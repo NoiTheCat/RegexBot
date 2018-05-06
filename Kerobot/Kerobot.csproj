@@ -10,6 +10,7 @@
     <Description>Advanced and flexible Discord moderation bot.</Description>
     <FileVersion>0.0.1</FileVersion>
     <Version>0.0.1</Version>
+    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
