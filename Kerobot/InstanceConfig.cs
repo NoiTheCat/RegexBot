@@ -30,7 +30,15 @@ namespace Kerobot
         /// </remarks>
         internal string PostgresConnString => _pgSqlConnectionString;
 
-        // TODO add fields for services to be configurable: DMRelay, InstanceLog
+        const string JInstanceLogReportTarget = "LogTarget";
+        readonly ulong _ilReptGuild, _ilReptChannel;
+        /// <summary>
+        /// Guild and channel ID, respectively, for instance log reporting.
+        /// Specified as "(guild ID)/(channel ID)".
+        /// </summary>
+        internal (ulong, ulong) InstanceLogReportTarget => (_ilReptGuild, _ilReptChannel);
+
+        // TODO add fields for services to be configurable: DMRelay
 
         /// <summary>
         /// Sets up instance configuration object from file and command line parameters.
@@ -63,10 +71,32 @@ namespace Kerobot
             // Input validation - throw exception on errors. Exception messages printed as-is.
             _botToken = conf[JBotToken]?.Value<string>();
             if (string.IsNullOrEmpty(_botToken))
-                throw new Exception($"'{JBotToken}' was not properly specified in configuration.");
+                throw new Exception($"'{JBotToken}' is not properly specified in configuration.");
             _pgSqlConnectionString = conf[JPgSqlConnectionString]?.Value<string>();
             if (string.IsNullOrEmpty(_pgSqlConnectionString))
-                throw new Exception($"'{JPgSqlConnectionString}' was not properly specified in configuration.");
+                throw new Exception($"'{JPgSqlConnectionString}' is not properly specified in configuration.");
+
+            var ilInput = conf[JInstanceLogReportTarget]?.Value<string>();
+            if (!string.IsNullOrWhiteSpace(ilInput))
+            {
+                int idx = ilInput.IndexOf('/');
+                if (idx < 0) throw new Exception($"'{JInstanceLogReportTarget}' is not properly specified in configuration.");
+                try
+                {
+                    _ilReptGuild = ulong.Parse(ilInput.Substring(0, idx));
+                    _ilReptChannel = ulong.Parse(ilInput.Substring(idx + 1, ilInput.Length - (idx + 1)));
+                }
+                catch (FormatException)
+                {
+                    throw new Exception($"'{JInstanceLogReportTarget}' is not properly specified in configuration.");
+                }
+            }
+            else
+            {
+                // Feature is disabled
+                _ilReptGuild = 0;
+                _ilReptChannel = 0;
+            }
         }
     }
 }

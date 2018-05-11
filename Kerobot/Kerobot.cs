@@ -1,8 +1,6 @@
-﻿using Discord;
-using Discord.WebSocket;
+﻿using Discord.WebSocket;
 using Kerobot.Services;
 using Npgsql;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -15,10 +13,11 @@ namespace Kerobot
     public partial class Kerobot
     {
         // Partial class: Services are able to add their own methods and properties to this class.
-        // This is to prevent this file from having too many references to many different and unrelated features.
+        // This is to prevent this file from having too many references to different and unrelated features.
 
         private readonly InstanceConfig _icfg;
         private readonly DiscordSocketClient _client;
+        private IReadOnlyCollection<Service> _services; // all services in an iterable format
 
         /// <summary>
         /// Gets application instance configuration.
@@ -34,14 +33,31 @@ namespace Kerobot
             _icfg = conf;
             _client = client;
 
+            // 'Ready' event handler. Because there's no other place for it.
+            _client.Ready += async delegate
+            {
+                await InstanceLogAsync(true, "Kerobot", "Connected and ready.");
+            };
+
             InitializeServices();
-            
-            // and prepare modules here
+
+            // TODO prepare modules here
+
+            // Everything's ready to go by now. Print the welcome message here.
+            var ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            InstanceLogAsync(false, "Kerobot",
+                $"This is Kerobot v{ver.ToString(3)}. https://github.com/Noikoio/Kerobot").Wait();
         }
 
         private void InitializeServices()
         {
-            throw new NotImplementedException();
+            var svcList = new List<Service>();
+
+            // Put services here as they become usable.
+            _svcLogging = new Services.Logging.LoggingService(this);
+            svcList.Add(_svcLogging);
+
+            _services = svcList.AsReadOnly();
         }
 
         /// <summary>

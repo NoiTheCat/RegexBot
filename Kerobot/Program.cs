@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace Kerobot
 {
     /// <summary>
-    /// Program startup class. Does initialization before starting the Discord client.
+    /// Program startup class.
     /// </summary>
     class Program
     {
@@ -18,12 +18,15 @@ namespace Kerobot
         
         static Kerobot _main;
         
+        /// <summary>
+        /// Entry point. Loads options, initializes all components, then connects to Discord.
+        /// </summary>
         static async Task Main(string[] args)
         {
             _startTime = DateTimeOffset.UtcNow;
             Console.WriteLine("Bot start time: " + _startTime.ToString("u"));
 
-            // Get instance config figured out
+            // Get instance configuration from file and parameters
             var opts = Options.ParseOptions(args); // Program can exit here.
             InstanceConfig cfg;
             try
@@ -37,7 +40,7 @@ namespace Kerobot
                 return;
             }
 
-            // Quick test if database configuration works
+            // Quick test of database configuration
             try
             {
                 using (var d = new Npgsql.NpgsqlConnection(cfg.PostgresConnString))
@@ -77,13 +80,21 @@ namespace Kerobot
 
         private static void Console_CancelKeyPress(object sender, ConsoleCancelEventArgs e)
         {
-            // TODO finish implementation when logging is set up
             e.Cancel = true;
-            // _main.Log("Received Cancel event. Application will shut down...");
-            // stop periodic task processing - wait for current run to finish if executing (handled by service?)
-            // notify services of shutdown
-            bool success = _main.DiscordClient.LogoutAsync().Wait(10000);
-            // if (!success) _main.Log("Failed to disconnect cleanly from Discord. Will force shut down.");
+
+            _main.InstanceLogAsync(true, "Kerobot", "Shutting down. Reason: Interrupt signal.");
+
+            // 5 seconds of leeway - any currently running tasks will need time to finish executing
+            var leeway = Task.Delay(5000);
+
+            // TODO periodic task service: stop processing, wait for all tasks to finish
+            // TODO notify services of shutdown
+
+            leeway.Wait();
+            
+            bool success = _main.DiscordClient.StopAsync().Wait(1000);
+            if (!success) _main.InstanceLogAsync(false, "Kerobot",
+                "Failed to disconnect cleanly from Discord. Will force shut down.").Wait();
             Environment.Exit(0);
         }
     }
