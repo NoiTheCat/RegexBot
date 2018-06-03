@@ -1,0 +1,218 @@
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace Kerobot.Services.GuildState
+{
+    /// <summary>
+    /// Implements per-module storage and retrieval of guild-specific state data.
+    /// This typically includes module configuration data.
+    /// </summary>
+    class GuildStateService : Service
+    {
+        // SCHEMAS ARE CREATED HERE, SOMEWHERE BELOW. MAKE SURE THIS CONSTRUCTOR IS CALLED EARLY.
+
+        private readonly object _storageLock = new object();
+        private readonly Dictionary<ulong, Dictionary<Type, StateInfo>> _storage;
+
+        const string GuildLogSource = "Configuration loader";
+
+        public GuildStateService(Kerobot kb) : base(kb)
+        {
+            _storage = new Dictionary<ulong, Dictionary<Type, StateInfo>>();
+
+            _defaultGuildJson = PreloadDefaultGuildJson();
+            
+            kb.DiscordClient.GuildAvailable += DiscordClient_GuildAvailable;
+            kb.DiscordClient.LeftGuild += DiscordClient_LeftGuild;
+
+            // TODO periodic task for refreshing stale configuration
+        }
+        
+        private async Task DiscordClient_GuildAvailable(Discord.WebSocket.SocketGuild arg)
+        {
+            // Get this done before any other thing.
+            await CreateSchema(arg.Id);
+
+            // Attempt initialization on the guild.
+            await CreateGuildConfigurationTableAsync(arg.Id);
+
+            // Then start loading guild information
+            bool success = await LoadGuildConfiguration(arg.Id);
+            if (!success)
+            {
+                await Kerobot.GuildLogAsync(arg.Id, GuildLogSource,
+                    "Configuration was not reloaded due to the previously stated error(s).");
+            }
+        }
+        private Task DiscordClient_LeftGuild(Discord.WebSocket.SocketGuild arg)
+        {
+            // Unload guild information.
+            lock (_storageLock) _storage.Remove(arg.Id);
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// See <see cref="ModuleBase.GetGuildState{T}(ulong)"/>.
+        /// </summary>
+        public T RetrieveGuildStateObject<T>(ulong guildId, Type t)
+        {
+            lock (_storageLock)
+            {
+                if (_storage.TryGetValue(guildId, out var tl))
+                {
+                    if (tl.TryGetValue(t, out var val))
+                    {
+                        // Leave handling of potential InvalidCastException to caller.
+                        return (T)val.Data;
+                    }
+                }
+                return default;
+            }
+        }
+
+        /// <summary>
+        /// Guild-specific configuration begins processing here.
+        /// Configuration is loaded from database, and appropriate sections dispatched to their
+        /// respective methods for further processing.
+        /// </summary>
+        /// <remarks>
+        /// This takes an all-or-nothing approach. Should there be a single issue in processing
+        /// configuration, the old state data is kept.
+        /// </remarks>
+        private async Task<bool> LoadGuildConfiguration(ulong guildId)
+        {
+            
+            var jstr = await RetrieveConfiguration(guildId);
+            int jstrHash = jstr.GetHashCode();
+            JObject guildConf;
+            try
+            {
+                var tok = JToken.Parse(jstr);
+                if (tok.Type != JTokenType.Object)
+                {
+                    guildConf = (JObject)tok;
+                }
+                else
+                {
+                    throw new InvalidCastException("The given configuration is not a JSON object.");
+                }
+            }
+            catch (Exception ex) when (ex is JsonReaderException || ex is InvalidCastException)
+            {
+                await Kerobot.GuildLogAsync(guildId, GuildLogSource,
+                    $"A problem exists within the guild configuration: {ex.Message}");
+
+                // Don't update currently loaded state.
+                return false;
+            }
+
+            // TODO Guild-specific service options? If implemented, this is where to load them.
+
+            var newStates = new Dictionary<Type, StateInfo>();
+            foreach (var mod in Kerobot.Modules)
+            {
+                var t = mod.GetType();
+                var tn = t.Name;
+                try
+                {
+                    var state = await mod.CreateGuildStateAsync(guildConf[tn]); // can be null
+                    newStates.Add(t, new StateInfo(state, jstrHash));
+                }
+                catch (ModuleLoadException ex)
+                {
+                    await Kerobot.GuildLogAsync(guildId, GuildLogSource,
+                        $"{tn} has encountered an issue with its configuration: {ex.Message}");
+                    return false;
+                }
+            }
+            lock (_storageLock) _storage[guildId] = newStates;
+            return true;
+        }
+
+        #region Database
+        /// <summary>
+        /// Creates a schema for holding all guild data.
+        /// Ensure that this runs first before any other database call to a guild.
+        /// </summary>
+        private async Task CreateSchema(ulong guildId)
+        {
+            using (var db = await Kerobot.GetOpenNpgsqlConnectionAsync(null))
+            {
+                using (var c = db.CreateCommand())
+                {
+                    c.CommandText = $"create schema if not exists guild_{guildId}";
+                    await c.ExecuteNonQueryAsync();
+                }
+            }
+        }
+
+        const string DBTableName = "guild_configuration";
+        /// <summary>
+        /// Creates the table structures for holding module configuration.
+        /// </summary>
+        private async Task CreateGuildConfigurationTableAsync(ulong guildId)
+        {
+            using (var db = await Kerobot.GetOpenNpgsqlConnectionAsync(guildId))
+            {
+                using (var c = db.CreateCommand())
+                {
+                    c.CommandText = $"create table if not exists {DBTableName} ("
+                        + $"rev_id integer not null primary key DEFAULT nextval('{DBTableName}_id_seq') "
+                        + "author bigint not null, "
+                        + "rev_date timestamptz not null default NOW(), "
+                        + "config_json text not null"
+                        + ")";
+                    await c.ExecuteNonQueryAsync();
+                }
+                // Creating default configuration with revision ID 0.
+                // This allows us to quickly define rev_id as type SERIAL and not have to configure it so that
+                // the serial should start at 2, but rather can easily start at 1. So lazy.
+                using (var c = db.CreateCommand())
+                {
+                    c.CommandText = $"insert into {DBTableName} (rev_id, author, config_json)"
+                        + "values (0, 0, @Json) "
+                        + "on conflict (rev_id) do nothing";
+                    c.Parameters.Add("@Json", NpgsqlTypes.NpgsqlDbType.Text).Value = _defaultGuildJson;
+                    c.Prepare();
+                    await c.ExecuteNonQueryAsync();
+                }
+            }
+        }
+
+        private async Task<string> RetrieveConfiguration(ulong guildId)
+        {
+            using (var db = await Kerobot.GetOpenNpgsqlConnectionAsync(guildId))
+            {
+                using (var c = db.CreateCommand())
+                {
+                    c.CommandText = $"select config_json from {DBTableName} "
+                        + "order by rev_id desc limit 1";
+                    using (var r = await c.ExecuteReaderAsync())
+                    {
+                        if (await r.ReadAsync())
+                        {
+                            return r.GetString(0);
+                        }
+                        return null;
+                    }
+                }
+            }
+        }
+        #endregion
+
+        // Default guild configuration JSON is embedded in assembly. Retrieving and caching it here.
+        private readonly string _defaultGuildJson;
+        private string PreloadDefaultGuildJson()
+        {
+            const string ResourceName = "Kerobot.DefaultGuildJson.json";
+
+            var a = System.Reflection.Assembly.GetExecutingAssembly();
+            using (var s = a.GetManifestResourceStream(ResourceName))
+            using (var r = new System.IO.StreamReader(s))
+                return r.ReadToEnd();
+        }
+    }
+}

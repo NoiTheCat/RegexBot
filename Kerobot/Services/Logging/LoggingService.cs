@@ -50,7 +50,7 @@ namespace Kerobot.Services.Logging
             }
         }
 
-        const string TableLog = "logging";
+        const string TableLog = "program_log";
         public override async Task CreateDatabaseTablesAsync(NpgsqlConnection db)
         {
             using (var c = db.CreateCommand())

@@ -17,7 +17,8 @@ namespace Kerobot
 
         private readonly InstanceConfig _icfg;
         private readonly DiscordSocketClient _client;
-        private IReadOnlyCollection<Service> _services; // all services in an iterable format
+        private IReadOnlyCollection<Service> _services;
+        private IReadOnlyCollection<ModuleBase> _modules;
 
         /// <summary>
         /// Gets application instance configuration.
@@ -27,6 +28,14 @@ namespace Kerobot
         /// Gets the Discord client instance.
         /// </summary>
         public DiscordSocketClient DiscordClient => _client;
+        /// <summary>
+        /// All loaded services in an iterable form.
+        /// </summary>
+        internal IReadOnlyCollection<Service> Services => _services;
+        /// <summary>
+        /// All loaded modules in an iterable form.
+        /// </summary>
+        internal IReadOnlyCollection<ModuleBase> Modules => _modules;
 
         internal Kerobot(InstanceConfig conf, DiscordSocketClient client)
         {
