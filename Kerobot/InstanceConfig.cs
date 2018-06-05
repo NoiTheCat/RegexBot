@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 namespace Kerobot
@@ -18,6 +19,13 @@ namespace Kerobot
         /// Token used for Discord authentication.
         /// </summary>
         internal string BotToken => _botToken;
+
+        const string JAssemblies = "Assemblies";
+        readonly string[] _enabledAssemblies;
+        /// <summary>
+        /// List of assemblies to load, by file. Paths are always relative to the bot directory.
+        /// </summary>
+        internal string[] EnabledAssemblies => _enabledAssemblies;
 
         const string JPgSqlConnectionString = "SqlConnectionString";
         readonly string _pgSqlConnectionString;
@@ -75,6 +83,13 @@ namespace Kerobot
             _pgSqlConnectionString = conf[JPgSqlConnectionString]?.Value<string>();
             if (string.IsNullOrEmpty(_pgSqlConnectionString))
                 throw new Exception($"'{JPgSqlConnectionString}' is not properly specified in configuration.");
+
+            var asmList = conf[JAssemblies];
+            if (asmList == null || asmList.Type != JTokenType.Array)
+            {
+                throw new Exception($"'{JAssemblies}' is not properly specified in configuration.");
+            }
+            _enabledAssemblies = asmList.Values<string>().ToArray();
 
             var ilInput = conf[JInstanceLogReportTarget]?.Value<string>();
             if (!string.IsNullOrWhiteSpace(ilInput))

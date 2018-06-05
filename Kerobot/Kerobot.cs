@@ -48,25 +48,29 @@ namespace Kerobot
                 await InstanceLogAsync(true, "Kerobot", "Connected and ready.");
             };
 
-            InitializeServices();
+            // Get all services started up
+            _services = InitializeServices();
 
-            // TODO prepare modules here
+            // Load externally defined functionality
+            _modules = ModuleLoader.Load(_icfg, this);
 
-            // Everything's ready to go by now. Print the welcome message here.
+            // Everything's ready to go. Print the welcome message here.
             var ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
             InstanceLogAsync(false, "Kerobot",
                 $"This is Kerobot v{ver.ToString(3)}. https://github.com/Noikoio/Kerobot").Wait();
         }
 
-        private void InitializeServices()
+        private IReadOnlyCollection<Service> InitializeServices()
         {
             var svcList = new List<Service>();
 
             // Put services here as they become usable.
             _svcLogging = new Services.Logging.LoggingService(this);
             svcList.Add(_svcLogging);
+            _svcGuildState = new Services.GuildState.GuildStateService(this);
+            svcList.Add(_svcGuildState);
 
-            _services = svcList.AsReadOnly();
+            return svcList.AsReadOnly();
         }
 
         /// <summary>

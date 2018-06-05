@@ -21,7 +21,11 @@ namespace Kerobot
         /// </summary>
         public Kerobot Kerobot => _kb;
 
-        private ModuleBase(Kerobot kb) => _kb = kb;
+        /// <summary>
+        /// When a module is loaded, this constructor is called.
+        /// Services are available at this point. Do not attempt to communicate to Discord within the constructor.
+        /// </summary>
+        public ModuleBase(Kerobot kb) => _kb = kb;
 
         /// <summary>
         /// Gets the module name.
