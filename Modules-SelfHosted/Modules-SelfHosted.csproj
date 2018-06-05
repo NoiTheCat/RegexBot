@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <Authors>Noikoio</Authors>
+    <Product>Kerobot</Product>
+    <Version>0.0.1</Version>
+    <Description>Kerobot modules with more specific purposes that may not work well in a public instance, but are manageable in self-hosted bot instances.</Description>
+    <RootNamespace>Kerobot.Modules</RootNamespace>
+  </PropertyGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy /Y &quot;$(TargetDir)$(ProjectName).*&quot; &quot;$(SolutionDir)Kerobot\bin\$(ConfigurationName)\netcoreapp2.0\&quot;" />
+  </Target>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Kerobot\Kerobot.csproj" />
+  </ItemGroup>
+
+</Project>
