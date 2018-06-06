@@ -26,6 +26,10 @@ namespace Kerobot.Services.Logging
 
             // Discord.Net log handling (client logging option is specified in Program.cs)
             kb.DiscordClient.Log += DiscordClient_Log;
+
+            // Ready message too
+            kb.DiscordClient.Ready += 
+                async delegate { await DoInstanceLogAsync(true, "Kerobot", "Connected and ready."); };
         }
 
         /// <summary>

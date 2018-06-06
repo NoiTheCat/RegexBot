@@ -12,47 +12,36 @@ namespace Kerobot
     /// </summary>
     public partial class Kerobot
     {
-        // Partial class: Services are able to add their own methods and properties to this class.
-        // This is to prevent this file from having too many references to different and unrelated features.
-
-        private readonly InstanceConfig _icfg;
-        private readonly DiscordSocketClient _client;
-        private IReadOnlyCollection<Service> _services;
-        private IReadOnlyCollection<ModuleBase> _modules;
-
         /// <summary>
         /// Gets application instance configuration.
         /// </summary>
-        internal InstanceConfig Config => _icfg;
+        internal InstanceConfig Config { get; }
+
         /// <summary>
         /// Gets the Discord client instance.
         /// </summary>
-        public DiscordSocketClient DiscordClient => _client;
+        public DiscordSocketClient DiscordClient { get; }
+
         /// <summary>
-        /// All loaded services in an iterable form.
+        /// Gets all loaded services in an iterable form.
         /// </summary>
-        internal IReadOnlyCollection<Service> Services => _services;
+        internal IReadOnlyCollection<Service> Services { get; }
+
         /// <summary>
-        /// All loaded modules in an iterable form.
+        /// Gets all loaded modules in an iterable form.
         /// </summary>
-        internal IReadOnlyCollection<ModuleBase> Modules => _modules;
+        internal IReadOnlyCollection<ModuleBase> Modules { get; }
 
         internal Kerobot(InstanceConfig conf, DiscordSocketClient client)
         {
-            _icfg = conf;
-            _client = client;
-
-            // 'Ready' event handler. Because there's no other place for it.
-            _client.Ready += async delegate
-            {
-                await InstanceLogAsync(true, "Kerobot", "Connected and ready.");
-            };
-
+            Config = conf;
+            DiscordClient = client;
+            
             // Get all services started up
-            _services = InitializeServices();
+            Services = InitializeServices();
 
             // Load externally defined functionality
-            _modules = ModuleLoader.Load(_icfg, this);
+            Modules = ModuleLoader.Load(Config, this);
 
             // Everything's ready to go. Print the welcome message here.
             var ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
@@ -81,7 +70,7 @@ namespace Kerobot
         /// </param>
         internal async Task<NpgsqlConnection> GetOpenNpgsqlConnectionAsync(ulong? guild)
         {
-            string cs = _icfg.PostgresConnString;
+            string cs = Config.PostgresConnString;
             if (guild.HasValue) cs += ";searchpath=guild_" + guild.Value;
 
             var db = new NpgsqlConnection(cs);

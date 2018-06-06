@@ -10,12 +10,11 @@ namespace Kerobot
     /// </summary>
     class Program
     {
-        static DateTimeOffset _startTime;
         /// <summary>
         /// Timestamp specifying the date and time that the program began running.
         /// </summary> 
-        public static DateTimeOffset StartTime => _startTime;
-        
+        public static DateTimeOffset StartTime { get; private set; }
+
         static Kerobot _main;
         
         /// <summary>
@@ -23,8 +22,8 @@ namespace Kerobot
         /// </summary>
         static async Task Main(string[] args)
         {
-            _startTime = DateTimeOffset.UtcNow;
-            Console.WriteLine("Bot start time: " + _startTime.ToString("u"));
+            StartTime = DateTimeOffset.UtcNow;
+            Console.WriteLine("Bot start time: " + StartTime.ToString("u"));
 
             // Get instance configuration from file and parameters
             var opts = Options.ParseOptions(args); // Program can exit here.
@@ -73,7 +72,7 @@ namespace Kerobot
             // send error notification to instance log channel, if possible
 
             // And off we go.
-            await _main.DiscordClient.LoginAsync(Discord.TokenType.Bot, cfg.BotToken);
+            await _main.DiscordClient.LoginAsync(TokenType.Bot, cfg.BotToken);
             await _main.DiscordClient.StartAsync();
             await Task.Delay(-1);
         }

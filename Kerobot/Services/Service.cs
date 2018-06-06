@@ -3,7 +3,7 @@
 namespace Kerobot.Services
 {
     /// <summary>
-    /// Base class for Kerobot service.
+    /// Base class for Kerobot services.
     /// </summary>
     /// <remarks>
     /// Services provide the core functionality of this program. Modules are expected to call into methods
@@ -11,18 +11,15 @@ namespace Kerobot.Services
     /// </remarks>
     internal abstract class Service
     {
-        private readonly Kerobot _kb;
-        public Kerobot Kerobot => _kb;
+        public Kerobot Kerobot { get; }
 
         public string Name => this.GetType().Name;
 
-        public Service(Kerobot kb)
-        {
-            _kb = kb;
-        }
+        public Service(Kerobot kb) => Kerobot = kb;
 
         /// <summary>
-        /// Initializes database tables per-guild. Called when entering a guild.
+        /// Initializes database tables per-guild.
+        /// This method is called by GuildStateService when entering a guild.
         /// </summary>
         /// <param name="db">An opened database connection with the appropriate schema option set.</param>
         /// <remarks>If overriding, calling the base method is not necessary.</remarks>

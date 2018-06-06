@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Discord.WebSocket;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Threading.Tasks;
 
@@ -9,23 +10,26 @@ namespace Kerobot
     /// user input (both by means of configuration and incoming Discord events) and process it accordingly.
     /// </summary>
     /// <remarks>
-    /// Implementing classes should not rely on local/instance variables to store data. Make use of
-    /// <see cref="CreateGuildStateAsync(JToken)"/> and <see cref="GetGuildState{T}(ulong)"/>.
+    /// Implementing classes should not rely on local variables to store runtime data regarding guilds.
+    /// Use <see cref="CreateGuildStateAsync(JToken)"/> and <see cref="GetGuildState{T}(ulong)"/>.
     /// </remarks>
     public abstract class ModuleBase
     {
-        private readonly Kerobot _kb;
-
         /// <summary>
         /// Retrieves the Kerobot instance.
         /// </summary>
-        public Kerobot Kerobot => _kb;
+        public Kerobot Kerobot { get; }
+
+        /// <summary>
+        /// Retrieves the Discord client instance.
+        /// </summary>
+        public DiscordSocketClient DiscordClient { get => Kerobot.DiscordClient; }
 
         /// <summary>
         /// When a module is loaded, this constructor is called.
         /// Services are available at this point. Do not attempt to communicate to Discord within the constructor.
         /// </summary>
-        public ModuleBase(Kerobot kb) => _kb = kb;
+        public ModuleBase(Kerobot kb) => Kerobot = kb;
 
         /// <summary>
         /// Gets the module name.
@@ -53,6 +57,20 @@ namespace Kerobot
         /// Thrown if the stored state object cannot be cast as specified.
         /// </exception>
         protected T GetGuildState<T>(ulong guildId) => Kerobot.GetGuildState<T>(guildId, GetType());
+
+        /// <summary>
+        /// Appends a message to the global instance log. Use sparingly.
+        /// </summary>
+        /// <param name="report">
+        /// Specifies if the log message should be sent to the reporting channel.
+        /// Only messages of very high importance should use this option.
+        /// </param>
+        protected Task LogAsync(string message, bool report = false) => Kerobot.InstanceLogAsync(report, Name, message);
+
+        /// <summary>
+        /// Appends a message to the log for the specified guild.
+        /// </summary>
+        protected Task LogAsync(ulong guild, string message) => Kerobot.GuildLogAsync(guild, Name, message);
     }
 
     /// <summary>
