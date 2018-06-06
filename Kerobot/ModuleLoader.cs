@@ -19,27 +19,35 @@ namespace Kerobot
             var path = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) + Path.DirectorySeparatorChar;
             var modules = new List<ModuleBase>();
 
-            try
+            foreach (var file in conf.EnabledAssemblies)
             {
-                foreach (var file in conf.EnabledAssemblies)
+                Assembly a = null;
+                try
                 {
-                    var a = Assembly.LoadFile(path + file);
-                    modules.AddRange(LoadModulesFromAssembly(a, k));
+                    a = Assembly.LoadFile(path + file);
                 }
-                return modules.AsReadOnly();
+                catch (Exception ex)
+                {
+                    Console.WriteLine("An error occurred when attempting to load a module assembly.");
+                    Console.WriteLine($"File: {file}");
+                    Console.WriteLine(ex.ToString());
+                    Environment.Exit(2);
+                }
+
+                IEnumerable<ModuleBase> amods = null;
+                try
+                {
+                    amods = LoadModulesFromAssembly(a, k);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("An error occurred when attempting to create a module instance.");
+                    Console.WriteLine(ex.ToString());
+                    Environment.Exit(2);
+                }
+                modules.AddRange(LoadModulesFromAssembly(a, k));
             }
-            catch (Exception ex)
-            {
-                // TODO better (not lazy) exception handling
-                // Possible exceptions:
-                // - Errors loading assemblies
-                // - Errors finding module paths
-                // - Errors creating module instances
-                // - Unknown errors
-                Console.WriteLine("Module load failed.");
-                Console.WriteLine(ex.ToString());
-                return null;
-            }
+            return modules.AsReadOnly();
         }
 
         static IEnumerable<ModuleBase> LoadModulesFromAssembly(Assembly asm, Kerobot k)
@@ -49,7 +57,7 @@ namespace Kerobot
                                 where type.GetCustomAttribute<KerobotModuleAttribute>() != null
                                 select type;
             k.InstanceLogAsync(false, LogName,
-                $"{asm.FullName} has {eligibleTypes.Count()} usable types:");
+                $"{asm.GetName().Name} has {eligibleTypes.Count()} usable types");
 
             var newmods = new List<ModuleBase>();
             foreach (var t in eligibleTypes)
