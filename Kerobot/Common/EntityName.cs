@@ -8,12 +8,19 @@ namespace Kerobot.Common
     /// <summary>
     /// The type of entity specified in an <see cref="EntityName"/>.
     /// </summary>
-    public enum EntityType { Unspecified, Role, Channel, User }
+    public enum EntityType
+    {
+        /// <summary>Default value. Is never referenced in regular usage.</summary>
+        Unspecified,
+        Role,
+        Channel,
+        User
+    }
 
     /// <summary>
     /// Helper class that holds an entity's name, ID, or both.
     /// Meant to be used during configuration processing in cases where the configuration expects
-    /// an entity name to be defined in a certain way and may or may not include its snowflake ID.
+    /// an entity name to be defined in a certain way which may or may not include its snowflake ID.
     /// </summary>
     public class EntityName
     {
@@ -33,7 +40,6 @@ namespace Kerobot.Common
         /// </summary>
         public string Name { get; private set; }
         
-
         // TODO elsewhere: find a way to emit a warning if the user specified a name without ID in configuration.
 
         /// <summary>
@@ -42,6 +48,7 @@ namespace Kerobot.Common
         /// </summary>
         /// <param name="input">Input string in EntityName format.</param>
         /// <exception cref="ArgumentNullException">Input string is null or blank.</exception>
+        /// <exception cref="ArgumentException">Input string cannot be resolved to an entity type.</exception>
         public EntityName(string input)
         {
             if (string.IsNullOrWhiteSpace(input))
@@ -54,9 +61,11 @@ namespace Kerobot.Common
                 if (input[0] == '&') Type = EntityType.Role;
                 else if (input[0] == '#') Type = EntityType.Channel;
                 else if (input[0] == '@') Type = EntityType.User;
-
-                if (Type != EntityType.Unspecified) input = input.Substring(1);
             }
+            if (Type == EntityType.Unspecified)
+                throw new ArgumentException("Entity type unable to be inferred by given input.");
+
+            input = input.Substring(1); // Remove prefix
 
             // Input contains ID/Label separator?
             int separator = input.IndexOf("::");
@@ -93,16 +102,22 @@ namespace Kerobot.Common
             }
         }
 
+        internal void SetId(ulong id)
+        {
+            if (!Id.HasValue) Id = id;
+        }
+
         #region Name to ID resolving
         /// <summary>
         /// Attempts to determine the corresponding ID if not already known.
-        /// Searches the given guild for it and stores it into this instance if found.
-        /// Immediately returns the ID if it is already known by this instance.
+        /// Searches the specified guild and stores it into this instance if found.
+        /// Places the ID into <paramref name="id"/> when and if the result is known.
         /// </summary>
         /// <param name="searchType">The entity type to which this instance corresponds to.</param>
         /// <param name="id">If known, outputs the ID of the corresponding entity.</param>
+        /// <param name="keepId">Specifies if the internal ID value should be stored if a match is found.</param>
         /// <returns>True if the ID is known.</returns>
-        public bool TryResolve(SocketGuild searchGuild, out ulong id, EntityType searchType = EntityType.Unspecified)
+        public bool TryResolve(SocketGuild searchGuild, out ulong id, bool keepId, EntityType searchType)
         {
             if (Id.HasValue)
             {
@@ -141,7 +156,7 @@ namespace Kerobot.Common
             {
                 if (resolver.Invoke(item))
                 {
-                    Id = item.Id;
+                    if (keepId) Id = item.Id;
                     id = Id.Value;
                     return true;
                 }
@@ -175,23 +190,23 @@ namespace Kerobot.Common
         /// <summary>
         /// Returns the appropriate prefix corresponding to an EntityType.
         /// </summary>
-        public static string Prefix(EntityType t)
+        public static char Prefix(EntityType t)
         {
             switch (t)
             {
-                case EntityType.Role: return "&";
-                case EntityType.Channel: return "#";
-                case EntityType.User: return "@";
-                default: return "";
+                case EntityType.Role: return '&';
+                case EntityType.Channel: return '#';
+                case EntityType.User: return '@';
+                default: return '\0';
             }
         }
 
         /// <summary>
-        /// Returns a string representation of this EntityName, in EntityName format.
+        /// Returns a string representation of this item in proper EntityName format.
         /// </summary>
         public override string ToString()
         {
-            string pf = Prefix(Type);
+            char pf = Prefix(Type);
 
             if (Id.HasValue && Name != null)
                 return $"{pf}{Id.Value}::{Name}";
