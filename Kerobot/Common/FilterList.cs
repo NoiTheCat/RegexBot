@@ -62,7 +62,8 @@ namespace Kerobot.Common
             }
 
             // Verify that the specified array is actually an array.
-            if (valueSrc.Type != JTokenType.Array) throw new ArgumentException("Given list must be a JSON array.");
+            if (valueSrc != null && valueSrc.Type != JTokenType.Array)
+                throw new ArgumentException("Given list must be a JSON array.");
             FilteredList = new EntityList((JArray)valueSrc, true);
 
             // Verify the same for the exemption list.
