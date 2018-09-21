@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Discord.WebSocket;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Npgsql;
 using System;
@@ -27,12 +28,29 @@ namespace Kerobot.Services.GuildState
             _defaultGuildJson = PreloadDefaultGuildJson();
             
             kb.DiscordClient.GuildAvailable += DiscordClient_GuildAvailable;
+            kb.DiscordClient.JoinedGuild += DiscordClient_JoinedGuild;
             kb.DiscordClient.LeftGuild += DiscordClient_LeftGuild;
 
             // TODO periodic task for refreshing stale configuration
         }
 
-        private async Task DiscordClient_GuildAvailable(Discord.WebSocket.SocketGuild arg)
+        private async Task DiscordClient_GuildAvailable(SocketGuild arg) => await InitializeGuild(arg);
+        private async Task DiscordClient_JoinedGuild(SocketGuild arg) => await InitializeGuild(arg);
+
+        /// <summary>
+        /// Unloads in-memory guild information.
+        /// </summary>
+        private Task DiscordClient_LeftGuild(SocketGuild arg)
+        {
+            // TODO what is GuildUnavailable? Should we listen for that too?
+            lock (_storageLock) _storage.Remove(arg.Id);
+            return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Initializes guild in-memory and database structures, then attempts to load configuration.
+        /// </summary>
+        private async Task InitializeGuild(SocketGuild arg)
         {
             // Get this done before any other thing.
             await CreateSchema(arg.Id);
@@ -49,11 +67,11 @@ namespace Kerobot.Services.GuildState
                     catch (NpgsqlException ex)
                     {
                         await Log("Database error on CreateDatabaseTablesAsync:\n"
-                            + $"-- Service: {svc.Name}\n-- Guild: {arg.Id}\n-- Error: {ex.Message}" , true);
+                            + $"-- Service: {svc.Name}\n-- Guild: {arg.Id}\n-- Error: {ex.Message}", true);
                     }
                 }
             }
-            
+
             // Then start loading guild information
             bool success = await LoadGuildConfiguration(arg.Id);
             if (!success)
@@ -66,12 +84,6 @@ namespace Kerobot.Services.GuildState
                 await Kerobot.InstanceLogAsync(false, GuildLogSource,
                     $"Configuration successfully refreshed for guild ID {arg.Id}.");
             }
-        }
-        private Task DiscordClient_LeftGuild(Discord.WebSocket.SocketGuild arg)
-        {
-            // Unload guild information.
-            lock (_storageLock) _storage.Remove(arg.Id);
-            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -138,7 +150,22 @@ namespace Kerobot.Services.GuildState
                 var tn = t.Name;
                 try
                 {
-                    var state = await mod.CreateGuildStateAsync(guildConf[tn]); // can be null
+                    object state;
+                    try
+                    {
+                        state = await mod.CreateGuildStateAsync(guildConf[tn]); // can be null
+                    }
+                    catch (Exception ex)
+                    {
+                        Log("Encountered unhandled exception during guild state initialization:\n" +
+                            $"Module: {tn}\n" +
+                            $"Guild: {guildId} ({Kerobot.DiscordClient.GetGuild(guildId)?.Name ?? "unknown name"})\n" +
+                            $"```\n{ex.ToString()}\n```", true).Wait();
+                        Kerobot.GuildLogAsync(guildId, GuildLogSource,
+                            "An internal error occurred when attempting to load new configuration. " +
+                            "The bot owner has been notified.").Wait();
+                        return false;
+                    }
                     newStates.Add(t, new StateInfo(state, jstrHash));
                 }
                 catch (ModuleLoadException ex)
