@@ -46,13 +46,14 @@ namespace Kerobot.Common
                 valueSrc = config[whitelistKey];
                 Mode = FilterMode.Whitelist;
             }
-            else if (valueSrc != null && blacklistKey != null)
+            if (valueSrc != null && blacklistKey != null)
             {
                 // Try getting a blacklist
                 valueSrc = config[blacklistKey];
                 Mode = FilterMode.Blacklist;
             }
-            else
+
+            if (valueSrc == null)
             {
                 // Got neither. Have an empty list.
                 Mode = FilterMode.None;
