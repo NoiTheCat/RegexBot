@@ -1,6 +1,7 @@
 ﻿using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Kerobot
@@ -56,6 +57,7 @@ namespace Kerobot
         /// <exception cref="InvalidCastException">
         /// Thrown if the stored state object cannot be cast as specified.
         /// </exception>
+        [DebuggerStepThrough]
         protected T GetGuildState<T>(ulong guildId) => Kerobot.GetGuildState<T>(guildId, GetType());
 
         /// <summary>
