@@ -65,8 +65,7 @@ namespace Kerobot.Common
             }
             _innerList = list.AsReadOnly();
         }
-
-        #region Entity matching
+        
         /// <summary>
         /// Checks if the parameters of the given <see cref="SocketMessage"/> matches with
         /// any entity specified in this list.
@@ -130,10 +129,13 @@ namespace Kerobot.Common
                     }
                 }
             }
-
             return false;
         }
-        #endregion
+
+        /// <summary>
+        /// Determines if this list contains no entries.
+        /// </summary>
+        public bool IsEmpty() => _innerList.Count == 0;
 
         public override string ToString() => $"Entity list contains {_innerList.Count} item(s).";
 
