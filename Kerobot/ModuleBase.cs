@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using static Kerobot.Kerobot;
 
 namespace Kerobot
 {
@@ -73,6 +74,53 @@ namespace Kerobot
         /// Appends a message to the log for the specified guild.
         /// </summary>
         protected Task LogAsync(ulong guild, string message) => Kerobot.GuildLogAsync(guild, Name, message);
+
+        /// <summary>
+        /// Attempts to ban the given user from the specified guild. It is greatly preferred to call this method
+        /// instead of manually executing the equivalent method found in Discord.Net. It notifies other services
+        /// that the action originated from the bot, and allows them to handle the action appropriately.
+        /// </summary>
+        /// <returns>A structure containing results of the ban operation.</returns>
+        /// <param name="guild">The guild in which to attempt the action.</param>
+        /// <param name="source">The user, module, or service which is requesting this action to be taken.</param>
+        /// <param name="targetUser">The user which to perform the action to.</param>
+        /// <param name="purgeDays">Number of days of prior post history to delete on ban. Must be between 0-7.</param>
+        /// <param name="reason">Reason for the action. Sent to the Audit Log and user (if specified).</param>
+        /// <param name="dmMsg">
+        /// Message to DM the target user. Set null to disable. Instances of "%s" are replaced with the guild name
+        /// and instances of "%r" are replaced with the reason.
+        /// </param>
+        protected Task<BanKickResult> BanAsync(SocketGuild guild, string source, ulong targetUser, int purgeDays, string reason, string dmMsg)
+            => Kerobot.BanOrKickAsync(RemovalType.Ban, guild, source, targetUser, purgeDays, reason, dmMsg);
+
+        protected Task<BanKickResult> BanAsync(SocketGuild guild, SocketGuildUser source, string targetSearch, string reason, string dmMsg)
+        {
+            // TODO requires EntityCache lookup. Do this when that feature gets implemented.
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Attempts to ban the given user from the specified guild. It is greatly preferred to call this method
+        /// instead of manually executing the equivalent method found in Discord.Net. It notifies other services
+        /// that the action originated from the bot, and allows them to handle the action appropriately.
+        /// </summary>
+        /// <returns>A structure containing results of the ban operation.</returns>
+        /// <param name="guild">The guild in which to attempt the action.</param>
+        /// <param name="source">The user, if any, which requested the action to be taken.</param>
+        /// <param name="targetUser">The user which to perform the action to.</param>
+        /// <param name="reason">Reason for the action. Sent to the Audit Log and user (if specified).</param>
+        /// <param name="dmMsg">
+        /// Message to DM the target user. Set null to disable. Instances of "%s" are replaced with the guild name
+        /// and instances of "%r" are replaced with the reason.
+        /// </param>
+        protected Task<BanKickResult> KickAsync(SocketGuild guild, string source, ulong targetUser, string reason, string dmMsg)
+            => Kerobot.BanOrKickAsync(RemovalType.Ban, guild, source, targetUser, 0, reason, dmMsg);
+
+        protected Task<BanKickResult> KickAsync(SocketGuild guild, SocketUser user, string reason, string dmMsg)
+        {
+            // TODO requires EntityCache lookup. Do this when that feature gets implemented.
+            throw new NotImplementedException();
+        }
     }
 
     /// <summary>
