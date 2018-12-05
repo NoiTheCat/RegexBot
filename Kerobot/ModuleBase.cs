@@ -93,6 +93,11 @@ namespace Kerobot
         protected Task<BanKickResult> BanAsync(SocketGuild guild, string source, ulong targetUser, int purgeDays, string reason, string dmMsg)
             => Kerobot.BanOrKickAsync(RemovalType.Ban, guild, source, targetUser, purgeDays, reason, dmMsg);
 
+        /// <summary>
+        /// Similar to <see cref="BanAsync(SocketGuild, string, ulong, int, string, string)"/>, but making use of an
+        /// EntityCache lookup to determine the target.
+        /// </summary>
+        /// <param name="targetSearch">The EntityCache search string.</param>
         protected Task<BanKickResult> BanAsync(SocketGuild guild, SocketGuildUser source, string targetSearch, string reason, string dmMsg)
         {
             // TODO requires EntityCache lookup. Do this when that feature gets implemented.
@@ -116,7 +121,12 @@ namespace Kerobot
         protected Task<BanKickResult> KickAsync(SocketGuild guild, string source, ulong targetUser, string reason, string dmMsg)
             => Kerobot.BanOrKickAsync(RemovalType.Ban, guild, source, targetUser, 0, reason, dmMsg);
 
-        protected Task<BanKickResult> KickAsync(SocketGuild guild, SocketUser user, string reason, string dmMsg)
+        /// <summary>
+        /// Similar to <see cref="KickAsync(SocketGuild, string, ulong, string, string)"/>, but making use of an
+        /// EntityCache lookup to determine the target.
+        /// </summary>
+        /// <param name="targetSearch">The EntityCache search string.</param>
+        protected Task<BanKickResult> KickAsync(SocketGuild guild, string source, string targetSearch, string reason, string dmMsg)
         {
             // TODO requires EntityCache lookup. Do this when that feature gets implemented.
             throw new NotImplementedException();

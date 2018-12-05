@@ -58,6 +58,7 @@ namespace Kerobot
             svcList.Add(_svcLogging);
             _svcGuildState = new Services.GuildState.GuildStateService(this);
             svcList.Add(_svcGuildState);
+            _svcCommonFunctions = new Services.CommonFunctions.CommonFunctionsService(this);
 
             return svcList.AsReadOnly();
         }
