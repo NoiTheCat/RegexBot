@@ -1,10 +1,9 @@
-﻿using Discord.WebSocket;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Npgsql;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Discord.WebSocket;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Kerobot.Services.GuildState
 {
@@ -14,8 +13,6 @@ namespace Kerobot.Services.GuildState
     /// </summary>
     class GuildStateService : Service
     {
-        // SCHEMAS ARE CREATED HERE, SOMEWHERE BELOW. MAKE SURE THIS CONSTRUCTOR IS CALLED EARLY.
-
         private readonly object _storageLock = new object();
         private readonly Dictionary<ulong, Dictionary<Type, StateInfo>> _storage;
 
@@ -24,8 +21,7 @@ namespace Kerobot.Services.GuildState
         public GuildStateService(Kerobot kb) : base(kb)
         {
             _storage = new Dictionary<ulong, Dictionary<Type, StateInfo>>();
-
-            _defaultGuildJson = PreloadDefaultGuildJson();
+            CreateDatabaseTablesAsync().Wait();
             
             kb.DiscordClient.GuildAvailable += DiscordClient_GuildAvailable;
             kb.DiscordClient.JoinedGuild += DiscordClient_JoinedGuild;
@@ -48,31 +44,11 @@ namespace Kerobot.Services.GuildState
         }
 
         /// <summary>
-        /// Initializes guild in-memory and database structures, then attempts to load configuration.
+        /// Initializes guild in-memory structures and attempts to load configuration.
         /// </summary>
         private async Task InitializeGuild(SocketGuild arg)
         {
-            // Get this done before any other thing.
-            await CreateSchema(arg.Id);
-
-            // Attempt initialization on the guild. All services will set up their tables here.
-            using (var db = await Kerobot.GetOpenNpgsqlConnectionAsync(arg.Id))
-            {
-                foreach (var svc in Kerobot.Services)
-                {
-                    try
-                    {
-                        await svc.CreateDatabaseTablesAsync(db);
-                    }
-                    catch (NpgsqlException ex)
-                    {
-                        await Log("Database error on CreateDatabaseTablesAsync:\n"
-                            + $"-- Service: {svc.Name}\n-- Guild: {arg.Id}\n-- Error: {ex.Message}", true);
-                    }
-                }
-            }
-
-            // Then start loading guild information
+            // We're only loading config here now.
             bool success = await LoadGuildConfiguration(arg.Id);
             if (!success)
             {
@@ -118,6 +94,7 @@ namespace Kerobot.Services.GuildState
         {
             
             var jstr = await RetrieveConfiguration(guildId);
+            if (jstr == null) jstr = await RetrieveDefaultConfiguration();
             int jstrHash = jstr.GetHashCode();
             JObject guildConf;
             try
@@ -180,59 +157,47 @@ namespace Kerobot.Services.GuildState
         }
 
         #region Database
+        const string DBTableName = "guild_configuration";
         /// <summary>
-        /// Creates a schema for holding all guild data.
-        /// Ensure that this runs first before any other database call to a guild.
+        /// Creates the table structures for holding guild configuration.
         /// </summary>
-        private async Task CreateSchema(ulong guildId)
+        private async Task CreateDatabaseTablesAsync()
         {
-            using (var db = await Kerobot.GetOpenNpgsqlConnectionAsync(null))
+            using (var db = await Kerobot.GetOpenNpgsqlConnectionAsync())
             {
                 using (var c = db.CreateCommand())
                 {
-                    c.CommandText = $"create schema if not exists guild_{guildId}";
+                    c.CommandText = $"create table if not exists {DBTableName} ("
+                        + $"rev_id SERIAL primary key, "
+                        + "guild_id bigint not null, "
+                        + "author bigint not null, "
+                        + "rev_date timestamptz not null default NOW(), "
+                        + "config_json text not null"
+                        + ")";
+                    await c.ExecuteNonQueryAsync();
+                }
+
+                // Creating default configuration with revision ID 0.
+                // Config ID 0 is used when no other configurations can be loaded for a guild.
+                using (var c = db.CreateCommand())
+                {
+                    c.CommandText = $"insert into {DBTableName} (rev_id, guild_id, author, config_json) "
+                        + "values (0, 0, 0, @Json) "
+                        + "on conflict (rev_id) do nothing";
+                    c.Parameters.Add("@Json", NpgsqlTypes.NpgsqlDbType.Text).Value = PreloadDefaultGuildJson();
+                    c.Prepare();
                     await c.ExecuteNonQueryAsync();
                 }
             }
         }
 
-        const string DBTableName = "guild_configuration";
-        /// <summary>
-        /// Creates the table structures for holding module configuration.
-        /// </summary>
-        public override async Task CreateDatabaseTablesAsync(NpgsqlConnection db)
-        {
-            using (var c = db.CreateCommand())
-            {
-                c.CommandText = $"create table if not exists {DBTableName} ("
-                    + $"rev_id SERIAL primary key, "
-                    + "author bigint not null, "
-                    + "rev_date timestamptz not null default NOW(), "
-                    + "config_json text not null"
-                    + ")";
-                await c.ExecuteNonQueryAsync();
-            }
-            // Creating default configuration with revision ID 0.
-            // This allows us to quickly define rev_id as type SERIAL and not have to configure it so that
-            // the serial should start at 2, but rather can easily start at 1. So lazy.
-            using (var c = db.CreateCommand())
-            {
-                c.CommandText = $"insert into {DBTableName} (rev_id, author, config_json)"
-                    + "values (0, 0, @Json) "
-                    + "on conflict (rev_id) do nothing";
-                c.Parameters.Add("@Json", NpgsqlTypes.NpgsqlDbType.Text).Value = _defaultGuildJson;
-                c.Prepare();
-                await c.ExecuteNonQueryAsync();
-            }
-        }
-
         private async Task<string> RetrieveConfiguration(ulong guildId)
         {
-            using (var db = await Kerobot.GetOpenNpgsqlConnectionAsync(guildId))
+            using (var db = await Kerobot.GetOpenNpgsqlConnectionAsync())
             {
                 using (var c = db.CreateCommand())
                 {
-                    c.CommandText = $"select config_json from {DBTableName} "
+                    c.CommandText = $"select config_json from {DBTableName} where guild_id = {guildId} "
                         + "order by rev_id desc limit 1";
                     using (var r = await c.ExecuteReaderAsync())
                     {
@@ -245,10 +210,25 @@ namespace Kerobot.Services.GuildState
                 }
             }
         }
+
+        private async Task<string> RetrieveDefaultConfiguration()
+        {
+            using (var db = await Kerobot.GetOpenNpgsqlConnectionAsync())
+            {
+                using (var c = db.CreateCommand())
+                {
+                    c.CommandText = $"select config_json from {DBTableName} where rev_id = 0";
+                    using (var r = await c.ExecuteReaderAsync())
+                    {
+                        if (await r.ReadAsync()) return r.GetString(0);
+                    }
+                }
+            }
+            throw new Exception("Unable to retrieve fallback configuration.");
+        }
         #endregion
 
-        // Default guild configuration JSON is embedded in assembly. Retrieving and caching it here.
-        private readonly string _defaultGuildJson;
+        // Default guild configuration JSON is embedded in assembly.
         private string PreloadDefaultGuildJson()
         {
             const string ResourceName = "Kerobot.DefaultGuildConfig.json";

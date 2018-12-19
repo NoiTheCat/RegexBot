@@ -59,7 +59,8 @@ namespace Kerobot
             var client = new DiscordSocketClient(new DiscordSocketConfig()
             {
                 DefaultRetryMode = RetryMode.AlwaysRetry,
-                MessageCacheSize = 0 // using our own
+                MessageCacheSize = 0, // using our own
+                LogLevel = LogSeverity.Info
             });
 
             // Kerobot class initialization - will set up services and modules

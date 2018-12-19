@@ -18,14 +18,6 @@ namespace Kerobot.Services
         public Service(Kerobot kb) => Kerobot = kb;
 
         /// <summary>
-        /// Initializes database tables per-guild.
-        /// This method is called by GuildStateService when entering a guild.
-        /// </summary>
-        /// <param name="db">An opened database connection with the appropriate schema option set.</param>
-        /// <remarks>If overriding, calling the base method is not necessary.</remarks>
-        public virtual Task CreateDatabaseTablesAsync(Npgsql.NpgsqlConnection db) => Task.CompletedTask;
-
-        /// <summary>
         /// Creates a log message.
         /// </summary>
         /// <param name="message">Logging message contents.</param>

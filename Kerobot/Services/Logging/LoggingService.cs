@@ -1,13 +1,15 @@
-﻿using Discord;
-using Npgsql;
-using NpgsqlTypes;
-using System;
+﻿using System;
 using System.Threading.Tasks;
+using Discord;
+using NpgsqlTypes;
 
 namespace Kerobot.Services.Logging
 {
     /// <summary>
-    /// Implements logging for the whole program.
+    /// Implements logging. Logging is distinguished into two types: Instance and per-guild.
+    /// Instance logs are messages of varying importance to the bot operator. Guild logs are messages that can be seen
+    /// by moderators of a particular guild. All log messages are backed by database.
+    /// Instance logs are stored as guild ID 0.
     /// </summary>
     class LoggingService : Service
     {
@@ -16,13 +18,8 @@ namespace Kerobot.Services.Logging
 
         internal LoggingService(Kerobot kb) : base(kb)
         {
-            // Create global instance log table
-            async Task CreateGlobalTable()
-            {
-                using (var db = await Kerobot.GetOpenNpgsqlConnectionAsync(null))
-                    await CreateDatabaseTablesAsync(db);
-            }
-            CreateGlobalTable().Wait();
+            // Create logging table
+            CreateDatabaseTablesAsync().Wait();
 
             // Discord.Net log handling (client logging option is specified in Program.cs)
             kb.DiscordClient.Log += DiscordClient_Log;
@@ -34,7 +31,7 @@ namespace Kerobot.Services.Logging
 
         /// <summary>
         /// Discord.Net logging events handled here.
-        /// Only events with high severity are placed in the log. Others are just printed to console.
+        /// Only events with high importance are kept. Others are just printed to console.
         /// </summary>
         private async Task DiscordClient_Log(LogMessage arg)
         {
@@ -43,44 +40,54 @@ namespace Kerobot.Services.Logging
             string msg = $"[{Enum.GetName(typeof(LogSeverity), arg.Severity)}] {arg.Message}";
             const string logSource = "Discord.Net";
 
-            if (important)
-            {
-                // Note: Using external method here!
-                await Kerobot.InstanceLogAsync(true, logSource, msg);
-            }
-            else
-            {
-                FormatToConsole(DateTimeOffset.UtcNow, logSource, msg);
-            }
+            if (important) await DoInstanceLogAsync(true, logSource, msg);
+            else FormatToConsole(DateTimeOffset.UtcNow, logSource, msg);
         }
 
+        #region Database
         const string TableLog = "program_log";
-        public override async Task CreateDatabaseTablesAsync(NpgsqlConnection db)
+        private async Task CreateDatabaseTablesAsync()
         {
-            using (var c = db.CreateCommand())
+            using (var db = await Kerobot.GetOpenNpgsqlConnectionAsync())
             {
-                c.CommandText = $"create table if not exists {TableLog} ("
-                    + "log_id serial primary key, "
-                    + "log_timestamp timestamptz not null, "
-                    + "log_source text not null, "
-                    + "message text not null"
-                    + ")";
-                await c.ExecuteNonQueryAsync();
+                using (var c = db.CreateCommand())
+                {
+                    c.CommandText = $"create table if not exists {TableLog} ("
+                        + "log_id serial primary key, "
+                        + "guild_id bigint not null, "
+                        + "log_timestamp timestamptz not null, "
+                        + "log_source text not null, "
+                        + "message text not null"
+                        + ")";
+                    await c.ExecuteNonQueryAsync();
+                }
+                using (var c = db.CreateCommand())
+                {
+                    c.CommandText = "create index if not exists " +
+                        $"{TableLog}_guildid_idx on {TableLog} guild_id";
+                    await c.ExecuteNonQueryAsync();
+                }
+            }
+
+        }
+        private async Task TableInsertAsync(ulong guildId, DateTimeOffset timestamp, string source, string message)
+        {
+            using (var db = await Kerobot.GetOpenNpgsqlConnectionAsync())
+            {
+                using (var c = db.CreateCommand())
+                {
+                    c.CommandText = $"insert into {TableLog} (guild_id, log_timestamp, log_source, message) values"
+                        + "(@Gid, @Ts, @Src, @Msg)";
+                    c.Parameters.Add("@Gid", NpgsqlDbType.Bigint).Value = guildId;
+                    c.Parameters.Add("@Ts", NpgsqlDbType.TimestampTZ).Value = timestamp;
+                    c.Parameters.Add("@Src", NpgsqlDbType.Text).Value = source;
+                    c.Parameters.Add("@Msg", NpgsqlDbType.Text).Value = message;
+                    c.Prepare();
+                    await c.ExecuteNonQueryAsync();
+                }
             }
         }
-        private async Task TableInsertAsync(NpgsqlConnection db, DateTimeOffset timestamp, string source, string message)
-        {
-            using (var c = db.CreateCommand())
-            {
-                c.CommandText = $"insert into {TableLog} (log_timestamp, log_source, message) values"
-                    + "(@Ts, @Src, @Msg)";
-                c.Parameters.Add("@Ts", NpgsqlDbType.TimestampTZ).Value = timestamp;
-                c.Parameters.Add("@Src", NpgsqlDbType.Text).Value = source;
-                c.Parameters.Add("@Msg", NpgsqlDbType.Text).Value = message;
-                c.Prepare();
-                await c.ExecuteNonQueryAsync();
-            }
-        }
+        #endregion
 
         /// <summary>
         /// All console writes originate here.
@@ -106,17 +113,15 @@ namespace Kerobot.Services.Logging
             Exception insertException = null;
             try
             {
-                using (var db = await Kerobot.GetOpenNpgsqlConnectionAsync(null))
-                {
-                    await TableInsertAsync(db, DateTimeOffset.UtcNow, source, message);
-                }
+                await TableInsertAsync(0, DateTimeOffset.UtcNow, source, message);
             }
             catch (Exception ex)
             {
-                // This is not good. Resorting to plain console write to report the issue.
-                // Let's hope a warning reaches the reporting channel.
+                // Not good. Resorting to plain console write to report the error.
                 Console.WriteLine("!!! Error during recording to instance log: " + ex.Message);
                 Console.WriteLine(ex.StackTrace);
+
+                // Attempt to pass this error to the reporting channel.
                 insertException = ex;
             }
 
@@ -175,14 +180,11 @@ namespace Kerobot.Services.Logging
         {
             try
             {
-                using (var db = await Kerobot.GetOpenNpgsqlConnectionAsync(guild))
-                {
-                    await TableInsertAsync(db, DateTimeOffset.UtcNow, source, message);
-                }
+                await TableInsertAsync(guild, DateTimeOffset.UtcNow, source, message);
             }
             catch (Exception ex)
             {
-                // Probably a bad idea, but...
+                // This is probably a terrible idea, but...
                 await DoInstanceLogAsync(true, this.Name, "Failed to store guild log item: " + ex.Message);
                 // Stack trace goes to console only.
                 FormatToConsole(DateTime.UtcNow, this.Name, ex.StackTrace);

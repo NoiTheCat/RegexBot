@@ -69,12 +69,9 @@ namespace Kerobot
         /// <param name="guild">
         /// If manipulating guild-specific information, this parameter sets the database connection's search path.
         /// </param>
-        internal async Task<NpgsqlConnection> GetOpenNpgsqlConnectionAsync(ulong? guild)
+        internal async Task<NpgsqlConnection> GetOpenNpgsqlConnectionAsync()
         {
-            string cs = Config.PostgresConnString;
-            if (guild.HasValue) cs += ";searchpath=guild_" + guild.Value;
-
-            var db = new NpgsqlConnection(cs);
+            var db = new NpgsqlConnection(Config.PostgresConnString);
             await db.OpenAsync();
             return db;
         }
