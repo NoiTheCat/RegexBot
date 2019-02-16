@@ -47,6 +47,8 @@ namespace Kerobot
             var ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
             InstanceLogAsync(false, "Kerobot",
                 $"This is Kerobot v{ver.ToString(3)}. https://github.com/Noikoio/Kerobot").Wait();
+
+            // We return to Program.cs at this point.
         }
 
         private IReadOnlyCollection<Service> InitializeServices()
@@ -59,6 +61,9 @@ namespace Kerobot
             _svcGuildState = new Services.GuildState.GuildStateService(this);
             svcList.Add(_svcGuildState);
             _svcCommonFunctions = new Services.CommonFunctions.CommonFunctionsService(this);
+            svcList.Add(_svcCommonFunctions);
+            _svcEntityCache = new Services.EntityCache.EntityCacheService(this);
+            svcList.Add(_svcEntityCache);
 
             return svcList.AsReadOnly();
         }
