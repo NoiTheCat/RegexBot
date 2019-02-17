@@ -2,6 +2,7 @@
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Kerobot.Common
 {
@@ -117,6 +118,7 @@ namespace Kerobot.Common
         /// <param name="id">If known, outputs the ID of the corresponding entity.</param>
         /// <param name="keepId">Specifies if the internal ID value should be stored if a match is found.</param>
         /// <returns>True if the ID is known.</returns>
+        [Obsolete]
         public bool TryResolve(SocketGuild searchGuild, out ulong id, bool keepId, EntityType searchType)
         {
             if (Id.HasValue)
@@ -215,5 +217,35 @@ namespace Kerobot.Common
             else
                 return $"{pf}{Name}";
         }
+
+        #region Helper methods
+        /// <summary>
+        /// Attempts to find the corresponding role within the given guild.
+        /// </summary>
+        /// <param name="guild">The guild in which to search for the role.</param>
+        /// <param name="updateMissingID">
+        /// Specifies if this EntityName instance should keep the snowflake ID of the
+        /// corresponding role found in this guild, if it is not already known by this instance.
+        /// </param>
+        /// <returns></returns>
+        public SocketRole FindRoleIn(SocketGuild guild, bool updateMissingID = false)
+        {
+            if (this.Type != EntityType.Role)
+                throw new ArgumentException("This EntityName instance must correspond to a Role.");
+
+            bool dirty = false; // flag to update ID if possible regardless of updateMissingID setting
+            if (this.Id.HasValue)
+            {
+                var role = guild.GetRole(Id.Value);
+                if (role != null) return role;
+                else dirty = true; // only set if ID already existed but is now invalid
+            }
+
+            var r = guild.Roles.FirstOrDefault(rq => string.Equals(rq.Name, this.Name, StringComparison.OrdinalIgnoreCase));
+            if (r != null && (updateMissingID || dirty)) this.Id = r.Id;
+
+            return r;
+        }
+        #endregion
     }
 }
