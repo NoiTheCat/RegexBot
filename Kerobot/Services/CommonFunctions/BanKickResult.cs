@@ -1,9 +1,9 @@
-﻿using System;
-using Discord.Net;
+﻿using Discord.Net;
 
 namespace Kerobot
 {
-    // Instances created by CommonFunctionService, but are meant to be sent to modules. Hence its namespace.
+    // Instances of this are created by CommonFunctionService and by ModuleBase on behalf of CommonFunctionService,
+    // and are meant to be sent to modules. This class has therefore been put within the Kerobot namespace.
 
     /// <summary>
     /// Contains information on various success/failure outcomes for a ban or kick operation.
@@ -12,17 +12,23 @@ namespace Kerobot
     {
         private readonly bool _userNotFound;
 
-        internal BanKickResult(HttpException error, bool notifySuccess, bool errorNotFound)
+        internal BanKickResult(HttpException error, bool notificationSuccess, bool errorNotFound)
         {
             OperationError = error;
-            MessageSendSuccess = notifySuccess;
+            MessageSendSuccess = notificationSuccess;
             _userNotFound = errorNotFound;
         }
 
         /// <summary>
         /// Gets a value indicating whether the kick or ban succeeded.
         /// </summary>
-        public bool OperationSuccess { get => OperationError == null; }
+        public bool OperationSuccess {
+            get {
+                if (ErrorNotFound) return false;
+                if (OperationError == null) return false;
+                return true;
+            }
+        }
 
         /// <summary>
         /// The exception thrown, if any, when attempting to kick or ban the target.

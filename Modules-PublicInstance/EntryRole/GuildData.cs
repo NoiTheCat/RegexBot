@@ -26,8 +26,12 @@ namespace Kerobot.Modules.EntryRole
 
         const int WaitTimeMax = 600; // 10 minutes
 
-        public GuildData(JObject conf)
+        public GuildData(JObject conf) : this(conf, new Dictionary<ulong, DateTimeOffset>()) { }
+
+        public GuildData(JObject conf, Dictionary<ulong, DateTimeOffset> _waitingList)
         {
+            WaitingList = _waitingList;
+
             var cfgRole = conf["Role"]?.Value<string>();
             if (string.IsNullOrWhiteSpace(cfgRole))
                 throw new ModuleLoadException("Role value not specified.");

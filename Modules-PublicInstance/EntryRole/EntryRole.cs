@@ -40,17 +40,17 @@ namespace Kerobot.Modules.EntryRole
             return Task.CompletedTask;
         }
 
-        public override Task<object> CreateGuildStateAsync(JToken config)
+        public override Task<object> CreateGuildStateAsync(ulong guildID, JToken config)
         {
             if (config == null) return null;
-
-            // preserve previously running timers?
-            // research: can GetState be called here or is it undefined?
 
             if (config.Type != JTokenType.Object)
                 throw new ModuleLoadException("Configuration is not properly defined.");
 
-            return Task.FromResult<object>(new GuildData((JObject)config));
+            // Attempt to preserve existing timer list on reload
+            var oldconf = GetGuildState<GuildData>(guildID);
+            if (oldconf == null) return Task.FromResult<object>(new GuildData((JObject)config));
+            else return Task.FromResult<object>(new GuildData((JObject)config, oldconf.WaitingList)); 
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace Kerobot.Modules.EntryRole
             var gconf = GetGuildState<GuildData>(g.Id);
             if (gconf == null) return;
 
-            // Get users to be affected
+            // Get list of users to be affected
             ulong[] userIds;
             lock (gconf.WaitingList)
             {

@@ -43,11 +43,12 @@ namespace Kerobot
         /// Called when a guild becomes available. The implementing class should construct an object to hold
         /// data specific to the corresponding guild for use during runtime.
         /// </summary>
+        /// <param name="guildID">Corresponding guild ID for the state data being used. Can be useful when reloading.</param>
         /// <param name="config">JSON token holding module configuration specific to this guild.</param>
         /// <returns>
         /// An object containing state and/or configuration information for the guild currently being processed.
         /// </returns>
-        public abstract Task<object> CreateGuildStateAsync(JToken config);
+        public abstract Task<object> CreateGuildStateAsync(ulong guildID, JToken config);
 
         /// <summary>
         /// Retrieves the state object that corresponds with the given guild.
@@ -98,10 +99,11 @@ namespace Kerobot
         /// EntityCache lookup to determine the target.
         /// </summary>
         /// <param name="targetSearch">The EntityCache search string.</param>
-        protected Task<BanKickResult> BanAsync(SocketGuild guild, SocketGuildUser source, string targetSearch, string reason, string dmMsg)
+        protected async Task<BanKickResult> BanAsync(SocketGuild guild, string source, string targetSearch, int purgeDays, string reason, string dmMsg)
         {
-            // TODO requires EntityCache lookup. Do this when that feature gets implemented.
-            throw new NotImplementedException();
+            var result = await Kerobot.EcQueryUser(guild.Id, targetSearch);
+            if (result == null) return new BanKickResult(null, false, true);
+            return await BanAsync(guild, source, result.UserID, purgeDays, reason, dmMsg);
         }
 
         /// <summary>
@@ -126,10 +128,11 @@ namespace Kerobot
         /// EntityCache lookup to determine the target.
         /// </summary>
         /// <param name="targetSearch">The EntityCache search string.</param>
-        protected Task<BanKickResult> KickAsync(SocketGuild guild, string source, string targetSearch, string reason, string dmMsg)
+        protected async Task<BanKickResult> KickAsync(SocketGuild guild, string source, string targetSearch, string reason, string dmMsg)
         {
-            // TODO requires EntityCache lookup. Do this when that feature gets implemented.
-            throw new NotImplementedException();
+            var result = await Kerobot.EcQueryUser(guild.Id, targetSearch);
+            if (result == null) return new BanKickResult(null, false, true);
+            return await KickAsync(guild, source, result.UserID, reason, dmMsg);
         }
     }
 

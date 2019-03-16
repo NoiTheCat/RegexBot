@@ -130,7 +130,7 @@ namespace Kerobot.Services.GuildState
                     object state;
                     try
                     {
-                        state = await mod.CreateGuildStateAsync(guildConf[tn]); // can be null
+                        state = await mod.CreateGuildStateAsync(guildId, guildConf[tn]); // can be null
                     }
                     catch (Exception ex)
                     {
