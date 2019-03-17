@@ -1,7 +1,6 @@
 ﻿using Discord.WebSocket;
 using NpgsqlTypes;
 using System;
-using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -133,6 +132,9 @@ namespace Kerobot.Services.EntityCache
         #region Querying
         private static Regex DiscriminatorSearch = new Regex(@"(.+)#(\d{4}(?!\d))", RegexOptions.Compiled);
 
+        /// <summary>
+        /// See <see cref="Kerobot.EcQueryUser(ulong, string)"/>.
+        /// </summary>
         internal async Task<CachedUser> Query(ulong guildID, string search)
         {
             // Is search just a number? Assume ID, pass it on to the correct place.

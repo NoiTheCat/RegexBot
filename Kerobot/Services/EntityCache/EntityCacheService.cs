@@ -18,7 +18,7 @@ namespace Kerobot.Services.EntityCache
         }
 
         /// <summary>
-        /// See documentation in Kerobot_hooks.
+        /// See <see cref="Kerobot.EcQueryUser(ulong, string)"/>.
         /// </summary>
         internal Task<CachedUser> QueryUserCache(ulong guildId, string search) => _uc.Query(guildId, search);
     }
