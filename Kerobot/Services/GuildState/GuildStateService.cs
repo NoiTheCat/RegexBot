@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord.WebSocket;
+using Kerobot.Common;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -14,13 +15,14 @@ namespace Kerobot.Services.GuildState
     class GuildStateService : Service
     {
         private readonly object _storageLock = new object();
-        private readonly Dictionary<ulong, Dictionary<Type, StateInfo>> _storage;
+        private readonly Dictionary<ulong, EntityList> _moderators;
+        private readonly Dictionary<ulong, Dictionary<Type, StateInfo>> _states;
 
         const string GuildLogSource = "Configuration loader";
 
         public GuildStateService(Kerobot kb) : base(kb)
         {
-            _storage = new Dictionary<ulong, Dictionary<Type, StateInfo>>();
+            _states = new Dictionary<ulong, Dictionary<Type, StateInfo>>();
             CreateDatabaseTablesAsync().Wait();
             
             kb.DiscordClient.GuildAvailable += DiscordClient_GuildAvailable;
@@ -39,7 +41,7 @@ namespace Kerobot.Services.GuildState
         private Task DiscordClient_LeftGuild(SocketGuild arg)
         {
             // TODO what is GuildUnavailable? Should we listen for that too?
-            lock (_storageLock) _storage.Remove(arg.Id);
+            lock (_storageLock) _states.Remove(arg.Id);
             return Task.CompletedTask;
         }
 
@@ -62,6 +64,7 @@ namespace Kerobot.Services.GuildState
             }
         }
 
+        #region Data output
         /// <summary>
         /// See <see cref="ModuleBase.GetGuildState{T}(ulong)"/>.
         /// </summary>
@@ -69,7 +72,7 @@ namespace Kerobot.Services.GuildState
         {
             lock (_storageLock)
             {
-                if (_storage.TryGetValue(guildId, out var tl))
+                if (_states.TryGetValue(guildId, out var tl))
                 {
                     if (tl.TryGetValue(t, out var val))
                     {
@@ -80,6 +83,19 @@ namespace Kerobot.Services.GuildState
                 return default;
             }
         }
+
+        /// <summary>
+        /// See <see cref="ModuleBase.GetModerators(ulong)"/>.
+        /// </summary>
+        public EntityList RetrieveGuildModerators(ulong guildId)
+        {
+            lock (_storageLock)
+            {
+                if (_moderators.TryGetValue(guildId, out var mods)) return mods;
+                else return new EntityList();
+            }
+        }
+        #endregion
 
         /// <summary>
         /// Guild-specific configuration begins processing here.
@@ -120,6 +136,10 @@ namespace Kerobot.Services.GuildState
 
             // TODO Guild-specific service options? If implemented, this is where to load them.
 
+            // Load moderator list
+            var mods = new EntityList(guildConf["Moderators"], true);
+
+            // Create guild state objects for all existing modules
             var newStates = new Dictionary<Type, StateInfo>();
             foreach (var mod in Kerobot.Modules)
             {
@@ -152,7 +172,11 @@ namespace Kerobot.Services.GuildState
                     return false;
                 }
             }
-            lock (_storageLock) _storage[guildId] = newStates;
+            lock (_storageLock)
+            {
+                _moderators[guildId] = mods;
+                _states[guildId] = newStates;
+            }
             return true;
         }
 

@@ -4,7 +4,7 @@ using System;
 namespace Kerobot.Services.GuildState
 {
     /// <summary>
-    /// Contains the guild state object and other useful metadata in regards to it.
+    /// Contains a guild state object and other useful metadata in regards to it.
     /// </summary>
     class StateInfo : IDisposable
     {

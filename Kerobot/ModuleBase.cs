@@ -1,4 +1,5 @@
 ﻿using Discord.WebSocket;
+using Kerobot.Common;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Diagnostics;
@@ -134,6 +135,15 @@ namespace Kerobot
             if (result == null) return new BanKickResult(null, false, true);
             return await KickAsync(guild, source, result.UserID, reason, dmMsg);
         }
+
+        /// <summary>
+        /// Returns the list of moderators defined in the current guild configuration.
+        /// </summary>
+        /// <returns>
+        /// An <see cref="EntityList"/> with corresponding moderator configuration data.
+        /// In case none exists, an empty list will be returned.
+        /// </returns>
+        protected EntityList GetModerators(ulong guild) => Kerobot.GetModerators(guild);
     }
 
     /// <summary>

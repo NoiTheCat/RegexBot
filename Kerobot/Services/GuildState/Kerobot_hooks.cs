@@ -1,4 +1,5 @@
-﻿using Kerobot.Services.GuildState;
+﻿using Kerobot.Common;
+using Kerobot.Services.GuildState;
 using System;
 
 namespace Kerobot
@@ -12,5 +13,10 @@ namespace Kerobot
         /// </summary>
         internal T GetGuildState<T>(ulong guild, Type type)
             => _svcGuildState.RetrieveGuildStateObject<T>(guild, type);
+
+        /// <summary>
+        /// See <see cref="ModuleBase.GetModerators(ulong)"/>.
+        /// </summary>
+        internal EntityList GetModerators(ulong guild) => _svcGuildState.RetrieveGuildModerators(guild);
     }
 }
