@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Discord.Net;
 using Discord.WebSocket;
 using static Kerobot.Kerobot;
@@ -22,15 +23,11 @@ namespace Kerobot.Services.CommonFunctions
         /// Common processing for kicks and bans. Called by DoKickAsync and DoBanAsync.
         /// </summary>
         /// <param name="logReason">The reason to insert into the Audit Log.</param>
-        /// <param name="dmTemplate">
-        /// The message to send out to the target. Leave null to not perform this action.
-        /// Instances of "%r" within it are replaced with <paramref name="logReason"/> and instances of "%g"
-        /// are replaced with the server name.
-        /// </param>
         internal async Task<BanKickResult> BanOrKickAsync(
             RemovalType t, SocketGuild guild, string source, ulong target, int banPurgeDays,
-            string logReason, string dmTemplate)
+            string logReason, bool sendDmToTarget)
         {
+            if (t == RemovalType.None) throw new ArgumentException("Removal type must be 'ban' or 'kick'.");
             if (string.IsNullOrWhiteSpace(logReason)) logReason = "Reason not specified.";
             var dmSuccess = true;
 
@@ -45,9 +42,9 @@ namespace Kerobot.Services.CommonFunctions
 #endif
 
             // Send DM notification
-            if (dmTemplate != null)
+            if (sendDmToTarget)
             {
-                if (utarget != null) dmSuccess = await BanKickSendNotificationAsync(utarget, dmTemplate, logReason);
+                if (utarget != null) dmSuccess = await BanKickSendNotificationAsync(utarget, t, logReason);
                 else dmSuccess = false;
             }
 
@@ -59,22 +56,23 @@ namespace Kerobot.Services.CommonFunctions
 #else
                 if (t == RemovalType.Ban) await guild.AddBanAsync(target, banPurgeDays);
                 else await utarget.KickAsync(logReason);
+                // TODO !! Insert ban reason! For kick also: Figure out a way to specify invoker.
 #endif
             }
             catch (HttpException ex)
             {
-                return new BanKickResult(ex, false, false);
+                return new BanKickResult(ex, dmSuccess, false);
             }
 
             return new BanKickResult(null, dmSuccess, false);
         }
 
-        private async Task<bool> BanKickSendNotificationAsync(SocketGuildUser target, string dmTemplate, string reason)
+        private async Task<bool> BanKickSendNotificationAsync(SocketGuildUser target, Kerobot.RemovalType action, string reason)
         {
-            if (dmTemplate == null) return true;
+            const string DMTemplate = "You have been {0} from {1} for the following reason:\n{2}";
 
-            var dch = await target.GetOrCreateDMChannelAsync();
-            string output = dmTemplate.Replace("%r", reason).Replace("%s", target.Guild.Name);
+            var dch = await target.GetOrCreateDMChannelAsync(); // TODO can this throw an exception?
+            var output = string.Format(DMTemplate, action == RemovalType.Ban ? "banned" : "kicked", target.Guild.Name, reason);
 
             try { await dch.SendMessageAsync(output); }
             catch (HttpException) { return false; }
