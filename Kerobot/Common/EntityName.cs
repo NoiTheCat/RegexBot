@@ -108,87 +108,6 @@ namespace Kerobot.Common
             if (!Id.HasValue) Id = id;
         }
 
-        #region Name to ID resolving
-        /// <summary>
-        /// Attempts to determine the corresponding ID if not already known.
-        /// Searches the specified guild and stores it into this instance if found.
-        /// Places the ID into <paramref name="id"/> when and if the result is known.
-        /// </summary>
-        /// <param name="searchType">The entity type to which this instance corresponds to.</param>
-        /// <param name="id">If known, outputs the ID of the corresponding entity.</param>
-        /// <param name="keepId">Specifies if the internal ID value should be stored if a match is found.</param>
-        /// <returns>True if the ID is known.</returns>
-        [Obsolete]
-        public bool TryResolve(SocketGuild searchGuild, out ulong id, bool keepId, EntityType searchType)
-        {
-            if (Id.HasValue)
-            {
-                id = Id.Value;
-                return true;
-            }
-            if (searchType != EntityType.Unspecified && Type == EntityType.Unspecified) Type = searchType;
-            if (string.IsNullOrWhiteSpace(Name))
-            {
-                id = default;
-                return false;
-            }
-
-            Predicate<ISnowflakeEntity> resolver;
-            IEnumerable<ISnowflakeEntity> collection;
-            switch (Type)
-            {
-                case EntityType.Role:
-                    collection = searchGuild.Roles;
-                    resolver = ResolveTryRole;
-                    break;
-                case EntityType.Channel:
-                    collection = searchGuild.TextChannels;
-                    resolver = ResolveTryChannel;
-                    break;
-                case EntityType.User:
-                    collection = searchGuild.Users;
-                    resolver = ResolveTryUser;
-                    break;
-                default:
-                    id = default;
-                    return false;
-            }
-
-            foreach (var item in collection)
-            {
-                if (resolver.Invoke(item))
-                {
-                    if (keepId) Id = item.Id;
-                    id = Id.Value;
-                    return true;
-                }
-            }
-
-            id = default;
-            return false;
-        }
-
-        private bool ResolveTryRole(ISnowflakeEntity entity)
-        {
-            var r = (SocketRole)entity;
-            return string.Equals(r.Name, this.Name, StringComparison.InvariantCultureIgnoreCase);
-        }
-
-        private bool ResolveTryChannel(ISnowflakeEntity entity)
-        {
-            var c = (SocketTextChannel)entity;
-            return string.Equals(c.Name, this.Name, StringComparison.InvariantCultureIgnoreCase);
-        }
-
-        private bool ResolveTryUser(ISnowflakeEntity entity)
-        {
-            var u = (SocketGuildUser)entity;
-            // Check username first, then nickname
-            return string.Equals(u.Username, this.Name, StringComparison.InvariantCultureIgnoreCase)
-                || string.Equals(u.Nickname, this.Name, StringComparison.InvariantCultureIgnoreCase);
-        }
-        #endregion
-
         /// <summary>
         /// Returns the appropriate prefix corresponding to an EntityType.
         /// </summary>
@@ -233,7 +152,7 @@ namespace Kerobot.Common
             if (this.Type != EntityType.Role)
                 throw new ArgumentException("This EntityName instance must correspond to a Role.");
 
-            bool dirty = false; // flag to update ID if possible regardless of updateMissingID setting
+            bool dirty = false; // flag for updating ID if possible regardless of updateMissingId setting
             if (this.Id.HasValue)
             {
                 var role = guild.GetRole(Id.Value);
@@ -245,6 +164,60 @@ namespace Kerobot.Common
             if (r != null && (updateMissingID || dirty)) this.Id = r.Id;
 
             return r;
+        }
+
+        /// <summary>
+        /// Attempts to find the corresponding user within the given guild.
+        /// </summary>
+        /// <param name="guild">The guild in which to search for the user.</param>
+        /// <param name="updateMissingID">
+        /// Specifies if this EntityName instance should keep the snowflake ID of the
+        /// corresponding user found in this guild, if it is not already known by this instance.
+        /// </param>
+        public SocketGuildUser FindUserIn(SocketGuild guild, bool updateMissingID = false)
+        {
+            if (this.Type != EntityType.User)
+                throw new ArgumentException("This EntityName instance must correspond to a User.");
+
+            bool dirty = false; // flag for updating ID if possible regardless of updateMissingId setting
+            if (this.Id.HasValue)
+            {
+                var user = guild.GetUser(Id.Value);
+                if (user != null) return user;
+                else dirty = true; // only set if ID already existed but is now invalid
+            }
+
+            var u = guild.Users.FirstOrDefault(rq => string.Equals(rq.Username, this.Name, StringComparison.OrdinalIgnoreCase));
+            if (u != null && (updateMissingID || dirty)) this.Id = u.Id;
+
+            return u;
+        }
+
+        /// <summary>
+        /// Attempts to find the corresponding channel within the given guild.
+        /// </summary>
+        /// <param name="guild">The guild in which to search for the channel.</param>
+        /// <param name="updateMissingID">
+        /// Specifies if this EntityName instance should keep the snowflake ID of the
+        /// corresponding channel found in this guild, if it is not already known by this instance.
+        /// </param>
+        public SocketTextChannel FindChannelIn(SocketGuild guild, bool updateMissingID = false)
+        {
+            if (this.Type != EntityType.Channel)
+                throw new ArgumentException("This EntityName instance must correspond to a Channel.");
+
+            bool dirty = false; // flag for updating ID if possible regardless of updateMissingId setting
+            if (this.Id.HasValue)
+            {
+                var channel = guild.GetTextChannel(Id.Value);
+                if (channel != null) return channel;
+                else dirty = true; // only set if ID already existed but is now invalid
+            }
+
+            var c = guild.TextChannels.FirstOrDefault(rq => string.Equals(rq.Name, this.Name, StringComparison.OrdinalIgnoreCase));
+            if (c != null && (updateMissingID || dirty)) this.Id = c.Id;
+
+            return c;
         }
         #endregion
     }
