@@ -3,6 +3,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -107,21 +108,40 @@ namespace Kerobot.Modules.EntryRole
             var targetRole = gconf.TargetRole.FindRoleIn(g, true);
             if (targetRole == null)
             {
-                // Notify of this failure.
-                string failList = "";
-                foreach (var item in gusers) failList += $", {item.Username}#{item.Discriminator}";
-
-                await LogAsync(g.Id, "Unable to find role to apply. (Was the role deleted?) " +
-                    "Failed to set role to the following users: " + failList.Substring(2));
+                await ReportFailure(g.Id, "Unable to determine role to be applied. Does it still exist?", gusers);
+                return;
             }
 
             // Apply roles
-            foreach (var item in gusers)
+            try
             {
-                // TODO exception handling and notification on forbidden
-                if (item.Roles.Contains(targetRole)) continue;
-                await item.AddRoleAsync(targetRole);
+                foreach (var item in gusers)
+                {
+                    if (item.Roles.Contains(targetRole)) continue;
+                    await item.AddRoleAsync(targetRole);
+                }
             }
+            catch (Discord.Net.HttpException ex) when (ex.HttpCode == System.Net.HttpStatusCode.Forbidden)
+            {
+                await ReportFailure(g.Id, "Unable to set role due to a permissions issue.", gusers);
+            }
+        }
+
+        private async Task ReportFailure(ulong gid, string message, IEnumerable<SocketGuildUser> failedUserList)
+        {
+            var failList = new StringBuilder();
+            var count = 0;
+            foreach (var item in failedUserList) {
+                failList.Append($", {item.Username}#{item.Discriminator}");
+                count++;
+                if (count > 5)
+                {
+                    failList.Append($"and {count} other(s).");
+                    break;
+                }
+            }
+            failList.Remove(0, 2);
+            await LogAsync(gid, message + " Failed while attempting to set role on the following users: " + failList.ToString());
         }
     }
 }
