@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using Kerobot.Common;
@@ -22,6 +24,7 @@ namespace Kerobot.Services.GuildState
 
         public GuildStateService(Kerobot kb) : base(kb)
         {
+            _moderators = new Dictionary<ulong, EntityList>();
             _states = new Dictionary<ulong, Dictionary<Type, StateInfo>>();
             CreateDatabaseTablesAsync().Wait();
             
@@ -110,7 +113,6 @@ namespace Kerobot.Services.GuildState
         {
             
             var jstr = await RetrieveConfiguration(guildId);
-            if (jstr == null) jstr = await RetrieveDefaultConfiguration();
             int jstrHash = jstr.GetHashCode();
             JObject guildConf;
             try
@@ -208,7 +210,7 @@ namespace Kerobot.Services.GuildState
                     c.CommandText = $"insert into {DBTableName} (rev_id, guild_id, author, config_json) "
                         + "values (0, 0, 0, @Json) "
                         + "on conflict (rev_id) do nothing";
-                    c.Parameters.Add("@Json", NpgsqlTypes.NpgsqlDbType.Text).Value = PreloadDefaultGuildJson();
+                    c.Parameters.Add("@Json", NpgsqlTypes.NpgsqlDbType.Text).Value = GetDefaultConfiguration();
                     c.Prepare();
                     await c.ExecuteNonQueryAsync();
                 }
@@ -217,43 +219,28 @@ namespace Kerobot.Services.GuildState
 
         private async Task<string> RetrieveConfiguration(ulong guildId)
         {
-            using (var db = await Kerobot.GetOpenNpgsqlConnectionAsync())
+            // Offline option: Per-guild configuration exists under `config/(guild ID).json`
+            var basePath = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location) +
+                Path.DirectorySeparatorChar + "config" + Path.DirectorySeparatorChar;
+            if (!Directory.Exists(basePath)) Directory.CreateDirectory(basePath);
+            var path = basePath + guildId + ".json";
+            if (File.Exists(path))
             {
-                using (var c = db.CreateCommand())
-                {
-                    c.CommandText = $"select config_json from {DBTableName} where guild_id = {guildId} "
-                        + "order by rev_id desc limit 1";
-                    using (var r = await c.ExecuteReaderAsync())
-                    {
-                        if (await r.ReadAsync())
-                        {
-                            return r.GetString(0);
-                        }
-                        return null;
-                    }
-                }
+                return await File.ReadAllTextAsync(path);
             }
-        }
-
-        private async Task<string> RetrieveDefaultConfiguration()
-        {
-            using (var db = await Kerobot.GetOpenNpgsqlConnectionAsync())
+            else
             {
-                using (var c = db.CreateCommand())
-                {
-                    c.CommandText = $"select config_json from {DBTableName} where rev_id = 0";
-                    using (var r = await c.ExecuteReaderAsync())
-                    {
-                        if (await r.ReadAsync()) return r.GetString(0);
-                    }
-                }
+                await File.WriteAllTextAsync(path, GetDefaultConfiguration());
+                await Log($"Created initial configuration file in config{Path.DirectorySeparatorChar}{guildId}.json");
+                return await RetrieveConfiguration(guildId);
             }
-            throw new Exception("Unable to retrieve fallback configuration.");
         }
         #endregion
 
-        // Default guild configuration JSON is embedded in assembly.
-        private string PreloadDefaultGuildJson()
+        /// <summary>
+        /// Retrieves the default configuration loaded within the assembly.
+        /// </summary>
+        private string GetDefaultConfiguration()
         {
             const string ResourceName = "Kerobot.DefaultGuildConfig.json";
 
