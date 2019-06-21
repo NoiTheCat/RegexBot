@@ -23,8 +23,9 @@ namespace Kerobot.Modules.RegexModerator
             if (config == null) return Task.FromResult<object>(null);
             var defs = new List<ConfDefinition>();
 
+            // TODO better error reporting during this process
             foreach (var def in config.Children<JObject>())
-                defs.Add(new ConfDefinition(this, def, guildID));
+                defs.Add(new ConfDefinition(def));
 
             if (defs.Count == 0) return Task.FromResult<object>(null);
             return Task.FromResult<object>(defs.AsReadOnly());
@@ -49,19 +50,23 @@ namespace Kerobot.Modules.RegexModerator
 
             // Send further processing to thread pool.
             // Match checking is a CPU-intensive task, thus very little checking is done here.
+
+
+            var msgProcessingTasks = new List<Task>();
             foreach (var item in defs)
             {
                 // Need to check sender's moderator status here. Definition can't access mod list.
                 var isMod = GetModerators(ch.Guild.Id).IsListMatch(msg, true);
 
                 var match = item.IsMatch(msg, isMod);
-                await Task.Run(async () => await ProcessMessage(item, msg, isMod));
+                msgProcessingTasks.Add(Task.Run(async () => await ProcessMessage(item, msg, isMod)));
             }
+            await Task.WhenAll(msgProcessingTasks);
         }
 
         /// <summary>
         /// Does further message checking and response execution.
-        /// Invocations of this method are meant to be on the thread pool.
+        /// Invocations of this method are meant to be placed onto a thread separate from the caller.
         /// </summary>
         private async Task ProcessMessage(ConfDefinition def, SocketMessage msg, bool isMod)
         {

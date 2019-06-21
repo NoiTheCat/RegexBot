@@ -38,7 +38,7 @@ namespace Kerobot.Modules.AutoResponder
         public override Task<object> CreateGuildStateAsync(ulong guild, JToken config)
         {
             // Guild state is a read-only IEnumerable<Definition>
-            if (config == null) return null;
+            if (config == null) return Task.FromResult<object>(null);
             var guildDefs = new List<Definition>();
             foreach (var defconf in config.Children<JProperty>())
             {

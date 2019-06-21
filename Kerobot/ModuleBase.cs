@@ -88,23 +88,20 @@ namespace Kerobot
         /// <param name="targetUser">The user which to perform the action to.</param>
         /// <param name="purgeDays">Number of days of prior post history to delete on ban. Must be between 0-7.</param>
         /// <param name="reason">Reason for the action. Sent to the Audit Log and user (if specified).</param>
-        /// <param name="dmMsg">
-        /// Message to DM the target user. Set null to disable. Instances of "%s" are replaced with the guild name
-        /// and instances of "%r" are replaced with the reason.
-        /// </param>
-        protected Task<BanKickResult> BanAsync(SocketGuild guild, string source, ulong targetUser, int purgeDays, string reason, string dmMsg)
-            => Kerobot.BanOrKickAsync(RemovalType.Ban, guild, source, targetUser, purgeDays, reason, dmMsg);
+        /// <param name="sendDMToTarget">Specify whether to send a direct message to the target user informing them of the action being taken.</param>
+        protected Task<BanKickResult> BanAsync(SocketGuild guild, string source, ulong targetUser, int purgeDays, string reason, bool sendDMToTarget)
+            => Kerobot.BanOrKickAsync(RemovalType.Ban, guild, source, targetUser, purgeDays, reason, sendDMToTarget);
 
         /// <summary>
-        /// Similar to <see cref="BanAsync(SocketGuild, string, ulong, int, string, string)"/>, but making use of an
+        /// Similar to <see cref="BanAsync(SocketGuild, string, ulong, int, string, bool)"/>, but making use of an
         /// EntityCache lookup to determine the target.
         /// </summary>
         /// <param name="targetSearch">The EntityCache search string.</param>
-        protected async Task<BanKickResult> BanAsync(SocketGuild guild, string source, string targetSearch, int purgeDays, string reason, string dmMsg)
+        protected async Task<BanKickResult> BanAsync(SocketGuild guild, string source, string targetSearch, int purgeDays, string reason, bool sendDMToTarget)
         {
             var result = await Kerobot.EcQueryUser(guild.Id, targetSearch);
             if (result == null) return new BanKickResult(null, false, true);
-            return await BanAsync(guild, source, result.UserID, purgeDays, reason, dmMsg);
+            return await BanAsync(guild, source, result.UserID, purgeDays, reason, sendDMToTarget);
         }
 
         /// <summary>
@@ -117,23 +114,20 @@ namespace Kerobot
         /// <param name="source">The user, if any, which requested the action to be taken.</param>
         /// <param name="targetUser">The user which to perform the action to.</param>
         /// <param name="reason">Reason for the action. Sent to the Audit Log and user (if specified).</param>
-        /// <param name="dmMsg">
-        /// Message to DM the target user. Set null to disable. Instances of "%s" are replaced with the guild name
-        /// and instances of "%r" are replaced with the reason.
-        /// </param>
-        protected Task<BanKickResult> KickAsync(SocketGuild guild, string source, ulong targetUser, string reason, string dmMsg)
-            => Kerobot.BanOrKickAsync(RemovalType.Ban, guild, source, targetUser, 0, reason, dmMsg);
+        /// <param name="sendDMToTarget">Specify whether to send a direct message to the target user informing them of the action being taken.</param>
+        protected Task<BanKickResult> KickAsync(SocketGuild guild, string source, ulong targetUser, string reason, bool sendDMToTarget)
+            => Kerobot.BanOrKickAsync(RemovalType.Ban, guild, source, targetUser, 0, reason, sendDMToTarget);
 
         /// <summary>
-        /// Similar to <see cref="KickAsync(SocketGuild, string, ulong, string, string)"/>, but making use of an
+        /// Similar to <see cref="KickAsync(SocketGuild, string, ulong, string, bool)"/>, but making use of an
         /// EntityCache lookup to determine the target.
         /// </summary>
         /// <param name="targetSearch">The EntityCache search string.</param>
-        protected async Task<BanKickResult> KickAsync(SocketGuild guild, string source, string targetSearch, string reason, string dmMsg)
+        protected async Task<BanKickResult> KickAsync(SocketGuild guild, string source, string targetSearch, string reason, bool sendDMToTarget)
         {
             var result = await Kerobot.EcQueryUser(guild.Id, targetSearch);
             if (result == null) return new BanKickResult(null, false, true);
-            return await KickAsync(guild, source, result.UserID, reason, dmMsg);
+            return await KickAsync(guild, source, result.UserID, reason, sendDMToTarget);
         }
 
         /// <summary>

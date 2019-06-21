@@ -66,7 +66,7 @@ namespace Kerobot.Services.EntityCache
                     c.CommandText = $"create or replace view {UserView} as " +
                         $"select {GlobalUserTable}.user_id, {GuildUserTable}.guild_id, {GuildUserTable}.first_seen, " +
                         $"{GuildUserTable}.cache_update_time, " +
-                        $"{GlobalUserTable}.username, {GlobalUserTable}.discriminator, {GlobalUserTable}.nickname, " +
+                        $"{GlobalUserTable}.username, {GlobalUserTable}.discriminator, {GuildUserTable}.nickname, " +
                         $"{GlobalUserTable}.avatar_url " +
                         $"from {GlobalUserTable} join {GuildUserTable} on {GlobalUserTable}.user_id = {GuildUserTable}.user_id";
                     await c.ExecuteNonQueryAsync();
@@ -90,7 +90,7 @@ namespace Kerobot.Services.EntityCache
                         "on conflict (user_id) do update " +
                         "set cache_update_time = EXCLUDED.cache_update_time, username = EXCLUDED.username, " +
                         "discriminator = EXCLUDED.discriminator, avatar_url = EXCLUDED.avatar_url";
-                    c.Parameters.Add("@Uid", NpgsqlDbType.Bigint).Value = current.Id;
+                    c.Parameters.Add("@Uid", NpgsqlDbType.Bigint).Value = (long)current.Id;
                     c.Parameters.Add("@Uname", NpgsqlDbType.Text).Value = current.Username;
                     c.Parameters.Add("@Disc", NpgsqlDbType.Text).Value = current.Discriminator;
                     var aurl = c.Parameters.Add("@Aurl", NpgsqlDbType.Text);
@@ -106,6 +106,9 @@ namespace Kerobot.Services.EntityCache
 
         private async Task DiscordClient_GuildMemberUpdated(SocketGuildUser old, SocketGuildUser current)
         {
+            // Also update user data here, in case it's unknown (avoid foreign key constraint violation)
+            await DiscordClient_UserUpdated(old, current);
+
             using (var db = await _kb.GetOpenNpgsqlConnectionAsync())
             {
                 using (var c = db.CreateCommand())
@@ -113,11 +116,10 @@ namespace Kerobot.Services.EntityCache
                     c.CommandText = $"insert into {GuildUserTable} " +
                         "(user_id, guild_id, cache_update_time, nickname) values " +
                         "(@Uid, @Gid, now(), @Nname) " +
-                        "on conflict (user_id) do update " +
-                        "set cache_update_time = EXCLUDED.cache_update_time, username = EXCLUDED.username, " +
-                        "discriminator = EXCLUDED.discriminator, avatar_url = EXCLUDED.avatar_url";
-                    c.Parameters.Add("@Uid", NpgsqlDbType.Bigint).Value = current.Id;
-                    c.Parameters.Add("@Gid", NpgsqlDbType.Bigint).Value = current.Guild.Id;
+                        "on conflict (user_id, guild_id) do update " +
+                        "set cache_update_time = EXCLUDED.cache_update_time, nickname = EXCLUDED.nickname";
+                    c.Parameters.Add("@Uid", NpgsqlDbType.Bigint).Value = (long)current.Id;
+                    c.Parameters.Add("@Gid", NpgsqlDbType.Bigint).Value = (long)current.Guild.Id;
                     var nname = c.Parameters.Add("@Nname", NpgsqlDbType.Text);
                     if (current.Nickname != null) nname.Value = current.Nickname;
                     else nname.Value = DBNull.Value;
@@ -130,7 +132,7 @@ namespace Kerobot.Services.EntityCache
         #endregion
 
         #region Querying
-        private static Regex DiscriminatorSearch = new Regex(@"(.+)#(\d{4}(?!\d))", RegexOptions.Compiled);
+        private static readonly Regex DiscriminatorSearch = new Regex(@"(.+)#(\d{4}(?!\d))", RegexOptions.Compiled);
 
         /// <summary>
         /// See <see cref="Kerobot.EcQueryUser(ulong, string)"/>.
@@ -174,12 +176,12 @@ namespace Kerobot.Services.EntityCache
                 var c = db.CreateCommand();
                 c.CommandText = $"select * from {UserView} " +
                     "where guild_id = @Gid";
-                c.Parameters.Add("@Gid", NpgsqlDbType.Bigint).Value = guildId;
+                c.Parameters.Add("@Gid", NpgsqlDbType.Bigint).Value = (long)guildId;
 
                 if (sID.HasValue)
                 {
                     c.CommandText += " and user_id = @Uid";
-                    c.Parameters.Add("@Uid", NpgsqlDbType.Bigint).Value = sID.Value;
+                    c.Parameters.Add("@Uid", NpgsqlDbType.Bigint).Value = (long)sID.Value;
                 }
 
                 if (sName != null)

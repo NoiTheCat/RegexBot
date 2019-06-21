@@ -46,7 +46,7 @@ namespace Kerobot
             // Everything's ready to go. Print the welcome message here.
             var ver = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
             InstanceLogAsync(false, "Kerobot",
-                $"This is Kerobot v{ver.ToString(3)}. https://github.com/Noikoio/Kerobot").Wait();
+                $"This is Kerobot v{ver.ToString(3)}. https://github.com/Noiiko/Kerobot").Wait();
 
             // We return to Program.cs at this point.
         }

@@ -149,15 +149,15 @@ namespace Kerobot.Services.GuildState
                 var tn = t.Name;
                 try
                 {
-                    object state;
                     try
                     {
-                        state = await mod.CreateGuildStateAsync(guildId, guildConf[tn]); // can be null
+                        var state = await mod.CreateGuildStateAsync(guildId, guildConf[tn]); // can be null
+                        newStates.Add(t, new StateInfo(state, jstrHash));
                     }
-                    catch (Exception ex)
+                    catch (Exception ex) when (!(ex is ModuleLoadException))
                     {
-                        Log("Encountered unhandled exception during guild state initialization:\n" +
-                            $"Module: {tn}\n" +
+                        Log("Unhandled exception while initializing guild state for module:\n" +
+                            $"Module: {tn} | " +
                             $"Guild: {guildId} ({Kerobot.DiscordClient.GetGuild(guildId)?.Name ?? "unknown name"})\n" +
                             $"```\n{ex.ToString()}\n```", true).Wait();
                         Kerobot.GuildLogAsync(guildId, GuildLogSource,
@@ -165,7 +165,6 @@ namespace Kerobot.Services.GuildState
                             "The bot owner has been notified.").Wait();
                         return false;
                     }
-                    newStates.Add(t, new StateInfo(state, jstrHash));
                 }
                 catch (ModuleLoadException ex)
                 {

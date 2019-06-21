@@ -35,10 +35,10 @@ namespace Kerobot.Services.Logging
         /// </summary>
         private async Task DiscordClient_Log(LogMessage arg)
         {
-            var ts = DateTimeOffset.UtcNow;
-            bool important = arg.Severity > LogSeverity.Info;
+            bool important = arg.Severity != LogSeverity.Info;
             string msg = $"[{Enum.GetName(typeof(LogSeverity), arg.Severity)}] {arg.Message}";
             const string logSource = "Discord.Net";
+            if (arg.Exception != null) msg += "\n```\n" + arg.Exception.ToString() + "\n```";
 
             if (important) await DoInstanceLogAsync(true, logSource, msg);
             else FormatToConsole(DateTimeOffset.UtcNow, logSource, msg);
@@ -64,7 +64,7 @@ namespace Kerobot.Services.Logging
                 using (var c = db.CreateCommand())
                 {
                     c.CommandText = "create index if not exists " +
-                        $"{TableLog}_guildid_idx on {TableLog} guild_id";
+                        $"{TableLog}_guild_id_idx on {TableLog} (guild_id)";
                     await c.ExecuteNonQueryAsync();
                 }
             }
@@ -78,8 +78,8 @@ namespace Kerobot.Services.Logging
                 {
                     c.CommandText = $"insert into {TableLog} (guild_id, log_timestamp, log_source, message) values"
                         + "(@Gid, @Ts, @Src, @Msg)";
-                    c.Parameters.Add("@Gid", NpgsqlDbType.Bigint).Value = guildId;
-                    c.Parameters.Add("@Ts", NpgsqlDbType.TimestampTZ).Value = timestamp;
+                    c.Parameters.Add("@Gid", NpgsqlDbType.Bigint).Value = (long)guildId;
+                    c.Parameters.Add("@Ts", NpgsqlDbType.TimestampTz).Value = timestamp;
                     c.Parameters.Add("@Src", NpgsqlDbType.Text).Value = source;
                     c.Parameters.Add("@Msg", NpgsqlDbType.Text).Value = message;
                     c.Prepare();
@@ -126,6 +126,7 @@ namespace Kerobot.Services.Logging
             }
 
             // Report to logging channel if necessary and possible
+            // TODO replace with webhook?
             var (g, c) = Kerobot.Config.InstanceLogReportTarget;
             if ((insertException != null || report) &&
                 g != 0 && c != 0 && Kerobot.DiscordClient.ConnectionState == ConnectionState.Connected)
@@ -142,7 +143,8 @@ namespace Kerobot.Services.Logging
                         {
                             Footer = new EmbedFooterBuilder() { Text = Name },
                             Timestamp = DateTimeOffset.UtcNow,
-                            Description = "Error during recording to instance log.\nCheck the console.",
+                            Description = "Error during recording to instance log: `" +
+                                insertException.Message + "`\nCheck the console.",
                             Color = Color.DarkRed
                         };
                         await ch.SendMessageAsync("", embed: e.Build());

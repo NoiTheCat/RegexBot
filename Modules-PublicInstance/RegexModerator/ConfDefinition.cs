@@ -18,8 +18,6 @@ namespace Kerobot.Modules.RegexModerator
     class ConfDefinition
     {
         public string Label { get; }
-        readonly RegexModerator _module; // TODO is this needed?
-        readonly ulong _guild; // corresponding guild, for debug purposes. (is this needed?)
 
         // Matching settings
         readonly IEnumerable<Regex> _regex;
@@ -40,10 +38,8 @@ namespace Kerobot.Modules.RegexModerator
         public bool RemovalSendUserNotification; // send ban/kick notification to user?
         public bool DeleteMessage { get; }
 
-        public ConfDefinition(RegexModerator instance, JObject def, ulong guildId)
+        public ConfDefinition(JObject def)
         {
-            _module = instance;
-
             Label = def["Label"].Value<string>();
             if (string.IsNullOrWhiteSpace(Label))
                 throw new ModuleLoadException("A rule does not have a label defined.");

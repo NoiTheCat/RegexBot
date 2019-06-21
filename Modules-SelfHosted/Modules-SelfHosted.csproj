@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
-    <Authors>Noikoio</Authors>
+    <Authors>Noiiko</Authors>
     <Product>Kerobot</Product>
     <Version>0.0.1</Version>
     <Description>Kerobot modules with more specific purposes that may not work well in a public instance, but are manageable in self-hosted bot instances.</Description>

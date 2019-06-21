@@ -45,7 +45,7 @@ namespace Kerobot
                     Console.WriteLine(ex.ToString());
                     Environment.Exit(2);
                 }
-                modules.AddRange(LoadModulesFromAssembly(a, k));
+                modules.AddRange(amods);
             }
             return modules.AsReadOnly();
         }
@@ -56,15 +56,14 @@ namespace Kerobot
                                 where !type.IsAssignableFrom(typeof(ModuleBase))
                                 where type.GetCustomAttribute<KerobotModuleAttribute>() != null
                                 select type;
-            k.InstanceLogAsync(false, LogName,
-                $"{asm.GetName().Name} has {eligibleTypes.Count()} usable types");
+            k.InstanceLogAsync(false, LogName, $"Scanning {asm.GetName().Name}");
 
             var newmods = new List<ModuleBase>();
             foreach (var t in eligibleTypes)
             {
                 var mod = Activator.CreateInstance(t, k);
                 k.InstanceLogAsync(false, LogName,
-                    $"---> Instance created: {t.FullName}");
+                    $"---> Loading module {t.FullName}");
                 newmods.Add((ModuleBase)mod);
             }
             return newmods;

@@ -1,9 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
-    <Authors>Noikoio</Authors>
-    <Company>Noikoio</Company>
+    <Authors>Noiiko</Authors>
     <Product>Kerobot</Product>
     <Version>0.0.1</Version>
     <Description>Essential functions for Kerobot which are available in the public bot instance.</Description>
