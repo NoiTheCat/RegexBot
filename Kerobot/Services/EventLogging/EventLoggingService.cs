@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Discord;
 using NpgsqlTypes;
 
-namespace Kerobot.Services.Logging
+namespace Kerobot.Services.EventLogging
 {
     /// <summary>
     /// Implements logging. Logging is distinguished into two types: Instance and per-guild.
@@ -11,12 +11,12 @@ namespace Kerobot.Services.Logging
     /// by moderators of a particular guild. All log messages are backed by database.
     /// Instance logs are stored as guild ID 0.
     /// </summary>
-    class LoggingService : Service
+    class EventLoggingService : Service
     {
         // Note: Service.Log's functionality is implemented here. Don't use it within this class.
         // If necessary, use DoInstanceLogAsync instead.
 
-        internal LoggingService(Kerobot kb) : base(kb)
+        internal EventLoggingService(Kerobot kb) : base(kb)
         {
             // Create logging table
             CreateDatabaseTablesAsync().Wait();

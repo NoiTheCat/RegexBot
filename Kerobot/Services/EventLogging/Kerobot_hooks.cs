@@ -1,11 +1,11 @@
-﻿using Kerobot.Services.Logging;
+﻿using Kerobot.Services.EventLogging;
 using System.Threading.Tasks;
 
 namespace Kerobot
 {
     partial class Kerobot
     {
-        LoggingService _svcLogging;
+        EventLoggingService _svcLogging;
 
         /// <summary>
         /// Appends a log message to the instance log.

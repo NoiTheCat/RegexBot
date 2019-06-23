@@ -56,7 +56,7 @@ namespace Kerobot
             var svcList = new List<Service>();
 
             // Put services here as they become usable.
-            _svcLogging = new Services.Logging.LoggingService(this);
+            _svcLogging = new Services.EventLogging.EventLoggingService(this);
             svcList.Add(_svcLogging);
             _svcGuildState = new Services.GuildState.GuildStateService(this);
             svcList.Add(_svcGuildState);
