@@ -125,8 +125,8 @@ namespace Noikoio.RegexBot.EntityCache
                 {
                     c.CommandText = $"SELECT {QueryColumns} FROM {SqlHelper.TableUser} WHERE "
                         + "user_id = @Uid AND guild_id = @Gid";
-                    c.Parameters.Add("@Uid", NpgsqlTypes.NpgsqlDbType.Bigint).Value = user;
-                    c.Parameters.Add("@Gid", NpgsqlTypes.NpgsqlDbType.Bigint).Value = guild;
+                    c.Parameters.Add("@Uid", NpgsqlTypes.NpgsqlDbType.Bigint).Value = (long)user;
+                    c.Parameters.Add("@Gid", NpgsqlTypes.NpgsqlDbType.Bigint).Value = (long)guild;
                     c.Prepare();
                     using (var r = await c.ExecuteReaderAsync())
                     {

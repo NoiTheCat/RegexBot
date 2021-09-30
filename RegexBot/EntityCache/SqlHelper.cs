@@ -102,7 +102,7 @@ namespace Noikoio.RegexBot.EntityCache
                         + "VALUES (@GuildId, now(), @CurrentName) "
                         + "ON CONFLICT (guild_id) DO UPDATE SET "
                         + "current_name = EXCLUDED.current_name, cache_date = EXCLUDED.cache_date";
-                    c.Parameters.Add("@GuildId", NpgsqlDbType.Bigint).Value = g.Id;
+                    c.Parameters.Add("@GuildId", NpgsqlDbType.Bigint).Value = (long)g.Id;
                     c.Parameters.Add("@CurrentName", NpgsqlDbType.Text).Value = g.Name;
                     c.Prepare();
                     await c.ExecuteNonQueryAsync();
@@ -140,8 +140,8 @@ namespace Noikoio.RegexBot.EntityCache
                     {
                         if (item.IsWebhook) continue;
 
-                        uid.Value = item.Id;
-                        gid.Value = item.Guild.Id;
+                        uid.Value = (long)item.Id;
+                        gid.Value = (long)item.Guild.Id;
                         uname.Value = item.Username;
                         disc.Value = item.Discriminator;
                         nname.Value = item.Nickname;
@@ -180,8 +180,8 @@ namespace Noikoio.RegexBot.EntityCache
                     {
                         if (!(item is ITextChannel ich)) continue;
 
-                        cid.Value = item.Id;
-                        gid.Value = item.Guild.Id;
+                        cid.Value = (long)item.Id;
+                        gid.Value = (long)item.Guild.Id;
                         cname.Value = item.Name;
                         await c.ExecuteNonQueryAsync();
                     }

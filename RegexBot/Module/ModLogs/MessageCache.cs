@@ -105,7 +105,7 @@ namespace Noikoio.RegexBot.Module.ModLogs
                     {
                         c.CommandText = "SELECT author_id, message, created_ts, edited_ts as msgtime FROM " + TableMessage
                             + " WHERE message_id = @MessageId";
-                        c.Parameters.Add("@MessageId", NpgsqlDbType.Bigint).Value = messageId;
+                        c.Parameters.Add("@MessageId", NpgsqlDbType.Bigint).Value = (long)messageId;
                         c.Prepare();
                         using (var r = await c.ExecuteReaderAsync())
                         {
@@ -320,15 +320,15 @@ namespace Noikoio.RegexBot.Module.ModLogs
                             + " (@MessageId, @UserId, @GuildId, @ChannelId, @Date, @Edit, @Message)"
                             + " ON CONFLICT (message_id) DO UPDATE"
                             + " SET message = EXCLUDED.message, edited_ts = EXCLUDED.edited_ts";
-                        c.Parameters.Add("@MessageId", NpgsqlDbType.Bigint).Value = msg.Id;
-                        c.Parameters.Add("@UserId", NpgsqlDbType.Bigint).Value = msg.Author.Id;
-                        c.Parameters.Add("@GuildId", NpgsqlDbType.Bigint).Value = ((SocketGuildUser)msg.Author).Guild.Id;
-                        c.Parameters.Add("@ChannelId", NpgsqlDbType.Bigint).Value = msg.Channel.Id;
-                        c.Parameters.Add("@Date", NpgsqlDbType.TimestampTZ).Value = msg.Timestamp;
+                        c.Parameters.Add("@MessageId", NpgsqlDbType.Bigint).Value = (long)msg.Id;
+                        c.Parameters.Add("@UserId", NpgsqlDbType.Bigint).Value = (long)msg.Author.Id;
+                        c.Parameters.Add("@GuildId", NpgsqlDbType.Bigint).Value = (long)((SocketGuildUser)msg.Author).Guild.Id;
+                        c.Parameters.Add("@ChannelId", NpgsqlDbType.Bigint).Value = (long)msg.Channel.Id;
+                        c.Parameters.Add("@Date", NpgsqlDbType.TimestampTz).Value = msg.Timestamp;
                         if (msg.EditedTimestamp.HasValue)
-                            c.Parameters.Add("@Edit", NpgsqlDbType.TimestampTZ).Value = msg.EditedTimestamp.Value;
+                            c.Parameters.Add("@Edit", NpgsqlDbType.TimestampTz).Value = msg.EditedTimestamp.Value;
                         else
-                            c.Parameters.Add("@Edit", NpgsqlDbType.TimestampTZ).Value = DBNull.Value;
+                            c.Parameters.Add("@Edit", NpgsqlDbType.TimestampTz).Value = DBNull.Value;
                         c.Parameters.Add("@Message", NpgsqlDbType.Text).Value = dbinsert.ToString();
                         c.Prepare();
                         await c.ExecuteNonQueryAsync();
@@ -351,7 +351,7 @@ namespace Noikoio.RegexBot.Module.ModLogs
                     {
                         c.CommandText = "SELECT message FROM " + TableMessage
                             + " WHERE message_id = @MessageId";
-                        c.Parameters.Add("@MessageId", NpgsqlDbType.Bigint).Value = messageId;
+                        c.Parameters.Add("@MessageId", NpgsqlDbType.Bigint).Value = (long)messageId;
                         c.Prepare();
                         using (var r = await c.ExecuteReaderAsync())
                         {

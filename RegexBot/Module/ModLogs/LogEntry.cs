@@ -178,8 +178,8 @@ namespace Noikoio.RegexBot.Module.ModLogs
                 {
                     c.CommandText = $"SELECT {QueryColumns} FROM {TblEntry} "
                         + "WHERE guild_id = @Guild and id = @Id";
-                    c.Parameters.Add("@Guild", NpgsqlTypes.NpgsqlDbType.Bigint).Value = guild;
-                    c.Parameters.Add("@Id", NpgsqlTypes.NpgsqlDbType.Numeric).Value = id;
+                    c.Parameters.Add("@Guild", NpgsqlTypes.NpgsqlDbType.Bigint).Value = (long)guild;
+                    c.Parameters.Add("@Id", NpgsqlTypes.NpgsqlDbType.Numeric).Value = (long)id;
                     c.Prepare();
                     using (var r = await c.ExecuteReaderAsync())
                     {
@@ -221,21 +221,21 @@ namespace Noikoio.RegexBot.Module.ModLogs
                         if (and) c.CommandText += " AND";
                         else and = true;
                         c.CommandText += " target_id = @TargetId";
-                        c.Parameters.Add("@TargetId", NpgsqlTypes.NpgsqlDbType.Bigint).Value = target.Value;
+                        c.Parameters.Add("@TargetId", NpgsqlTypes.NpgsqlDbType.Bigint).Value = (long)target.Value;
                     }
                     if (invoker.HasValue)
                     {
                         if (and) c.CommandText += " AND";
                         else and = true;
                         c.CommandText += " invoke_id = @InvokeId";
-                        c.Parameters.Add("@InvokeId", NpgsqlTypes.NpgsqlDbType.Bigint).Value = invoker.Value;
+                        c.Parameters.Add("@InvokeId", NpgsqlTypes.NpgsqlDbType.Bigint).Value = (long)invoker.Value;
                     }
                     if (channel.HasValue)
                     {
                         if (and) c.CommandText += " AND";
                         else and = true;
                         c.CommandText += " target_channel_id = @ChannelId";
-                        c.Parameters.Add("@ChannelId", NpgsqlTypes.NpgsqlDbType.Bigint).Value = channel.Value;
+                        c.Parameters.Add("@ChannelId", NpgsqlTypes.NpgsqlDbType.Bigint).Value = (long)channel.Value;
                     }
                     if (category.HasValue)
                     {
