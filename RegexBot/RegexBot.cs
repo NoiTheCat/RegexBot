@@ -60,6 +60,7 @@ namespace Noikoio.RegexBot
                 new Module.ModCommands.ModCommands(_client),
                 new Module.AutoRespond.AutoRespond(_client),
                 new Module.EntryAutoRole.EntryAutoRole(_client),
+                new Module.PendingAutoRole.PendingAutoRole(_client),
                 new Module.VoiceRoleSync.VoiceRoleSync(_client),
                 new Module.VoteTempChannel.VoteTempChannel(_client),
 
