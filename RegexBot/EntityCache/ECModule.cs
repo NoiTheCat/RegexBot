@@ -1,4 +1,5 @@
-﻿using Discord.WebSocket;
+﻿using Discord;
+using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
 using Noikoio.RegexBot.ConfigItem;
 using Npgsql;
@@ -81,7 +82,7 @@ namespace Noikoio.RegexBot.EntityCache
         }
 
         // Guild member information has changed
-        private async Task Client_GuildMemberUpdated(SocketGuildUser arg1, SocketGuildUser arg2)
+        private async Task Client_GuildMemberUpdated(Cacheable<SocketGuildUser, ulong> arg1, SocketGuildUser arg2)
         {
             await Task.Run(async () => 
             {
@@ -113,13 +114,13 @@ namespace Noikoio.RegexBot.EntityCache
         }
 
         // User left the guild. No new data, but gives an excuse to update the cache date.
-        private async Task Client_UserLeft(SocketGuildUser arg)
+        private async Task Client_UserLeft(SocketGuild guild, SocketUser user)
         {
             await Task.Run(async () =>
             {
                 try
                 {
-                    await SqlHelper.UpdateGuildMemberAsync(arg);
+                    await SqlHelper.UpdateGuildMemberAsync((SocketGuildUser)user);
                 }
                 catch (NpgsqlException ex)
                 {

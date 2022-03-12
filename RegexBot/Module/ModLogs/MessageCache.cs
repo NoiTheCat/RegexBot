@@ -64,17 +64,17 @@ namespace Noikoio.RegexBot.Module.ModLogs
             await AddOrUpdateCacheItemAsync(after);
         }
 
-        private async Task Client_MessageDeleted(Cacheable<Discord.IMessage, ulong> msg, ISocketMessageChannel channel)
+        private async Task Client_MessageDeleted(Cacheable<IMessage, ulong> msg, Cacheable<IMessageChannel, ulong> channel)
         {
-            if (channel is IDMChannel) return; // No DMs
-            await ProcessReportMessage(true, msg.Id, channel, null);
+            if (channel.Value is IDMChannel) return; // No DMs
+            await ProcessReportMessage(true, msg.Id, channel.Value, null);
         }
         #endregion
 
         #region Reporting
         // Reports an edited or deleted message as if it were a log entry (even though it's not).
         private async Task ProcessReportMessage(
-            bool isDelete, ulong messageId, ISocketMessageChannel ch, string editMsg)
+            bool isDelete, ulong messageId, IMessageChannel ch, string editMsg)
         {
             ulong guildId;
             if (ch is SocketTextChannel sch)
@@ -146,7 +146,7 @@ namespace Noikoio.RegexBot.Module.ModLogs
         const string ReportCutoffNotify = "**Message length too long; showing first {0} characters.**\n\n";
         private EmbedBuilder CreateReportEmbed(
             bool isDelete,
-            EntityCache.CacheUser ucd, ulong messageId, ISocketMessageChannel chInfo,
+            EntityCache.CacheUser ucd, ulong messageId, IMessageChannel chInfo,
             (string, string) content, // Item1 = cached content. Item2 = post-edit message (null if isDelete)
             DateTimeOffset msgCreated, DateTimeOffset? msgEdited)
         {

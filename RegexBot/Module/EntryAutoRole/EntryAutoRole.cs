@@ -70,10 +70,10 @@ namespace Noikoio.RegexBot.Module.EntryAutoRole
             return Task.CompletedTask;
         }
 
-        private Task Client_UserLeft(SocketGuildUser arg)
+        private Task Client_UserLeft(SocketGuild guild, SocketUser user)
         {
-            if (GetState<object>(arg.Guild.Id) == null) return Task.CompletedTask;
-            lock (_roleWaitLock) _roleWaitlist.RemoveAll(m => m.GuildId == arg.Guild.Id && m.UserId == arg.Id);
+            if (GetState<object>(guild.Id) == null) return Task.CompletedTask;
+            lock (_roleWaitLock) _roleWaitlist.RemoveAll(m => m.GuildId == guild.Id && m.UserId == user.Id);
             return Task.CompletedTask;
         }
 

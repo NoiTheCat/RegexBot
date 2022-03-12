@@ -1,4 +1,5 @@
-﻿using Discord.WebSocket;
+﻿using Discord;
+using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
 using Noikoio.RegexBot.ConfigItem;
 using System.Linq;
@@ -34,12 +35,12 @@ namespace Noikoio.RegexBot.Module.PendingAutoRole {
             }
         }
 
-        private async Task Client_GuildMemberUpdated(SocketGuildUser previous, SocketGuildUser current) {
+        private async Task Client_GuildMemberUpdated(Cacheable<SocketGuildUser, ulong> previous, SocketGuildUser current) {
             var conf = GetState<ModuleConfig>(current.Guild.Id);
             if (conf == null) return;
 
-            if (!(previous.IsPending.HasValue && current.IsPending.HasValue)) return;
-            if (previous.IsPending == true && current.IsPending == false) {
+            if (!(previous.Value.IsPending.HasValue && current.IsPending.HasValue)) return;
+            if (previous.Value.IsPending == true && current.IsPending == false) {
                 var r = GetRole(current.Guild);
                 if (r == null) {
                     await Log($"Failed to update {current} - was the role renamed or deleted?");

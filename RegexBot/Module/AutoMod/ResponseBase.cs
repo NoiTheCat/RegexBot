@@ -113,7 +113,7 @@ namespace Noikoio.RegexBot.Module.AutoMod
             if (targetName == "_")
             {
                 if (et == EntityType.Channel) return m.Channel;
-                else return await m.Author.GetOrCreateDMChannelAsync();
+                else return await m.Author.CreateDMChannelAsync();
             }
 
             EntityName ei = new EntityName(targetName, et);
@@ -141,7 +141,7 @@ namespace Noikoio.RegexBot.Module.AutoMod
                 if (ei.Id.HasValue)
                 {
                     // The easy way
-                    return await Client.GetUser(ei.Id.Value).GetOrCreateDMChannelAsync();
+                    return await Client.GetUser(ei.Id.Value).CreateDMChannelAsync();
                 }
 
                 // The hard way
@@ -150,7 +150,7 @@ namespace Noikoio.RegexBot.Module.AutoMod
                     if (string.Equals(ei.Name, u.Username, StringComparison.OrdinalIgnoreCase) ||
                         string.Equals(ei.Name, u.Nickname, StringComparison.OrdinalIgnoreCase))
                     {
-                        return await u.GetOrCreateDMChannelAsync();
+                        return await u.CreateDMChannelAsync();
                     }
                 }
             }

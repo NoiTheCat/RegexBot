@@ -186,7 +186,7 @@ namespace Noikoio.RegexBot.Module.ModCommands.Commands
             if (_notifyMsg == null) return true;
             if (target == null) return false;
 
-            var ch = await target.GetOrCreateDMChannelAsync();
+            var ch = await target.CreateDMChannelAsync();
             string outresult = _notifyMsg;
             outresult = outresult.Replace("$s", target.Guild.Name);
             outresult = outresult.Replace("$r", reason ?? NotifyReasonNone);
