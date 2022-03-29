@@ -1,28 +1,23 @@
-﻿using System.Threading.Tasks;
+﻿namespace RegexBot.Services;
 
-namespace RegexBot.Services
-{
+/// <summary>
+/// Base class for services.
+/// </summary>
+/// <remarks>
+/// Services provide core and shared functionality for this program. Modules are expected to call into services
+/// directly or indirectly in order to access bot features.
+/// </remarks>
+internal abstract class Service {
+    public RegexbotClient BotClient { get; }
+
+    public string Name => GetType().Name;
+
+    public Service(RegexbotClient bot) => BotClient = bot;
+
     /// <summary>
-    /// Base class for Kerobot services.
+    /// Emits a log message.
     /// </summary>
-    /// <remarks>
-    /// Services provide the core functionality of this program. Modules are expected to call into methods
-    /// provided by services for the times when processor-intensive or shared functionality needs to be utilized.
-    /// </remarks>
-    internal abstract class Service
-    {
-        public RegexbotClient BotClient { get; }
-
-        public string Name => this.GetType().Name;
-
-        public Service(RegexbotClient bot) => BotClient = bot;
-
-        /// <summary>
-        /// Creates a log message.
-        /// </summary>
-        /// <param name="message">Logging message contents.</param>
-        /// <param name="report">Determines if the log message should be sent to a reporting channel.</param>
-        /// <returns></returns>
-        protected Task Log(string message, bool report = false) => BotClient.InstanceLogAsync(report, Name, message);
-    }
+    /// <param name="message">The log message to send. Multi-line messages are acceptable.</param>
+    /// <param name="report">Specify if the log message should be sent to a reporting channel.</param>
+    protected void Log(string message, bool report = false) => BotClient._svcLogging.DoInstanceLog(report, Name, message);
 }
