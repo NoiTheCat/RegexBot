@@ -45,7 +45,9 @@ namespace Noikoio.RegexBot
                 LogLevel = LogSeverity.Info,
                 AlwaysDownloadUsers = true,
                 DefaultRetryMode = RetryMode.AlwaysRetry,
-                MessageCacheSize = 0
+                MessageCacheSize = 0,
+                GatewayIntents = GatewayIntents.All & ~GatewayIntents.GuildPresences,
+                LogGatewayIntentWarnings = false
             });
 
             // Hook up basic handlers and other references
