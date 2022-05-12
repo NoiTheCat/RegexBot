@@ -2,9 +2,8 @@
 using RegexBot.Services.CommonFunctions;
 
 namespace RegexBot;
-
 partial class RegexbotClient {
-    private CommonFunctionsService _svcCommonFunctions;
+    private readonly CommonFunctionsService _svcCommonFunctions;
 
     public enum RemovalType { None, Ban, Kick }
 
@@ -31,9 +30,9 @@ partial class RegexbotClient {
     /// <param name="targetSearch">The EntityCache search string.</param>
     public async Task<BanKickResult> BanAsync(SocketGuild guild, string source, string targetSearch,
                                               int purgeDays, string reason, bool sendDMToTarget) {
-        var result = await EcQueryUser(guild.Id, targetSearch);
+        var result = EcQueryGuildUser(guild.Id, targetSearch);
         if (result == null) return new BanKickResult(null, false, true, RemovalType.Ban, 0);
-        return await BanAsync(guild, source, result.UserID, purgeDays, reason, sendDMToTarget);
+        return await BanAsync(guild, source, (ulong)result.UserId, purgeDays, reason, sendDMToTarget);
     }
 
     /// <summary>
@@ -44,9 +43,15 @@ partial class RegexbotClient {
     /// <returns>A structure containing results of the ban operation.</returns>
     /// <param name="guild">The guild in which to attempt the kick.</param>
     /// <param name="source">The user, module, or service which is requesting this action to be taken.</param>
-    /// <param name="targetUser">The user which to perform the action to.</param>
-    /// <param name="reason">Reason for the action. Sent to the Audit Log and user (if specified).</param>
-    /// <param name="sendDMToTarget">Specify whether to send a direct message to the target user informing them of the action being taken.</param>
+    /// <param name="targetUser">The user which to perform the action towards.</param>
+    /// <param name="reason">
+    /// Reason for the action. Sent to the guild's audit log and, if
+    /// <paramref name="sendDMToTarget"/> is <see langword="true"/>, the target.
+    /// </param>
+    /// <param name="sendDMToTarget">
+    /// Specify whether to send a direct message to the target user informing them of the action
+    /// (that is, a ban/kick message).
+    /// </param>
     public Task<BanKickResult> KickAsync(SocketGuild guild, string source, ulong targetUser, string reason, bool sendDMToTarget)
         => _svcCommonFunctions.BanOrKickAsync(RemovalType.Ban, guild, source, targetUser, 0, reason, sendDMToTarget);
 
@@ -56,8 +61,8 @@ partial class RegexbotClient {
     /// </summary>
     /// <param name="targetSearch">The EntityCache search string.</param>
     public async Task<BanKickResult> KickAsync(SocketGuild guild, string source, string targetSearch, string reason, bool sendDMToTarget) {
-        var result = await EcQueryUser(guild.Id, targetSearch);
+        var result = EcQueryGuildUser(guild.Id, targetSearch);
         if (result == null) return new BanKickResult(null, false, true, RemovalType.Kick, 0);
-        return await KickAsync(guild, source, result.UserID, reason, sendDMToTarget);
+        return await KickAsync(guild, source, (ulong)result.UserId, reason, sendDMToTarget);
     }
 }

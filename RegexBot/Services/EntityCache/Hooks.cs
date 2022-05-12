@@ -1,11 +1,9 @@
-﻿#pragma warning disable CA1822
-using RegexBot.Data;
+﻿using RegexBot.Data;
 using RegexBot.Services.EntityCache;
 
 namespace RegexBot;
-
 partial class RegexbotClient {
-    private EntityCacheService _svcEntityCache;
+    private readonly EntityCacheService _svcEntityCache;
 
     /// <summary>
     /// Queries the entity cache for user information. The given search string may contain a user ID
@@ -14,7 +12,7 @@ partial class RegexbotClient {
     /// </summary>
     /// <param name="search">Search string. May be a name with discriminator, a name, or an ID.</param>
     /// <returns>A <see cref="CachedUser"/> instance containing cached information, or null if no result.</returns>
-    public CachedUser? EcQueryUser(string search) => EntityCacheService.QueryUserCache(search);
+    public CachedUser? EcQueryUser(string search) => _svcEntityCache.QueryUserCache(search);
 
     /// <summary>
     /// Queries the entity cache for guild-specific user information. The given search string may contain a user ID,
@@ -24,5 +22,20 @@ partial class RegexbotClient {
     /// <param name="guildId">ID of the corresponding guild in which to search.</param>
     /// <param name="search">Search string. May be a name with discriminator, a name, or an ID.</param>
     /// <returns>A <see cref="CachedGuildUser"/> instance containing cached information, or null if no result.</returns>
-    public CachedGuildUser? EcQueryGuildUser(ulong guildId, string search) => EntityCacheService.QueryGuildUserCache(guildId, search);
+    public CachedGuildUser? EcQueryGuildUser(ulong guildId, string search) => _svcEntityCache.QueryGuildUserCache(guildId, search);
+
+    /// <summary>
+    /// Fired after a message edit, when the message cache is about to be updated with the edited message.
+    /// </summary>
+    /// <remarks>
+    /// An alternative to <seealso cref="Discord.WebSocket.BaseSocketClient.MessageUpdated"/>.<br />
+    /// This event is fired in response to a guild message being edited and provides handlers with existing
+    /// cached contents before it is updated and the previous contents permanently lost.
+    /// </remarks>
+    public event CachePreUpdateHandler? OnCachePreUpdate {
+        add { _svcEntityCache.OnCachePreUpdate += value; }
+        remove { _svcEntityCache.OnCachePreUpdate -= value; }
+    }
+
+    public delegate Task CachePreUpdateHandler(CachedGuildMessage cachedMsg);
 }

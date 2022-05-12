@@ -3,12 +3,12 @@ using RegexBot.Data;
 using System.Text.RegularExpressions;
 
 namespace RegexBot.Services.EntityCache;
-
 /// <summary>
 /// Provides and maintains a database-backed cache of users.
 /// It is meant to work as a supplement to Discord.Net's own user caching capabilities. Its purpose is to 
 /// provide information on users which the library may not be aware about, such as users no longer in a guild.
 /// </summary>
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static")]
 class UserCachingSubservice {
     private static Regex DiscriminatorSearch { get; } = new(@"(.+)#(\d{4}(?!\d))", RegexOptions.Compiled);
 
@@ -58,7 +58,7 @@ class UserCachingSubservice {
     }
 
     // Hooked
-    internal static CachedUser? DoUserQuery(string search) {
+    internal CachedUser? DoUserQuery(string search) {
         static CachedUser? innerQuery(ulong? sID, (string name, string? disc)? nameSearch) {
             var db = new BotDatabaseContext();
 
@@ -87,7 +87,7 @@ class UserCachingSubservice {
     }
 
     // Hooked
-    internal static CachedGuildUser? DoGuildUserQuery(ulong guildId, string search) {
+    internal CachedGuildUser? DoGuildUserQuery(ulong guildId, string search) {
         static CachedGuildUser? innerQuery(ulong guildId, ulong? sID, (string name, string? disc)? nameSearch) {
             var db = new BotDatabaseContext();
 

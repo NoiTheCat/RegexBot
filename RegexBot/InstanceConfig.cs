@@ -55,20 +55,18 @@ class InstanceConfig {
             throw new Exception(pfx + ex.Message, ex);
         }
 
-#pragma warning disable CS8601 // Possible null reference assignment.
         // Input validation - throw exception on errors. Exception messages printed as-is.
-        BotToken = conf[nameof(BotToken)]?.Value<string>();
+        BotToken = conf[nameof(BotToken)]?.Value<string>()!;
         if (string.IsNullOrEmpty(BotToken))
             throw new Exception($"'{nameof(BotToken)}' is not properly specified in configuration.");
 
-        PostgresConnString = conf[nameof(PostgresConnString)]?.Value<string>();
+        PostgresConnString = conf[nameof(PostgresConnString)]?.Value<string>()!;
         if (string.IsNullOrEmpty(PostgresConnString))
             throw new Exception($"'{nameof(PostgresConnString)}' is not properly specified in configuration.");
 
-        InstanceLogTarget = conf[nameof(InstanceLogTarget)]?.Value<string>();
+        InstanceLogTarget = conf[nameof(InstanceLogTarget)]?.Value<string>()!;
         if (string.IsNullOrEmpty(InstanceLogTarget))
             throw new Exception($"'{nameof(InstanceLogTarget)}' is not properly specified in configuration.");
-#pragma warning restore CS8601
 
         var asmList = conf[nameof(Assemblies)];
         if (asmList == null || asmList.Type != JTokenType.Array) {

@@ -2,7 +2,6 @@
 using Discord.WebSocket;
 
 namespace RegexBot;
-
 class Program {
     /// <summary>
     /// Timestamp specifying the date and time that the program began running.
@@ -51,7 +50,7 @@ class Program {
     private static void Console_CancelKeyPress(object? sender, ConsoleCancelEventArgs e) {
         e.Cancel = true;
 
-        _main.InstanceLogAsync(true, nameof(RegexBot), "Shutting down. Reason: Interrupt signal.");
+        _main._svcLogging.DoInstanceLog(true, nameof(RegexBot), "Shutting down. Reason: Interrupt signal.");
 
         // 5 seconds of leeway - any currently running tasks will need time to finish executing
         var closeWait = Task.Delay(5000);
@@ -62,8 +61,8 @@ class Program {
         closeWait.Wait();
 
         bool success = _main.DiscordClient.StopAsync().Wait(1000);
-        if (!success) _main.InstanceLogAsync(false, nameof(RegexBot),
-            "Failed to disconnect cleanly from Discord. Will force shut down.").Wait();
+        if (!success) _main._svcLogging.DoInstanceLog(false, nameof(RegexBot),
+            "Failed to disconnect cleanly from Discord. Will force shut down.");
         Environment.Exit(0);
     }
 }

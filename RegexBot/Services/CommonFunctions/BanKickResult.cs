@@ -4,7 +4,6 @@ using static RegexBot.RegexbotClient;
 // Instances of this class are created by CommonFunctionService and are meant to be sent to modules,
 // therefore we put this in the root RegexBot namespace despite being specific to this service.
 namespace RegexBot;
-
 /// <summary>
 /// Contains information on various success/failure outcomes for a ban or kick operation.
 /// </summary>
@@ -75,7 +74,7 @@ public class BanKickResult {
     /// Returns a message representative of the ban/kick result that may be posted as-is
     /// within the a Discord channel.
     /// </summary>
-    public string GetResultString(RegexbotClient bot, ulong guildId) {
+    public string GetResultString(RegexbotClient bot) {
         string msg;
 
         if (OperationSuccess) msg = ":white_check_mark: ";
@@ -92,10 +91,12 @@ public class BanKickResult {
         }
 
         if (_rptTargetId != 0) {
-            var user = bot.EcQueryUser(guildId, _rptTargetId.ToString()).GetAwaiter().GetResult();
+            var user = bot.EcQueryUser(_rptTargetId.ToString());
             if (user != null) {
                 // TODO sanitize possible formatting characters in display name
                 msg += $" user **{user.Username}#{user.Discriminator}**";
+            } else {
+                msg += $" user with ID **{_rptTargetId}**";
             }
         }
 

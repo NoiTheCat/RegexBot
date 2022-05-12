@@ -20,6 +20,7 @@ internal class CommonFunctionsService : Service {
     /// Common processing for kicks and bans. Called by DoKickAsync and DoBanAsync.
     /// </summary>
     /// <param name="logReason">The reason to insert into the Audit Log.</param>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static")]
     internal async Task<BanKickResult> BanOrKickAsync(
         RemovalType t, SocketGuild guild, string source, ulong target, int banPurgeDays,
         string logReason, bool sendDmToTarget) {
@@ -31,7 +32,7 @@ internal class CommonFunctionsService : Service {
         // Can't kick without obtaining user object. Quit here.
         if (t == RemovalType.Kick && utarget == null) return new BanKickResult(null, false, true, RemovalType.Kick, 0);
 
-        // TODO notify services here as soon as we get some who will want to listen to this
+        // TODO notify services here as soon as we get some who will want to listen to this (use source parameter)
 
         // Send DM notification
         if (sendDmToTarget) {

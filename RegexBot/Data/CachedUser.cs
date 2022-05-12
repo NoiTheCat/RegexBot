@@ -14,4 +14,7 @@ public class CachedUser {
 
     [InverseProperty(nameof(CachedGuildUser.User))]
     public ICollection<CachedGuildUser> Guilds { get; set; } = null!;
+
+    [InverseProperty(nameof(CachedGuildMessage.Author))]
+    public ICollection<CachedGuildMessage> GuildMessages { get; set; } = null!;
 }
