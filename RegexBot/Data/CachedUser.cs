@@ -6,6 +6,7 @@ namespace RegexBot.Data;
 [Table("cache_user")]
 public class CachedUser {
     [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.None)]
     public long UserId { get; set; }
     public DateTimeOffset ULastUpdateTime { get; set; }
     public string Username { get; set; } = null!;

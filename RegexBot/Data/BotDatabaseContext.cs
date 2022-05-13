@@ -30,7 +30,10 @@ public class BotDatabaseContext : DbContext {
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
         modelBuilder.Entity<GuildLogLine>(entity => entity.Property(e => e.Timestamp).HasDefaultValueSql("now()"));
         modelBuilder.Entity<CachedUser>(entity => entity.Property(e => e.Discriminator).HasMaxLength(4).IsFixedLength());
-        modelBuilder.Entity<CachedGuildUser>(entity => entity.Navigation(e => e.User).AutoInclude());
+        modelBuilder.Entity<CachedGuildUser>(entity => {
+            entity.Navigation(e => e.User).AutoInclude();
+            entity.HasKey(e => new { e.UserId, e.GuildId });
+        });
         modelBuilder.Entity<CachedGuildMessage>(entity => entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()"));
     }
 }

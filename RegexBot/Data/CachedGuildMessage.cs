@@ -5,6 +5,7 @@ namespace RegexBot.Data;
 [Table("cache_messages")]
 public class CachedGuildMessage {
     [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.None)]
     public long MessageId { get; set; }
 
     public long AuthorId { get; set; }
@@ -28,7 +29,7 @@ public class CachedGuildMessage {
     [NotMapped]
     public DateTimeOffset LastUpdatedAt => EditedAt ?? CreatedAt;
 
-    [ForeignKey(nameof(CachedUser.UserId))]
+    [ForeignKey(nameof(AuthorId))]
     [InverseProperty(nameof(CachedUser.GuildMessages))]
     public CachedUser Author { get; set; } = null!;
 
