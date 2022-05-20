@@ -37,6 +37,6 @@ public partial class RegexbotClient {
 
         // Everything's ready to go. Print the welcome message here.
         var ver = Assembly.GetExecutingAssembly().GetName().Version!.ToString(3);
-        _svcLogging.DoInstanceLog(false, nameof(RegexBot), $"{nameof(RegexBot)} v{ver}. https://github.com/NoiTheCat/RegexBot");
+        _svcLogging.DoLog(true, nameof(RegexBot), $"{nameof(RegexBot)} v{ver} - https://github.com/NoiTheCat/RegexBot");
     }
 }

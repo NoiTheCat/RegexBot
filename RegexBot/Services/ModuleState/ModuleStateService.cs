@@ -27,10 +27,7 @@ class ModuleStateService : Service {
     }
 
     private async Task RefreshGuildState(SocketGuild arg) {
-        bool success = await ProcessConfiguration(arg.Id);
-
-        if (success) BotClient._svcLogging.DoInstanceLog(false, GuildLogSource, $"Configuration refreshed for guild ID {arg.Id}.");
-        else BotClient._svcLogging.DoGuildLog(arg.Id, GuildLogSource, "Configuration was not refreshed due to errors.");
+        if (await ProcessConfiguration(arg.Id)) Log($"Configuration refreshed for server {arg.Id}.");
     }
 
     private Task RemoveGuildData(SocketGuild arg) {
@@ -79,7 +76,7 @@ class ModuleStateService : Service {
                 throw new InvalidCastException("Configuration is not valid JSON.");
             }
         } catch (Exception ex) when (ex is JsonReaderException or InvalidCastException) {
-            BotClient._svcLogging.DoGuildLog(guildId, GuildLogSource, $"A problem exists within the guild configuration: {ex.Message}");
+            Log($"Error loading configuration for server ID {guildId}: {ex.Message}");
             return false;
         }
 
@@ -90,25 +87,19 @@ class ModuleStateService : Service {
 
         // Create guild state objects for all existing modules
         var newStates = new Dictionary<Type, object?>();
-        foreach (var mod in BotClient.Modules) {
-            var t = mod.GetType();
-            var tn = t.Name;
+        foreach (var module in BotClient.Modules) {
+            var t = module.GetType();
             try {
-                try {
-                    var state = await mod.CreateGuildStateAsync(guildId, guildConf[tn]!);
-                    newStates.Add(t, state);
-                } catch (Exception ex) when (ex is not ModuleLoadException) {
-                    Log("Unhandled exception while initializing guild state for module:\n" +
-                        $"Module: {tn} | " +
-                        $"Guild: {guildId} ({BotClient.DiscordClient.GetGuild(guildId)?.Name ?? "unknown name"})\n" +
-                        $"```\n{ex}\n```", true);
-                    BotClient._svcLogging.DoGuildLog(guildId, GuildLogSource,
-                        "An internal error occurred when attempting to load new configuration.");
-                    return false;
-                }
+                var state = await module.CreateGuildStateAsync(guildId, guildConf[module.Name]!);
+                newStates.Add(t, state);
             } catch (ModuleLoadException ex) {
-                BotClient._svcLogging.DoGuildLog(guildId, GuildLogSource,
-                    $"{tn} has encountered an issue with its configuration: {ex.Message}");
+                Log($"{guildId}: Error reading configuration regarding {module.Name}: {ex.Message}");
+                return false;
+            } catch (Exception ex) when (ex is not ModuleLoadException) {
+                Log("Unhandled exception while initializing guild state for module:\n" +
+                    $"Module: {module.Name} | " +
+                    $"Guild: {guildId} ({BotClient.DiscordClient.GetGuild(guildId)?.Name ?? "unknown name"})\n" +
+                    $"```\n{ex}\n```", true);
                 return false;
             }
         }

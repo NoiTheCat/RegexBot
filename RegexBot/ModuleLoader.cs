@@ -4,8 +4,6 @@ using System.Reflection;
 namespace RegexBot;
 
 static class ModuleLoader {
-    private const string LogName = nameof(ModuleLoader);
-
     /// <summary>
     /// Given the instance configuration, loads all appropriate types from file specified in it.
     /// </summary>
@@ -42,13 +40,12 @@ static class ModuleLoader {
                             where !type.IsAssignableFrom(typeof(RegexbotModule))
                             where type.GetCustomAttribute<RegexbotModuleAttribute>() != null
                             select type;
-        k._svcLogging.DoInstanceLog(false, LogName, $"Scanning {asm.GetName().Name}");
+        k._svcLogging.DoLog(false, nameof(ModuleLoader), $"Scanning {asm.GetName().Name}");
 
         var newmods = new List<RegexbotModule>();
         foreach (var t in eligibleTypes) {
             var mod = Activator.CreateInstance(t, k)!;
-            k._svcLogging.DoInstanceLog(false, LogName,
-                $"---> Loading module {t.FullName}");
+            k._svcLogging.DoLog(false, nameof(ModuleLoader), $"---> Loading module {t.FullName}");
             newmods.Add((RegexbotModule)mod);
         }
         return newmods;

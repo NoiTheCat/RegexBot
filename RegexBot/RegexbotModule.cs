@@ -69,18 +69,21 @@ public abstract class RegexbotModule {
     protected EntityList GetModerators(ulong guild) => Bot._svcGuildState.DoGetModlist(guild);
 
     /// <summary>
-    /// Appends a message to the specified guild log.
+    /// Emits a log message to the bot console that is associated with the specified guild.
     /// </summary>
     /// /// <param name="message">The log message to send. Multi-line messages are acceptable.</param>
-    protected void Log(ulong guild, string message) => Bot._svcLogging.DoGuildLog(guild, Name, message);
+    protected void Log(SocketGuild guild, string? message) {
+        var gname = guild.Name ?? $"Guild ID {guild.Id}";
+        Bot._svcLogging.DoLog(false, $"{Name}] [{gname}", message);
+    }
 
     /// <summary>
-    /// Sends a message to the instance log.
+    /// Emits a log message to the bot console and, optionally, the logging webhook.
     /// </summary>
     /// <param name="message">The log message to send. Multi-line messages are acceptable.</param>
     /// <param name="report">
     /// Specifies if the log message should be sent to the reporting channel.
     /// Only messages of very high importance should use this option.
     /// </param>
-    protected void PLog(string message, bool report = false) => Bot._svcLogging.DoInstanceLog(report, Name, message);
+    protected void Log(string message, bool report = false) => Bot._svcLogging.DoLog(report, Name, message);
 }

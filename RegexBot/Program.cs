@@ -50,19 +50,16 @@ class Program {
     private static void Console_CancelKeyPress(object? sender, ConsoleCancelEventArgs e) {
         e.Cancel = true;
 
-        _main._svcLogging.DoInstanceLog(true, nameof(RegexBot), "Shutting down. Reason: Interrupt signal.");
+        _main._svcLogging.DoLog(true, nameof(RegexBot), "Shutting down. Reason: Interrupt signal.");
 
-        // 5 seconds of leeway - any currently running tasks will need time to finish executing
-        var closeWait = Task.Delay(5000);
-
-        // TODO periodic task service: stop processing, wait for all tasks to finish
-        // TODO notify services of shutdown
-
-        closeWait.Wait();
-
-        bool success = _main.DiscordClient.StopAsync().Wait(1000);
-        if (!success) _main._svcLogging.DoInstanceLog(false, nameof(RegexBot),
-            "Failed to disconnect cleanly from Discord. Will force shut down.");
+        var finishingTasks = Task.Run(async () => {
+            // TODO periodic task service: stop processing, wait for all tasks to finish
+            // TODO notify services of shutdown
+            await _main.DiscordClient.StopAsync();
+        });
+        
+        if (!finishingTasks.Wait(5000))
+            _main._svcLogging.DoLog(false, nameof(RegexBot), "Could not disconnect properly. Exiting...");
         Environment.Exit(0);
     }
 }

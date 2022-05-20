@@ -19,5 +19,5 @@ internal abstract class Service {
     /// </summary>
     /// <param name="message">The log message to send. Multi-line messages are acceptable.</param>
     /// <param name="report">Specify if the log message should be sent to a reporting channel.</param>
-    protected void Log(string message, bool report = false) => BotClient._svcLogging.DoInstanceLog(report, Name, message);
+    protected void Log(string message, bool report = false) => BotClient._svcLogging.DoLog(report, Name, message);
 }
