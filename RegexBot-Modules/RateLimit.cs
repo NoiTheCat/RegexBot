@@ -3,15 +3,16 @@
 /// <summary>
 /// Helper class for managing rate limit data.
 /// More accurately, this class holds entries, not allowing the same entry to be held more than once until a specified
-/// amount of time has paspsed since the entry was originally tracked; useful for a rate limit system.
+/// amount of time has passed since the entry was originally tracked; useful for a rate limit system.
 /// </summary>
-class RateLimit<T> {
+class RateLimit<T> where T : notnull {
     public const ushort DefaultTimeout = 20; // Skeeter's a cool guy and you can't convince me otherwise.
 
+    /// <summary>
+    /// Time until an entry within this instance expires, in seconds.
+    /// </summary>
     public uint Timeout { get; }
-#pragma warning disable CS8714
     private Dictionary<T, DateTime> Entries { get; } = new Dictionary<T, DateTime>();
-#pragma warning restore CS8714
 
     public RateLimit() : this(DefaultTimeout) { }
     public RateLimit(uint timeout) => Timeout = timeout;

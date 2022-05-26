@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reflection;
+using System.Text;
 
 namespace RegexBot;
 
@@ -42,12 +43,14 @@ static class ModuleLoader {
                             select type;
         k._svcLogging.DoLog(false, nameof(ModuleLoader), $"Scanning {asm.GetName().Name}");
 
+        var newreport = new StringBuilder("---> Found module(s):");
         var newmods = new List<RegexbotModule>();
         foreach (var t in eligibleTypes) {
             var mod = Activator.CreateInstance(t, k)!;
-            k._svcLogging.DoLog(false, nameof(ModuleLoader), $"---> Loading module {t.FullName}");
+            newreport.Append($" {t.Name}");
             newmods.Add((RegexbotModule)mod);
         }
+        k._svcLogging.DoLog(false, nameof(ModuleLoader), newreport.ToString());
         return newmods;
     }
 }

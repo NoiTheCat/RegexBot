@@ -1,6 +1,5 @@
 ﻿using Discord.Net;
 using Discord.WebSocket;
-using static RegexBot.RegexbotClient;
 
 namespace RegexBot.Services.CommonFunctions;
 
@@ -16,14 +15,15 @@ internal class CommonFunctionsService : Service {
     public CommonFunctionsService(RegexbotClient bot) : base(bot) { }
 
     #region Guild member removal
-    /// <summary>
-    /// Common processing for kicks and bans. Called by DoKickAsync and DoBanAsync.
-    /// </summary>
-    /// <param name="logReason">The reason to insert into the Audit Log.</param>
+    // Hooked (indirectly)
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static")]
-    internal async Task<BanKickResult> BanOrKickAsync(
-        RemovalType t, SocketGuild guild, string source, ulong target, int banPurgeDays,
-        string logReason, bool sendDmToTarget) {
+    internal async Task<BanKickResult> BanOrKickAsync(RemovalType t,
+                                                      SocketGuild guild,
+                                                      string source,
+                                                      ulong target,
+                                                      int banPurgeDays,
+                                                      string? logReason,
+                                                      bool sendDmToTarget) {
         if (t == RemovalType.None) throw new ArgumentException("Removal type must be 'ban' or 'kick'.");
         if (string.IsNullOrWhiteSpace(logReason)) logReason = "Reason not specified.";
         var dmSuccess = true;
@@ -42,9 +42,9 @@ internal class CommonFunctionsService : Service {
 
         // Perform the action
         try {
-            if (t == RemovalType.Ban) await guild.AddBanAsync(target, banPurgeDays);
+            if (t == RemovalType.Ban) await guild.AddBanAsync(target, banPurgeDays, logReason);
             else await utarget!.KickAsync(logReason);
-            // TODO !! Insert ban reason! For kick also: Figure out a way to specify invoker.
+            // TODO for kick: Figure out a way to specify invoker.
         } catch (HttpException ex) {
             return new BanKickResult(ex, dmSuccess, false, t, target);
         }

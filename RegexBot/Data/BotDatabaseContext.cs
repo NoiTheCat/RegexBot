@@ -4,7 +4,7 @@ namespace RegexBot.Data;
 
 public class BotDatabaseContext : DbContext {
     private static string? _npgsqlConnectionString;
-    internal static string NpgsqlConnectionString {
+    internal static string PostgresConnectionString {
 #if DEBUG
         get {
             if (_npgsqlConnectionString != null) return _npgsqlConnectionString;
@@ -24,7 +24,7 @@ public class BotDatabaseContext : DbContext {
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
          => optionsBuilder
-            .UseNpgsql(NpgsqlConnectionString)
+            .UseNpgsql(PostgresConnectionString)
             .UseSnakeCaseNamingConvention();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {

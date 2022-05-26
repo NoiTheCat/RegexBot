@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using RegexBot.Data;
 using System.Reflection;
 
 namespace RegexBot;
@@ -20,11 +21,6 @@ class InstanceConfig {
     internal string[] Assemblies { get; }
 
     /// <summary>
-    /// Connection string for accessing the PostgreSQL database.
-    /// </summary>
-    internal string PostgresConnString { get; }
-
-    /// <summary>
     /// Webhook URL for bot log reporting.
     /// </summary>
     internal string InstanceLogTarget { get; }
@@ -37,7 +33,7 @@ class InstanceConfig {
     internal InstanceConfig(string[] cmdline) {
         var opts = Options.ParseOptions(cmdline);
 
-        string path = opts.ConfigFile;
+        var path = opts.ConfigFile;
         if (path == null) { // default: config.json in working directory
             path = Path.GetDirectoryName(Assembly.GetEntryAssembly()!.Location)
                 + "." + Path.DirectorySeparatorChar + "config.json";
@@ -60,9 +56,10 @@ class InstanceConfig {
         if (string.IsNullOrEmpty(BotToken))
             throw new Exception($"'{nameof(BotToken)}' is not properly specified in configuration.");
 
-        PostgresConnString = conf[nameof(PostgresConnString)]?.Value<string>()!;
-        if (string.IsNullOrEmpty(PostgresConnString))
-            throw new Exception($"'{nameof(PostgresConnString)}' is not properly specified in configuration.");
+        var pginput = conf[nameof(BotDatabaseContext.PostgresConnectionString)]?.Value<string>()!;
+        if (string.IsNullOrEmpty(pginput))
+            throw new Exception($"'{nameof(BotDatabaseContext.PostgresConnectionString)}' is not properly specified in configuration.");
+        BotDatabaseContext.PostgresConnectionString = pginput;
 
         InstanceLogTarget = conf[nameof(InstanceLogTarget)]?.Value<string>()!;
         if (string.IsNullOrEmpty(InstanceLogTarget))

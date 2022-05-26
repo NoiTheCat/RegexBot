@@ -32,11 +32,10 @@ public partial class RegexbotClient {
         _svcCommonFunctions = new Services.CommonFunctions.CommonFunctionsService(this);
         _svcEntityCache = new Services.EntityCache.EntityCacheService(this);
 
+        var ver = Assembly.GetExecutingAssembly().GetName().Version!;
+        _svcLogging.DoLog(true, nameof(RegexBot), $"{nameof(RegexBot)} v{ver:3} - https://github.com/NoiTheCat/RegexBot");
+
         // Load externally defined functionality
         Modules = ModuleLoader.Load(Config, this);
-
-        // Everything's ready to go. Print the welcome message here.
-        var ver = Assembly.GetExecutingAssembly().GetName().Version!.ToString(3);
-        _svcLogging.DoLog(true, nameof(RegexBot), $"{nameof(RegexBot)} v{ver} - https://github.com/NoiTheCat/RegexBot");
     }
 }

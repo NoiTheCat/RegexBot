@@ -25,13 +25,9 @@ public class FilterList {
     /// <exception cref="FormatException">
     /// Thrown if there is a problem with input. The exception message specifies the reason.
     /// </exception>
-    public FilterList(
-        JObject config,
-        string whitelistKey = "whitelist",
-        string blacklistKey = "blacklist",
-        string exemptKey = "exempt") {
-        if ((whitelistKey != null && config[whitelistKey] != null) &&
-            (blacklistKey != null && config[blacklistKey] != null)) {
+    public FilterList(JObject config, string whitelistKey = "whitelist", string blacklistKey = "blacklist", string exemptKey = "exempt") {
+        if (whitelistKey != null && config[whitelistKey] != null &&
+            blacklistKey != null && config[blacklistKey] != null) {
             throw new FormatException($"Cannot have both '{whitelistKey}' and '{blacklistKey}' defined at once.");
         }
 
@@ -83,12 +79,12 @@ public class FilterList {
     public bool IsFiltered(SocketMessage msg, bool keepId) {
         if (Mode == FilterMode.None) return false;
 
-        bool inFilter = FilteredList.IsListMatch(msg, keepId);
+        var isInFilter = FilteredList.IsListMatch(msg, keepId);
         if (Mode == FilterMode.Whitelist) {
-            if (!inFilter) return true;
+            if (!isInFilter) return true;
             return FilterExemptions.IsListMatch(msg, keepId);
         } else if (Mode == FilterMode.Blacklist) {
-            if (!inFilter) return false;
+            if (!isInFilter) return false;
             return !FilterExemptions.IsListMatch(msg, keepId);
         }
 
