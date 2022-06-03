@@ -7,22 +7,22 @@
 [RegexbotModule]
 public class PendingOutRole : RegexbotModule {
     public PendingOutRole(RegexbotClient bot) : base(bot) {
-        DiscordClient.GuildAvailable += DiscordClient_GuildAvailable;
+        DiscordClient.GuildMembersDownloaded += DiscordClient_GuildMembersDownloaded;
         DiscordClient.GuildMemberUpdated += DiscordClient_GuildMemberUpdated;
     }
 
-    private async Task DiscordClient_GuildAvailable(SocketGuild arg) {
+    private async Task DiscordClient_GuildMembersDownloaded(SocketGuild arg) {
         var conf = GetGuildState<ModuleConfig>(arg.Id);
         if (conf == null) return;
-        var trole = GetRole(arg);
-        if (trole == null) {
-            Log(arg.Id, "Unable to find target role to be applied. Was it renamed or deleted?");
+        var targetRole = conf.Role.FindRoleIn(arg, true);
+        if (targetRole == null) {
+            Log(arg, "Unable to find role to be applied. Initial check has been skipped.");
             return;
         }
 
         foreach (var user in arg.Users.Where(u => u.IsPending.HasValue && u.IsPending.Value == false)) {
-            if (user.Roles.Contains(trole)) continue;
-            await user.AddRoleAsync(trole);
+            if (user.Roles.Contains(targetRole)) continue;
+            await user.AddRoleAsync(targetRole);
         }
     }
 
@@ -32,9 +32,9 @@ public class PendingOutRole : RegexbotModule {
 
         if (!(previous.Value.IsPending.HasValue && current.IsPending.HasValue)) return;
         if (previous.Value.IsPending == true && current.IsPending == false) {
-            var r = GetRole(current.Guild);
+            var r = conf.Role.FindRoleIn(current.Guild, true);
             if (r == null) {
-                Log(current.Guild.Id, $"Failed to update {current} - was the role renamed or deleted?");
+                Log(current.Guild, $"Failed to update role for {current} - was the role renamed or deleted?");
                 return;
             }
             await current.AddRoleAsync(r);
@@ -46,21 +46,5 @@ public class PendingOutRole : RegexbotModule {
         if (config.Type != JTokenType.Object)
             throw new ModuleLoadException("Configuration for this section is invalid.");
         return Task.FromResult<object?>(new ModuleConfig((JObject)config));
-    }
-
-    private SocketRole? GetRole(SocketGuild g) {
-        var conf = GetGuildState<ModuleConfig>(g.Id);
-        if (conf == null) return null;
-
-        if (conf.Role.Id.HasValue) {
-            var result = g.GetRole(conf.Role.Id.Value);
-            if (result != null) return result;
-        } else {
-            foreach (var role in g.Roles) {
-                if (string.Equals(conf.Role.Name, role.Name, StringComparison.OrdinalIgnoreCase)) return role;
-            }
-        }
-        Log(g.Id, "Unable to find role in " + g.Name);
-        return null;
     }
 }

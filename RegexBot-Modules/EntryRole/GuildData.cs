@@ -1,6 +1,6 @@
 ﻿using RegexBot.Common;
 
-namespace RegexBot.Modules.EntryTimeRole;
+namespace RegexBot.Modules.EntryRole;
 
 /// <summary>
 /// Contains configuration data as well as per-guild timers for those awaiting role assignment.
@@ -37,7 +37,7 @@ class GuildData {
         }
 
         try {
-            WaitTime = conf["WaitTime"].Value<int>();
+            WaitTime = conf[nameof(WaitTime)]!.Value<int>();
         } catch (NullReferenceException) {
             throw new ModuleLoadException("WaitTime value not specified.");
         } catch (InvalidCastException) {
@@ -54,7 +54,9 @@ class GuildData {
     }
 
     public void WaitlistAdd(ulong userId) {
-        lock (WaitingList) WaitingList.Add(userId, DateTimeOffset.UtcNow.AddSeconds(WaitTime));
+        lock (WaitingList) {
+            if (!WaitingList.ContainsKey(userId)) WaitingList.Add(userId, DateTimeOffset.UtcNow.AddSeconds(WaitTime));
+        }
     }
 
     public void WaitlistRemove(ulong userId) {

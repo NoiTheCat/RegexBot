@@ -1,22 +1,45 @@
 ﻿using System.Text;
 
-namespace RegexBot.Modules.EntryTimeRole;
+namespace RegexBot.Modules.EntryRole;
 
 /// <summary>
 /// Automatically sets a role onto users entering the guild after a predefined amount of time.
 /// </summary>
 [RegexbotModule]
-public class EntryTimeRole : RegexbotModule {
+public sealed class EntryRole : RegexbotModule, IDisposable {
     readonly Task _workerTask;
-    readonly CancellationTokenSource _workerTaskToken; // TODO make use of this when possible
+    readonly CancellationTokenSource _workerTaskToken;
 
-    public EntryTimeRole(RegexbotClient bot) : base(bot) {
+    public EntryRole(RegexbotClient bot) : base(bot) {
+        DiscordClient.GuildMembersDownloaded += DiscordClient_GuildMembersDownloaded;
         DiscordClient.UserJoined += DiscordClient_UserJoined;
         DiscordClient.UserLeft += DiscordClient_UserLeft;
 
         _workerTaskToken = new CancellationTokenSource();
         _workerTask = Task.Factory.StartNew(RoleApplyWorker, _workerTaskToken.Token,
             TaskCreationOptions.LongRunning, TaskScheduler.Default);
+    }
+
+    void IDisposable.Dispose() {
+        _workerTaskToken.Cancel();
+        _workerTask.Wait(2000);
+        _workerTask.Dispose();
+    }
+
+    private Task DiscordClient_GuildMembersDownloaded(SocketGuild arg) {
+        var data = GetGuildState<GuildData>(arg.Id);
+        if (data == null) return Task.CompletedTask;
+
+        var rolecheck = data.TargetRole.FindRoleIn(arg);
+        if (rolecheck == null) {
+            Log(arg, "Unable to find target role to be applied. Initial check has been skipped.");
+            return Task.CompletedTask;
+        }
+        foreach (var user in arg.Users.Where(u => !u.Roles.Contains(rolecheck))) {
+            data.WaitlistAdd(user.Id);
+        }
+
+        return Task.CompletedTask;
     }
 
     private Task DiscordClient_UserJoined(SocketGuildUser arg) {
@@ -88,7 +111,7 @@ public class EntryTimeRole : RegexbotModule {
         // Attempt to get role. 
         var targetRole = gconf.TargetRole.FindRoleIn(g, true);
         if (targetRole == null) {
-            ReportFailure(g.Id, "Unable to determine role to be applied. Does it still exist?", gusers);
+            ReportFailure(g, "Unable to determine role to be applied. Does it still exist?", gusers);
             return;
         }
 
@@ -99,11 +122,11 @@ public class EntryTimeRole : RegexbotModule {
                 await item.AddRoleAsync(targetRole);
             }
         } catch (Discord.Net.HttpException ex) when (ex.HttpCode == System.Net.HttpStatusCode.Forbidden) {
-            ReportFailure(g.Id, "Unable to set role due to a permissions issue.", gusers);
+            ReportFailure(g, "Unable to set role due to a permissions issue.", gusers);
         }
     }
 
-    private void ReportFailure(ulong gid, string message, IEnumerable<SocketGuildUser> failedUserList) {
+    private void ReportFailure(SocketGuild g, string message, IEnumerable<SocketGuildUser> failedUserList) {
         var failList = new StringBuilder();
         var count = 0;
         foreach (var item in failedUserList) {
@@ -115,6 +138,6 @@ public class EntryTimeRole : RegexbotModule {
             }
         }
         failList.Remove(0, 2);
-        Log(gid, message + " Failed while attempting to set role on the following users: " + failList.ToString());
+        Log(g, message + " Failed while attempting to set role on the following users: " + failList.ToString());
     }
 }

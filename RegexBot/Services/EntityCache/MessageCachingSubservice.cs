@@ -16,16 +16,13 @@ class MessageCachingSubservice {
         bot.DiscordClient.MessageUpdated += DiscordClient_MessageUpdated;
     }
 
-    private Task DiscordClient_MessageReceived(SocketMessage arg) {
-        if (arg.Channel is IDMChannel || arg is not SocketSystemMessage) return Task.CompletedTask;
-        return AddOrUpdateCacheItemAsync(arg);
-    }
-    private Task DiscordClient_MessageUpdated(Cacheable<IMessage, ulong> arg1, SocketMessage arg2, ISocketMessageChannel arg3) {
-        if (arg2.Channel is IDMChannel || arg2 is not SocketSystemMessage) return Task.CompletedTask;
-        return AddOrUpdateCacheItemAsync(arg2);
-    }
+    private Task DiscordClient_MessageReceived(SocketMessage arg)
+        => AddOrUpdateCacheItemAsync(arg);
+    private Task DiscordClient_MessageUpdated(Cacheable<IMessage, ulong> arg1, SocketMessage arg2, ISocketMessageChannel arg3)
+        => AddOrUpdateCacheItemAsync(arg2);
 
     private async Task AddOrUpdateCacheItemAsync(SocketMessage arg) {
+        if (!Common.Misc.IsValidUserMessage(arg, out _)) return;
         using var db = new BotDatabaseContext();
 
         CachedGuildMessage? msg = db.GuildMessageCache.Where(m => m.MessageId == (long)arg.Id).SingleOrDefault();

@@ -14,8 +14,7 @@ public class AutoResponder : RegexbotModule {
     }
 
     private async Task DiscordClient_MessageReceived(SocketMessage arg) {
-        if (arg.Channel is not SocketGuildChannel ch) return;
-        if (arg.Author.IsBot || arg.Author.IsWebhook) return;
+        if (!Common.Misc.IsValidUserMessage(arg, out var ch)) return;
 
         var definitions = GetGuildState<IEnumerable<Definition>>(ch.Guild.Id);
         if (definitions == null) return; // No configuration in this guild; do no further processing
@@ -49,7 +48,7 @@ public class AutoResponder : RegexbotModule {
             await msg.Channel.SendMessageAsync(def.GetResponse());
         } else {
             var ch = (SocketGuildChannel)msg.Channel;
-            string[] cmdline = def.Command.Split(new char[] { ' ' }, 2);
+            var cmdline = def.Command.Split(new char[] { ' ' }, 2);
 
             var ps = new ProcessStartInfo() {
                 FileName = cmdline[0],
@@ -63,13 +62,13 @@ public class AutoResponder : RegexbotModule {
             p.WaitForExit(5000); // waiting 5 seconds at most
             if (p.HasExited) {
                 if (p.ExitCode != 0) {
-                    PLog($"Command execution in {ch.Guild.Id}: Process exited abnormally (with code {p.ExitCode}).");
+                    Log(ch.Guild, $"Command execution: Process exited abnormally (with code {p.ExitCode}).");
                 }
                 using var stdout = p.StandardOutput;
                 var result = await stdout.ReadToEndAsync();
                 if (!string.IsNullOrWhiteSpace(result)) await msg.Channel.SendMessageAsync(result);
             } else {
-                PLog($"Command execution in {ch.Guild.Id}: Process has not exited in 5 seconds. Killing process.");
+                Log(ch.Guild, $"Command execution: Process has not exited in 5 seconds. Killing process.");
                 p.Kill();
             }
         }
