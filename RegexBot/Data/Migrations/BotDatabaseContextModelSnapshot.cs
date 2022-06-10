@@ -81,8 +81,10 @@ namespace RegexBot.Data.Migrations
                         .HasColumnName("guild_id");
 
                     b.Property<DateTimeOffset>("FirstSeenTime")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("first_seen_time");
+                        .HasColumnName("first_seen_time")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<DateTimeOffset>("GULastUpdateTime")
                         .HasColumnType("timestamp with time zone")

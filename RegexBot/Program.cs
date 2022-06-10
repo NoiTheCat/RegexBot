@@ -29,7 +29,8 @@ class Program {
             MessageCacheSize = 0, // using our own
             LogLevel = LogSeverity.Info,
             GatewayIntents = GatewayIntents.All & ~GatewayIntents.GuildPresences,
-            LogGatewayIntentWarnings = false
+            LogGatewayIntentWarnings = false,
+            AlwaysDownloadUsers = true
         });
 
         // Kerobot class initialization - will set up services and modules

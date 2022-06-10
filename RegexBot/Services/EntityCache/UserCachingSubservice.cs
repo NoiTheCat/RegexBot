@@ -13,8 +13,26 @@ class UserCachingSubservice {
     private static Regex DiscriminatorSearch { get; } = new(@"(.+)#(\d{4}(?!\d))", RegexOptions.Compiled);
 
     internal UserCachingSubservice(RegexbotClient bot) {
+        bot.DiscordClient.GuildMembersDownloaded += DiscordClient_GuildMembersDownloaded;
         bot.DiscordClient.GuildMemberUpdated += DiscordClient_GuildMemberUpdated;
         bot.DiscordClient.UserUpdated += DiscordClient_UserUpdated;
+    }
+
+    private async Task DiscordClient_GuildMembersDownloaded(SocketGuild arg) {
+        using var db = new BotDatabaseContext();
+        foreach (var user in arg.Users) {
+            UpdateUser(user, db);
+            UpdateGuildUser(user, db);
+        }
+        await db.SaveChangesAsync();
+    }
+
+    private async Task DiscordClient_GuildMemberUpdated(Discord.Cacheable<SocketGuildUser, ulong> old, SocketGuildUser current) {
+        using var db = new BotDatabaseContext();
+        UpdateUser(current, db); // Update user data first (avoid potential foreign key constraint violation)
+        UpdateGuildUser(current, db);
+
+        await db.SaveChangesAsync();
     }
 
     private async Task DiscordClient_UserUpdated(SocketUser old, SocketUser current) {
@@ -23,6 +41,7 @@ class UserCachingSubservice {
         await db.SaveChangesAsync();
     }
 
+    // IMPORTANT: Do NOT forget to save changes in database after calling this!
     private static void UpdateUser(SocketUser user, BotDatabaseContext db) {
         CachedUser uinfo;
         try {
@@ -38,23 +57,18 @@ class UserCachingSubservice {
         uinfo.ULastUpdateTime = DateTimeOffset.UtcNow;
     }
 
-    private async Task DiscordClient_GuildMemberUpdated(Discord.Cacheable<SocketGuildUser, ulong> old, SocketGuildUser current) {
-        using var db = new BotDatabaseContext();
-        UpdateUser(current, db); // Update user data too (avoid potential foreign key constraint violation)
-
+    private static void UpdateGuildUser(SocketGuildUser user, BotDatabaseContext db) {
         CachedGuildUser guinfo;
         try {
-            guinfo = db.GuildUserCache.Where(c => c.GuildId == (long)current.Guild.Id && c.UserId == (long)current.Id).First();
+            guinfo = db.GuildUserCache.Where(c => c.GuildId == (long)user.Guild.Id && c.UserId == (long)user.Id).First();
         } catch (InvalidOperationException) {
-            guinfo = new() { GuildId = (long)current.Guild.Id, UserId = (long)current.Id };
+            guinfo = new() { GuildId = (long)user.Guild.Id, UserId = (long)user.Id };
             db.GuildUserCache.Add(guinfo);
         }
 
         guinfo.GULastUpdateTime = DateTimeOffset.UtcNow;
-        guinfo.Nickname = current.Nickname;
+        guinfo.Nickname = user.Nickname;
         // TODO guild-specific avatar, other details?
-
-        await db.SaveChangesAsync();
     }
 
     // Hooked

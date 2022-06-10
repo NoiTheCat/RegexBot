@@ -33,6 +33,7 @@ public class BotDatabaseContext : DbContext {
         modelBuilder.Entity<CachedGuildUser>(entity => {
             entity.Navigation(e => e.User).AutoInclude();
             entity.HasKey(e => new { e.UserId, e.GuildId });
+            entity.Property(e => e.FirstSeenTime).HasDefaultValueSql("now()");
         });
         modelBuilder.Entity<CachedGuildMessage>(entity => entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()"));
     }

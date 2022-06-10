@@ -13,8 +13,8 @@ using RegexBot.Data;
 namespace RegexBot.Data.Migrations
 {
     [DbContext(typeof(BotDatabaseContext))]
-    [Migration("20220513061851_InitialEFSetup")]
-    partial class InitialEFSetup
+    [Migration("20220610210059_InitialMigration")]
+    partial class InitialMigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -83,8 +83,10 @@ namespace RegexBot.Data.Migrations
                         .HasColumnName("guild_id");
 
                     b.Property<DateTimeOffset>("FirstSeenTime")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("first_seen_time");
+                        .HasColumnName("first_seen_time")
+                        .HasDefaultValueSql("now()");
 
                     b.Property<DateTimeOffset>("GULastUpdateTime")
                         .HasColumnType("timestamp with time zone")

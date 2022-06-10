@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace RegexBot.Data.Migrations
 {
-    public partial class InitialEFSetup : Migration
+    public partial class InitialMigration : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -73,7 +73,7 @@ namespace RegexBot.Data.Migrations
                     user_id = table.Column<long>(type: "bigint", nullable: false),
                     guild_id = table.Column<long>(type: "bigint", nullable: false),
                     gu_last_update_time = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    first_seen_time = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    first_seen_time = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
                     nickname = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
