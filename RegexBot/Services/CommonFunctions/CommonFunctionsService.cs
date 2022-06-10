@@ -25,7 +25,6 @@ internal class CommonFunctionsService : Service {
                                                       string? logReason,
                                                       bool sendDmToTarget) {
         if (t == RemovalType.None) throw new ArgumentException("Removal type must be 'ban' or 'kick'.");
-        if (string.IsNullOrWhiteSpace(logReason)) logReason = "Reason not specified.";
         var dmSuccess = true;
 
         SocketGuildUser utarget = guild.GetUser(target);
@@ -41,10 +40,11 @@ internal class CommonFunctionsService : Service {
         }
 
         // Perform the action
+        var auditReason = $"(By: {source}) {logReason}";
         try {
-            if (t == RemovalType.Ban) await guild.AddBanAsync(target, banPurgeDays, logReason);
-            else await utarget!.KickAsync(logReason);
-            // TODO for kick: Figure out a way to specify invoker.
+            if (t == RemovalType.Ban) await guild.AddBanAsync(target, banPurgeDays, auditReason);
+            else await utarget!.KickAsync(auditReason);
+            // TODO for kick: Figure out a way to specify invoker properly in audit log (as in mee6, etc).
         } catch (HttpException ex) {
             return new BanKickResult(ex, dmSuccess, false, t, target);
         }
@@ -52,13 +52,16 @@ internal class CommonFunctionsService : Service {
         return new BanKickResult(null, dmSuccess, false, t, target);
     }
 
-    private static async Task<bool> BanKickSendNotificationAsync(SocketGuildUser target, RemovalType action, string reason) {
-        const string DMTemplate = "You have been {0} from {1} for the following reason:\n{2}";
+    private static async Task<bool> BanKickSendNotificationAsync(SocketGuildUser target, RemovalType action, string? reason) {
+        const string DMTemplate = "You have been {0} from {1}";
+        const string DMTemplateReason = " for the following reason:\n{2}";
 
+        var outMessage = string.IsNullOrWhiteSpace(reason)
+            ? string.Format(DMTemplate + ".", action == RemovalType.Ban ? "banned" : "kicked", target.Guild.Name)
+            : string.Format(DMTemplate + DMTemplateReason, action == RemovalType.Ban ? "banned" : "kicked", target.Guild.Name, reason);
         var dch = await target.CreateDMChannelAsync();
-        var output = string.Format(DMTemplate, action == RemovalType.Ban ? "banned" : "kicked", target.Guild.Name, reason);
 
-        try { await dch.SendMessageAsync(output); } catch (HttpException) { return false; }
+        try { await dch.SendMessageAsync(outMessage); } catch (HttpException) { return false; }
 
         return true;
     }
