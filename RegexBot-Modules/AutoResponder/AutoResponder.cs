@@ -13,6 +13,22 @@ public class AutoResponder : RegexbotModule {
         DiscordClient.MessageReceived += DiscordClient_MessageReceived;
     }
 
+    public override Task<object?> CreateGuildStateAsync(ulong guildID, JToken config) {
+        if (config == null) return Task.FromResult<object?>(null);
+        var defs = new List<Definition>();
+
+        if (config.Type != JTokenType.Array)
+            throw new ModuleLoadException(Name + " configuration must be a JSON array.");
+
+        // TODO better error reporting during this process
+        foreach (var def in config.Children<JObject>())
+            defs.Add(new Definition(def));
+
+        if (defs.Count == 0) return Task.FromResult<object?>(null);
+        Log(DiscordClient.GetGuild(guildID), $"Loaded {defs.Count} definition(s).");
+        return Task.FromResult<object?>(defs.AsReadOnly());
+    }
+
     private async Task DiscordClient_MessageReceived(SocketMessage arg) {
         if (!Common.Misc.IsValidUserMessage(arg, out var ch)) return;
 
@@ -25,20 +41,6 @@ public class AutoResponder : RegexbotModule {
         }
 
         await Task.WhenAll(tasks);
-    }
-
-    public override Task<object?> CreateGuildStateAsync(ulong guild, JToken config) {
-        // Guild state is a read-only IEnumerable<Definition>
-        if (config == null) return Task.FromResult<object?>(null);
-        var guildDefs = new List<Definition>();
-        foreach (var defconf in config.Children<JProperty>()) {
-            // Validation of data is left to the Definition constructor
-            var def = new Definition(defconf); // ModuleLoadException may be thrown here
-            guildDefs.Add(def);
-            // TODO global options
-        }
-
-        return Task.FromResult<object?>(guildDefs.AsReadOnly());
     }
 
     private async Task ProcessMessageAsync(SocketMessage msg, Definition def) {

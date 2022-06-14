@@ -11,7 +11,7 @@ class Definition {
 
     public string Label { get; }
     public IEnumerable<Regex> Regex { get; }
-    public IReadOnlyList<string> Response { get; }
+    public IReadOnlyList<string> Reply { get; }
     public string? Command { get; }
     public FilterList Filter { get; }
     public RateLimit<ulong> RateLimit { get; }
@@ -20,105 +20,102 @@ class Definition {
     /// <summary>
     /// Creates an instance based on JSON configuration.
     /// </summary>
-    public Definition(JProperty incoming) {
-        Label = incoming.Name;
-        if (incoming.Value.Type != JTokenType.Object)
-            throw new ModuleLoadException($"Value of {nameof(AutoResponder)} definition must be a JSON object.");
-        var data = (JObject)incoming.Value;
+    public Definition(JObject def) {
+        Label = def[nameof(Label)]?.Value<string>()
+            ?? throw new ModuleLoadException($"Encountered a rule without a defined {nameof(Label)}.");
 
-        // error message postfix
-        var errpofx = $" in AutoRespond definition '{Label}'.";
+        var errpostfx = $" in the rule definition for '{Label}'.";
 
-        // Parse regex
-        const RegexOptions rxopts = RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.Multiline;
-        var regexes = new List<Regex>();
-        var rxconf = data[nameof(Regex)];
-        // Accepting either array or single string
-        // TODO this code could be moved into a helper method somehow
-        if (rxconf?.Type == JTokenType.Array) {
+        // Regex
+        var opts = RegexOptions.Compiled | RegexOptions.CultureInvariant;
+        // TODO consider adding an option to specify Singleline and Multiline mode. Defaulting to Singleline.
+        // Reminder: in Singleline mode, all contents are subject to the same regex (useful if e.g. spammer separates words line by line)
+        opts |= RegexOptions.Singleline;
+        // IgnoreCase is enabled by default; must be explicitly set to false
+        if (def["IgnoreCase"]?.Value<bool>() ?? true) opts |= RegexOptions.IgnoreCase;
+
+        const string ErrNoRegex = $"No patterns were defined under {nameof(Regex)}";
+        var regexRules = new List<Regex>();
+        var rxconf = def[nameof(Regex)];
+        if (rxconf == null) throw new ModuleLoadException(ErrNoRegex + errpostfx);
+        if (rxconf.Type == JTokenType.Array) {
             foreach (var input in rxconf.Values<string>()) {
                 try {
-                    var r = new Regex(input!, rxopts);
-                    regexes.Add(r);
-                } catch (ArgumentException) {
-                    throw new ModuleLoadException($"Failed to parse regular expression pattern '{input}'{errpofx}");
+                    regexRules.Add(new Regex(input!, opts));
+                } catch (Exception ex) when (ex is ArgumentException or NullReferenceException) {
+                    throw new ModuleLoadException("Unable to parse regular expression pattern" + errpostfx);
                 }
             }
-        } else if (rxconf?.Type == JTokenType.String) {
-            var rxstr = rxconf.Value<string>()!;
+        } else {
+            var rxstr = rxconf.Value<string>();
             try {
-                var r = new Regex(rxstr, rxopts);
-                regexes.Add(r);
-            } catch (ArgumentException) {
-                throw new ModuleLoadException($"Failed to parse regular expression pattern '{rxstr}'{errpofx}");
-            }
-        } else {
-            throw new ModuleLoadException("'Regex' not defined" + errpofx);
-        }
-        Regex = regexes.AsReadOnly();
-
-        bool responseDefined;
-
-        // Get response
-        // TODO this bit could also go into the same aforementioned helper method
-        var replyconf = data["reply"];
-        if (replyconf?.Type == JTokenType.String) {
-            var str = replyconf.Value<string>()!;
-            Response = new List<string>() { str }.AsReadOnly();
-            responseDefined = true;
-        } else if (replyconf?.Type == JTokenType.Array) {
-            Response = new List<string>(replyconf.Values<string>()!).AsReadOnly();
-            responseDefined = true;
-        } else {
-            Response = Array.Empty<string>();
-            responseDefined = false;
-        }
-        // Get command
-        var commconf = data[nameof(Command)];
-        if (commconf != null && responseDefined) {
-            throw new ModuleLoadException("Cannot have 'Response' and 'Command' defined at the same time" + errpofx);
-        }
-        if (!responseDefined) {
-            if (commconf != null) {
-                var commstr = commconf.Value<string>();
-                if (string.IsNullOrWhiteSpace(commstr))
-                    throw new ModuleLoadException("'Command' is defined, but value is blank" + errpofx);
-                Command = commstr;
-                responseDefined = true;
+                regexRules.Add(new Regex(rxstr!, opts));
+            } catch (Exception ex) when (ex is ArgumentException or NullReferenceException) {
+                throw new ModuleLoadException("Unable to parse regular expression pattern" + errpostfx);
             }
         }
-        // Got neither...
-        if (!responseDefined) throw new ModuleLoadException("Neither 'Response' nor 'Command' were defined" + errpofx);
+        if (regexRules.Count == 0) {
+            throw new ModuleLoadException(ErrNoRegex + errpostfx);
+        }
+        Regex = regexRules.AsReadOnly();
 
         // Filtering
-        Filter = new FilterList(data);
+        Filter = new FilterList(def);
+
+        bool haveResponse;
+
+        // Reply options
+        var replyConf = def[nameof(Reply)];
+        if (replyConf?.Type == JTokenType.String) {
+            // Single string response
+            Reply = new List<string>() { replyConf.Value<string>()! }.AsReadOnly();
+            haveResponse = true;
+        } else if (replyConf?.Type == JTokenType.Array) {
+            // Have multiple responses
+            Reply = new List<string>(replyConf.Values<string>()!).AsReadOnly();
+            haveResponse= true;
+        } else {
+            // Have no response
+            Reply = Array.Empty<string>();
+            haveResponse = false;
+        }
+
+        // Command options
+        Command = def[nameof(Command)]?.Value<string>()!;
+        if (Command != null && haveResponse)
+            throw new ModuleLoadException($"Only one of either '{nameof(Reply)}' or '{nameof(Command)}' may be defined{errpostfx}");
+        if (Command != null) {
+            if (string.IsNullOrWhiteSpace(Command))
+                throw new ModuleLoadException($"'{nameof(Command)}' must have a non-blank value{errpostfx}");
+            haveResponse = true;
+        }
+
+        if (!haveResponse) throw new ModuleLoadException($"Neither '{nameof(Reply)}' nor '{nameof(Command)}' were defined{errpostfx}");
 
         // Rate limiting
-        var rlconf = data[nameof(RateLimit)];
+        var rlconf = def[nameof(RateLimit)];
         if (rlconf?.Type == JTokenType.Integer) {
             var rlval = rlconf.Value<uint>();
             RateLimit = new RateLimit<ulong>(rlval);
         } else if (rlconf != null) {
-            throw new ModuleLoadException("'RateLimit' must be a non-negative integer" + errpofx);
+            throw new ModuleLoadException($"'{nameof(RateLimit)}' must be a non-negative integer{errpostfx}");
         } else {
             RateLimit = new(0);
         }
-        var rlstr = data[nameof(RateLimit)]?.Value<ushort>();
 
         // Random chance parameter
-        var randstr = data[nameof(RandomChance)]?.Value<string>();
-        double randval;
-        if (string.IsNullOrWhiteSpace(randstr)) {
-            randval = double.NaN;
+        var randconf = def[nameof(RandomChance)];
+        if (randconf?.Type == JTokenType.Float) {
+            RandomChance = randconf.Value<float>();
+            if (RandomChance is > 1 or < 0) {
+                throw new ModuleLoadException($"Random value is invalid (not between 0 and 1){errpostfx}");
+            }
+        } else if (randconf != null) {
+            throw new ModuleLoadException($"{nameof(RandomChance)} is not correctly defined{errpostfx}");
         } else {
-            if (!double.TryParse(randstr, out randval)) {
-                throw new ModuleLoadException("Random value is invalid (unable to parse)" + errpofx);
-            }
-            if (randval is > 1 or < 0) {
-                throw new ModuleLoadException("Random value is invalid (not between 0 and 1)" + errpofx);
-            }
+            // Default to none if undefined
+            RandomChance = double.NaN;
         }
-        RandomChance = randval;
     }
 
     /// <summary>
@@ -131,7 +128,7 @@ class Definition {
         if (Filter.IsFiltered(m, true)) return false;
 
         // Match check
-        bool matchFound = false;
+        var matchFound = false;
         foreach (var item in Regex) {
             if (item.IsMatch(m.Content)) {
                 matchFound = true;
@@ -159,7 +156,7 @@ class Definition {
     /// </summary>
     public string GetResponse() {
         // TODO feature request: option to show responses in order instead of random
-        if (Response.Count == 1) return Response[0];
-        return Response[Chance.Next(0, Response.Count - 1)];
+        if (Reply.Count == 1) return Reply[0];
+        return Reply[Chance.Next(0, Reply.Count - 1)];
     }
 }
