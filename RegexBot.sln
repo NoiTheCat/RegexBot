@@ -1,34 +1,28 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.32112.339
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RegexBot", "RegexBot\RegexBot.csproj", "{6FA3A92F-F1FC-4BA8-8018-1A05CB4C7FA3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RegexBot", "RegexBot\RegexBot.csproj", "{F7CDACE1-C74E-451E-A9C2-ED717BF72C1C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RegexBot-Modules", "RegexBot-Modules\RegexBot-Modules.csproj", "{03111D82-30ED-4FDF-A512-87BDC05C6DA1}"
-	ProjectSection(ProjectDependencies) = postProject
-		{6FA3A92F-F1FC-4BA8-8018-1A05CB4C7FA3} = {6FA3A92F-F1FC-4BA8-8018-1A05CB4C7FA3}
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RegexBot-Modules", "RegexBot-Modules\RegexBot-Modules.csproj", "{347A1912-4F7D-419B-A159-6671791568CC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{6FA3A92F-F1FC-4BA8-8018-1A05CB4C7FA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6FA3A92F-F1FC-4BA8-8018-1A05CB4C7FA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6FA3A92F-F1FC-4BA8-8018-1A05CB4C7FA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6FA3A92F-F1FC-4BA8-8018-1A05CB4C7FA3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{03111D82-30ED-4FDF-A512-87BDC05C6DA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{03111D82-30ED-4FDF-A512-87BDC05C6DA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{03111D82-30ED-4FDF-A512-87BDC05C6DA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{03111D82-30ED-4FDF-A512-87BDC05C6DA1}.Release|Any CPU.Build.0 = Release|Any CPU
-	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {C823EC9C-CF20-4437-8B99-72158A6DD113}
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F7CDACE1-C74E-451E-A9C2-ED717BF72C1C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F7CDACE1-C74E-451E-A9C2-ED717BF72C1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F7CDACE1-C74E-451E-A9C2-ED717BF72C1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F7CDACE1-C74E-451E-A9C2-ED717BF72C1C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{347A1912-4F7D-419B-A159-6671791568CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{347A1912-4F7D-419B-A159-6671791568CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{347A1912-4F7D-419B-A159-6671791568CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{347A1912-4F7D-419B-A159-6671791568CC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

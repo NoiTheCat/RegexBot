@@ -71,7 +71,8 @@ public abstract class RegexbotModule {
     /// <summary>
     /// Emits a log message to the bot console that is associated with the specified guild.
     /// </summary>
-    /// /// <param name="message">The log message to send. Multi-line messages are acceptable.</param>
+    /// <param name="guild">The guld for which this log message is associated with.</param>
+    /// <param name="message">The log message to send. Multi-line messages are acceptable.</param>
     protected void Log(SocketGuild guild, string? message) {
         var gname = guild.Name ?? $"Guild ID {guild.Id}";
         Bot._svcLogging.DoLog(false, $"{Name}] [{gname}", message);

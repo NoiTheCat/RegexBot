@@ -115,8 +115,10 @@ public class EntityList : IEnumerable<EntityName> {
     /// </summary>
     public bool IsEmpty() => _innerList.Count == 0;
 
+    /// <inheritdoc/>
     public override string ToString() => $"Entity list contains {_innerList.Count} item(s).";
 
+    /// <inheritdoc/>
     public IEnumerator<EntityName> GetEnumerator() => _innerList.GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

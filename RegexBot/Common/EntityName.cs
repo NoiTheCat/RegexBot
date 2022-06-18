@@ -50,7 +50,7 @@ public class EntityName {
         input = input[1..]; // Remove prefix
 
         // Input contains ID/Label separator?
-        int separator = input.IndexOf("::");
+        var separator = input.IndexOf("::");
         if (separator != -1) {
             Name = input[(separator + 2)..];
             if (ulong.TryParse(input.AsSpan(0, separator), out var parseOut)) {
@@ -93,7 +93,7 @@ public class EntityName {
     /// Returns a string representation of this item in proper EntityName format.
     /// </summary>
     public override string ToString() {
-        char pf = Prefix(Type);
+        var pf = Prefix(Type);
 
         if (Id.HasValue && Name != null)
             return $"{pf}{Id.Value}::{Name}";
@@ -109,14 +109,14 @@ public class EntityName {
     /// </summary>
     /// <param name="guild">The guild in which to search for the role.</param>
     /// <param name="updateMissingID">
-    /// Specifies if this EntityName instance should keep the snowflake ID of the
-    /// corresponding role found in this guild, if it is not already known by this instance.
+    /// Specifies if this EntityName instance should cache the snowflake ID of the
+    /// corresponding role found in this guild if it is not already known by this instance.
     /// </param>
     public SocketRole? FindRoleIn(SocketGuild guild, bool updateMissingID = false) {
         if (Type != EntityType.Role)
             throw new ArgumentException("This EntityName instance must correspond to a Role.");
 
-        bool dirty = false; // flag for updating ID if possible regardless of updateMissingId setting
+        var dirty = false; // flag for updating ID if possible regardless of updateMissingId setting
         if (Id.HasValue) {
             var role = guild.GetRole(Id.Value);
             if (role != null) return role;
@@ -134,14 +134,14 @@ public class EntityName {
     /// </summary>
     /// <param name="guild">The guild in which to search for the user.</param>
     /// <param name="updateMissingID">
-    /// Specifies if this EntityName instance should keep the snowflake ID of the
-    /// corresponding user found in this guild, if it is not already known by this instance.
+    /// Specifies if this EntityName instance should cache the snowflake ID of the
+    /// corresponding user found in this guild if it is not already known by this instance.
     /// </param>
     public SocketGuildUser? FindUserIn(SocketGuild guild, bool updateMissingID = false) {
         if (Type != EntityType.User)
             throw new ArgumentException("This EntityName instance must correspond to a User.");
 
-        bool dirty = false; // flag for updating ID if possible regardless of updateMissingId setting
+        var dirty = false; // flag for updating ID if possible regardless of updateMissingId setting
         if (Id.HasValue) {
             var user = guild.GetUser(Id.Value);
             if (user != null) return user;
@@ -159,14 +159,14 @@ public class EntityName {
     /// </summary>
     /// <param name="guild">The guild in which to search for the channel.</param>
     /// <param name="updateMissingID">
-    /// Specifies if this EntityName instance should keep the snowflake ID of the
-    /// corresponding channel found in this guild, if it is not already known by this instance.
+    /// Specifies if this EntityName instance should cache the snowflake ID of the
+    /// corresponding channel found in this guild if it is not already known by this instance.
     /// </param>
     public SocketTextChannel? FindChannelIn(SocketGuild guild, bool updateMissingID = false) {
         if (Type != EntityType.Channel)
             throw new ArgumentException("This EntityName instance must correspond to a Channel.");
 
-        bool dirty = false; // flag for updating ID if possible regardless of updateMissingId setting
+        var dirty = false; // flag for updating ID if possible regardless of updateMissingId setting
         if (Id.HasValue) {
             var channel = guild.GetTextChannel(Id.Value);
             if (channel != null) return channel;
