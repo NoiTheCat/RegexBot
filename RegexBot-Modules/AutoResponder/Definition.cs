@@ -36,27 +36,20 @@ class Definition {
 
         const string ErrNoRegex = $"No patterns were defined under {nameof(Regex)}";
         var regexRules = new List<Regex>();
-        var rxconf = def[nameof(Regex)];
-        if (rxconf == null) throw new ModuleLoadException(ErrNoRegex + errpostfx);
-        if (rxconf.Type == JTokenType.Array) {
-            foreach (var input in rxconf.Values<string>()) {
-                try {
-                    regexRules.Add(new Regex(input!, opts));
-                } catch (Exception ex) when (ex is ArgumentException or NullReferenceException) {
-                    throw new ModuleLoadException("Unable to parse regular expression pattern" + errpostfx);
-                }
-            }
-        } else {
-            var rxstr = rxconf.Value<string>();
+        List<string> inputs;
+        try {
+            inputs = Misc.LoadStringOrStringArray(def[nameof(Regex)]);
+        } catch (ArgumentNullException) {
+            throw new ModuleLoadException(ErrNoRegex + errpostfx);
+        }
+        foreach (var inputRule in inputs) {
             try {
-                regexRules.Add(new Regex(rxstr!, opts));
+                regexRules.Add(new Regex(inputRule, opts));
             } catch (Exception ex) when (ex is ArgumentException or NullReferenceException) {
                 throw new ModuleLoadException("Unable to parse regular expression pattern" + errpostfx);
             }
         }
-        if (regexRules.Count == 0) {
-            throw new ModuleLoadException(ErrNoRegex + errpostfx);
-        }
+        if (regexRules.Count == 0) throw new ModuleLoadException(ErrNoRegex + errpostfx);
         Regex = regexRules.AsReadOnly();
 
         // Filtering
@@ -66,18 +59,14 @@ class Definition {
 
         // Reply options
         var replyConf = def[nameof(Reply)];
-        if (replyConf?.Type == JTokenType.String) {
-            // Single string response
-            Reply = new List<string>() { replyConf.Value<string>()! }.AsReadOnly();
-            haveResponse = true;
-        } else if (replyConf?.Type == JTokenType.Array) {
-            // Have multiple responses
-            Reply = new List<string>(replyConf.Values<string>()!).AsReadOnly();
-            haveResponse= true;
-        } else {
-            // Have no response
+        try {
+            Reply = Misc.LoadStringOrStringArray(replyConf);
+            haveResponse = Reply.Count > 0;
+        } catch (ArgumentNullException) {
             Reply = Array.Empty<string>();
             haveResponse = false;
+        } catch (ArgumentException) {
+            throw new ModuleLoadException($"Encountered a problem within 'Reply'{errpostfx}");
         }
 
         // Command options
