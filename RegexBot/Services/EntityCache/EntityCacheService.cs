@@ -25,7 +25,7 @@ class EntityCacheService : Service {
         => _uc.DoGuildUserQuery(guildId, search);
 
     // Hooked
-    internal event RegexbotClient.CachePreUpdateHandler? OnCachePreUpdate {
+    internal event RegexbotClient.EcMessageUpdateHandler? OnCachePreUpdate {
         add { lock (_mc) _mc.OnCachePreUpdate += value; }
         remove { lock (_mc) _mc.OnCachePreUpdate -= value; }
     }
