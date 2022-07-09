@@ -1,5 +1,4 @@
 ﻿using Discord.Net;
-using static RegexBot.RegexbotClient;
 
 // Instances of this class are created by CommonFunctionService and are meant to be sent to modules,
 // therefore we put this in the root RegexBot namespace despite being specific to this service.
@@ -87,7 +86,7 @@ public class BanKickResult {
             if (OperationSuccess) msg += "Kicked";
             else msg += "kick";
         } else {
-            throw new System.InvalidOperationException("Cannot create a message for removal type of None.");
+            throw new InvalidOperationException("Cannot create a message for removal type of None.");
         }
 
         if (_rptTargetId != 0) {
@@ -105,7 +104,7 @@ public class BanKickResult {
             if (!MessageSendSuccess) msg += "\n(User was unable to receive notification message.)";
         } else {
             if (ErrorNotFound) msg += ": The specified user could not be found.";
-            else if (ErrorForbidden) msg += ": I do not have the required permissions to perform that action.";
+            else if (ErrorForbidden) msg += ": " + Strings.ForbiddenGenericError;
         }
 
         return msg;

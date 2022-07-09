@@ -38,7 +38,7 @@ class Definition {
         var regexRules = new List<Regex>();
         List<string> inputs;
         try {
-            inputs = Misc.LoadStringOrStringArray(def[nameof(Regex)]);
+            inputs = Utilities.LoadStringOrStringArray(def[nameof(Regex)]);
         } catch (ArgumentNullException) {
             throw new ModuleLoadException(ErrNoRegex + errpostfx);
         }
@@ -60,7 +60,7 @@ class Definition {
         // Reply options
         var replyConf = def[nameof(Reply)];
         try {
-            Reply = Misc.LoadStringOrStringArray(replyConf);
+            Reply = Utilities.LoadStringOrStringArray(replyConf);
             haveResponse = Reply.Count > 0;
         } catch (ArgumentNullException) {
             Reply = Array.Empty<string>();

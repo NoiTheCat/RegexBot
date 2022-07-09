@@ -30,7 +30,7 @@ public class AutoResponder : RegexbotModule {
     }
 
     private async Task DiscordClient_MessageReceived(SocketMessage arg) {
-        if (!Common.Misc.IsValidUserMessage(arg, out var ch)) return;
+        if (!Common.Utilities.IsValidUserMessage(arg, out var ch)) return;
 
         var definitions = GetGuildState<IEnumerable<Definition>>(ch.Guild.Id);
         if (definitions == null) return; // No configuration in this guild; do no further processing

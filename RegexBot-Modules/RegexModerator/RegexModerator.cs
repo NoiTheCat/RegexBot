@@ -36,7 +36,7 @@ public class RegexModerator : RegexbotModule {
     /// Does initial message checking before further processing.
     /// </summary>
     private async Task ReceiveIncomingMessage(SocketMessage msg) {
-        if (!Common.Misc.IsValidUserMessage(msg, out var ch)) return;
+        if (!Common.Utilities.IsValidUserMessage(msg, out var ch)) return;
 
         // Get config?
         var defs = GetGuildState<IEnumerable<ConfDefinition>>(ch.Guild.Id);

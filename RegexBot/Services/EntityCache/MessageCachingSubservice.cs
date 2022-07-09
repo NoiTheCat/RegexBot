@@ -22,7 +22,7 @@ class MessageCachingSubservice {
         => AddOrUpdateCacheItemAsync(arg2, true);
 
     private async Task AddOrUpdateCacheItemAsync(SocketMessage arg, bool isUpdate) {
-        if (!Common.Misc.IsValidUserMessage(arg, out _)) return;
+        if (!Common.Utilities.IsValidUserMessage(arg, out _)) return;
 
         using var db = new BotDatabaseContext();
         CachedGuildMessage? cachedMsg = db.GuildMessageCache.Where(m => m.MessageId == (long)arg.Id).SingleOrDefault();

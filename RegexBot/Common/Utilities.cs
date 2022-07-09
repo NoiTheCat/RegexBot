@@ -5,9 +5,9 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace RegexBot.Common;
 /// <summary>
-/// Miscellaneous useful functions that don't have a particular place anywhere else.
+/// Miscellaneous utility methods useful for the bot and modules.
 /// </summary>
-public static class Misc {
+public static class Utilities {
     /// <summary>
     /// Performs common checks on the specified message to see if it fits all the criteria of a
     /// typical, ordinary message sent by an ordinary guild user.

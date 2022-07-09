@@ -50,7 +50,7 @@ class ConfDefinition {
         var regexRules = new List<Regex>();
         List<string> regexStrings;
         try {
-            regexStrings = Misc.LoadStringOrStringArray(def[nameof(Regex)]);
+            regexStrings = Utilities.LoadStringOrStringArray(def[nameof(Regex)]);
         } catch (ArgumentNullException) {
             throw new ModuleLoadException($"No patterns were defined under '{nameof(Regex)}'{errpostfx}");
         } catch (ArgumentException) {
@@ -75,7 +75,7 @@ class ConfDefinition {
 
         // Load response(s) and response settings
         try {
-            Response = Misc.LoadStringOrStringArray(def[nameof(Response)]).AsReadOnly();
+            Response = Utilities.LoadStringOrStringArray(def[nameof(Response)]).AsReadOnly();
         } catch (ArgumentNullException) {
             throw new ModuleLoadException($"No responses were defined under '{nameof(Response)}'{errpostfx}");
         } catch (ArgumentException) {

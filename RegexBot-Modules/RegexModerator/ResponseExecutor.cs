@@ -10,8 +10,6 @@ namespace RegexBot.Modules.RegexModerator;
 class ResponseExecutor {
     delegate Task<ResponseResult> ResponseHandler(string? parameter);
 
-    const string ForbiddenGenericError = "Failed to perform the action due to a permissions issue.";
-
     private readonly ConfDefinition _rule;
     private readonly RegexbotClient _bot;
 
@@ -69,7 +67,7 @@ class ResponseExecutor {
                 var result = await runLine(param);
                 _reports.Add((cmd, result));
             } catch (Discord.Net.HttpException ex) when (ex.HttpCode == System.Net.HttpStatusCode.Forbidden) {
-                _reports.Add((cmd, FromError(ForbiddenGenericError)));
+                _reports.Add((cmd, FromError(Strings.ForbiddenGenericError)));
             }
         }
 
