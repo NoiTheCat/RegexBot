@@ -22,13 +22,6 @@ public class CachedGuildMessage {
 
     public string Content { get; set; } = null!;
 
-    /// <summary>Gets the timestamp when the message was last updated.</summary>
-    /// <remarks>
-    /// This is equivalent to coalescing the value of <see cref="EditedAt"/> and <see cref="CreatedAt"/>.
-    /// </remarks>
-    [NotMapped]
-    public DateTimeOffset LastUpdatedAt => EditedAt ?? CreatedAt;
-
     [ForeignKey(nameof(AuthorId))]
     [InverseProperty(nameof(CachedUser.GuildMessages))]
     public CachedUser Author { get; set; } = null!;
