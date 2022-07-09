@@ -43,10 +43,8 @@ class UserCachingSubservice {
 
     // IMPORTANT: Do NOT forget to save changes in database after calling this!
     private static void UpdateUser(SocketUser user, BotDatabaseContext db) {
-        CachedUser uinfo;
-        try {
-            uinfo = db.UserCache.Where(c => c.UserId == (long)user.Id).First();
-        } catch (InvalidOperationException) {
+        var uinfo = db.UserCache.Where(c => c.UserId == (long)user.Id).SingleOrDefault();
+        if (uinfo == null) {
             uinfo = new() { UserId = (long)user.Id };
             db.UserCache.Add(uinfo);
         }
@@ -58,10 +56,8 @@ class UserCachingSubservice {
     }
 
     private static void UpdateGuildUser(SocketGuildUser user, BotDatabaseContext db) {
-        CachedGuildUser guinfo;
-        try {
-            guinfo = db.GuildUserCache.Where(c => c.GuildId == (long)user.Guild.Id && c.UserId == (long)user.Id).First();
-        } catch (InvalidOperationException) {
+        var guinfo = db.GuildUserCache.Where(c => c.GuildId == (long)user.Guild.Id && c.UserId == (long)user.Id).SingleOrDefault();
+        if (guinfo == null) {
             guinfo = new() { GuildId = (long)user.Guild.Id, UserId = (long)user.Id };
             db.GuildUserCache.Add(guinfo);
         }
