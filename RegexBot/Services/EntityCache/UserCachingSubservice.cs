@@ -1,6 +1,6 @@
 ﻿using Discord.WebSocket;
+using RegexBot.Common;
 using RegexBot.Data;
-using System.Text.RegularExpressions;
 
 namespace RegexBot.Services.EntityCache;
 /// <summary>
@@ -10,8 +10,6 @@ namespace RegexBot.Services.EntityCache;
 /// </summary>
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static")]
 class UserCachingSubservice {
-    private static Regex DiscriminatorSearch { get; } = new(@"(.+)#(\d{4}(?!\d))", RegexOptions.Compiled);
-
     internal UserCachingSubservice(RegexbotClient bot) {
         bot.DiscordClient.GuildMembersDownloaded += DiscordClient_GuildMembersDownloaded;
         bot.DiscordClient.GuildMemberUpdated += DiscordClient_GuildMemberUpdated;
@@ -84,15 +82,18 @@ class UserCachingSubservice {
             return query.SingleOrDefault();
         }
 
-        // Is search just a number? Assume ID, pass it on to the correct place.
-        if (ulong.TryParse(search, out var searchid)) {
+        // Is search actually a ping? Extract ID.
+        var m = Utilities.UserMention.Match(search);
+        if (m.Success) search = m.Groups["snowflake"].Value;
+
+        // Is search a number? Assume ID, proceed to query.
+        if (ulong.TryParse(search, out var searchid)) {    
             var idres = innerQuery(searchid, null);
             if (idres != null) return idres;
         }
 
-        // If the above fails, assume the number may be a string to search.
+        // All of the above failed. Assume the number may be a string to search.
         var namesplit = SplitNameAndDiscriminator(search);
-
         return innerQuery(null, namesplit);
     }
 
@@ -114,22 +115,25 @@ class UserCachingSubservice {
             return query.SingleOrDefault();
         }
 
-        // Is search just a number? Assume ID, pass it on to the correct place.
+        // Is search actually a ping? Extract ID.
+        var m = Utilities.UserMention.Match(search);
+        if (m.Success) search = m.Groups["snowflake"].Value;
+
+        // Is search a number? Assume ID, proceed to query.
         if (ulong.TryParse(search, out var searchid)) {
             var idres = innerQuery(guildId, searchid, null);
             if (idres != null) return idres;
         }
-
-        // If the above fails, assume the number may be a string to search.
+        
+        // All of the above failed. Assume the number may be a string to search.
         var namesplit = SplitNameAndDiscriminator(search);
-
         return innerQuery(guildId, null, namesplit);
     }
 
     private static (string, string?) SplitNameAndDiscriminator(string input) {
         string name;
         string? disc = null;
-        var split = DiscriminatorSearch.Match(input);
+        var split = Utilities.DiscriminatorSearch.Match(input);
         if (split.Success) {
             name = split.Groups[1].Value;
             disc = split.Groups[2].Value;

@@ -5,7 +5,7 @@ class ModuleConfig {
     public EntityName Role { get; }
 
     public ModuleConfig(JObject conf) {
-        var cfgRole = conf["Role"]?.Value<string>();
+        var cfgRole = conf[nameof(Role)]?.Value<string>();
         if (string.IsNullOrWhiteSpace(cfgRole))
             throw new ModuleLoadException("Role was not specified.");
         Role = new EntityName(cfgRole);

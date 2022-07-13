@@ -2,12 +2,18 @@
 using Discord.WebSocket;
 using Newtonsoft.Json.Linq;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.RegularExpressions;
 
 namespace RegexBot.Common;
 /// <summary>
 /// Miscellaneous utility methods useful for the bot and modules.
 /// </summary>
 public static class Utilities {
+    public static Regex ChannelMention { get; } = new(@"<#(?<snowflake>\d+)>", RegexOptions.Compiled);
+    public static Regex CustomEmoji { get; } = new(@"<:(?<name>[A-Za-z0-9_]{2,}):(?<ID>\d+)>", RegexOptions.Compiled);
+    public static Regex DiscriminatorSearch { get; } = new(@"(.+)#(\d{4}(?!\d))", RegexOptions.Compiled);
+    public static Regex UserMention { get; } = new(@"<@!?(?<snowflake>\d+)>", RegexOptions.Compiled);
+
     /// <summary>
     /// Performs common checks on the specified message to see if it fits all the criteria of a
     /// typical, ordinary message sent by an ordinary guild user.

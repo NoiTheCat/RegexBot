@@ -141,7 +141,7 @@ class ResponseExecutor {
             result = await _bot.KickAsync(_guild, $"Rule '{_rule.Label}'", _user.Id,
                                           parameter, _rule.NotifyUserOfRemoval);
         }
-        if (result.ErrorForbidden) return FromError(ForbiddenGenericError);
+        if (result.ErrorForbidden) return FromError(Strings.ForbiddenGenericError);
         if (result.ErrorNotFound) return FromError("The target user is no longer in the server.");
         if (_rule.NotifyChannelOfRemoval) await _msg.Channel.SendMessageAsync(result.GetResultString(_bot));
         return FromSuccess(result.MessageSendSuccess ? null : "Unable to send notification DM.");
