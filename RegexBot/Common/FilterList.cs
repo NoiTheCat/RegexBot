@@ -25,7 +25,7 @@ public class FilterList {
     /// <exception cref="FormatException">
     /// Thrown if there is a problem with input. The exception message specifies the reason.
     /// </exception>
-    public FilterList(JObject config, string whitelistKey = "whitelist", string blacklistKey = "blacklist", string exemptKey = "exempt") {
+    public FilterList(JObject config, string whitelistKey = "Whitelist", string blacklistKey = "Blacklist", string exemptKey = "Exempt") {
         if (whitelistKey != null && config[whitelistKey] != null &&
             blacklistKey != null && config[blacklistKey] != null) {
             throw new FormatException($"Cannot have both '{whitelistKey}' and '{blacklistKey}' defined at once.");
