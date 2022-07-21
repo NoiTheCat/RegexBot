@@ -5,7 +5,7 @@
 /// that is, the user has passed the requirements needed to fully access the guild such as welcome messages, etc.
 /// </summary>
 [RegexbotModule]
-public class PendingOutRole : RegexbotModule {
+internal class PendingOutRole : RegexbotModule {
     public PendingOutRole(RegexbotClient bot) : base(bot) {
         DiscordClient.GuildMembersDownloaded += DiscordClient_GuildMembersDownloaded;
         DiscordClient.GuildMemberUpdated += DiscordClient_GuildMemberUpdated;
@@ -45,6 +45,7 @@ public class PendingOutRole : RegexbotModule {
         if (config == null) return Task.FromResult<object?>(null);
         if (config.Type != JTokenType.Object)
             throw new ModuleLoadException("Configuration for this section is invalid.");
+        Log(DiscordClient.GetGuild(guildID), "Active.");
         return Task.FromResult<object?>(new ModuleConfig((JObject)config));
     }
 }

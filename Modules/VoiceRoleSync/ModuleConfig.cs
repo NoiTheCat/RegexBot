@@ -7,6 +7,8 @@ namespace RegexBot.Modules.VoiceRoleSync;
 class ModuleConfig {
     private readonly ReadOnlyDictionary<ulong, ulong> _values;
 
+    public int Count { get => _values.Count; }
+
     public ModuleConfig(JObject config) {
         // Configuration format is expected to be an object that contains other objects.
         // The objects themselves should have their name be the voice channel,

@@ -6,7 +6,7 @@ namespace RegexBot.Modules.EntryRole;
 /// Automatically sets a role onto users entering the guild after a predefined amount of time.
 /// </summary>
 [RegexbotModule]
-public sealed class EntryRole : RegexbotModule, IDisposable {
+internal sealed class EntryRole : RegexbotModule, IDisposable {
     readonly Task _workerTask;
     readonly CancellationTokenSource _workerTaskToken;
 
@@ -57,11 +57,19 @@ public sealed class EntryRole : RegexbotModule, IDisposable {
 
         if (config.Type != JTokenType.Object)
             throw new ModuleLoadException("Configuration is not properly defined.");
+        var g = DiscordClient.GetGuild(guildID);
 
         // Attempt to preserve existing timer list on reload
         var oldconf = GetGuildState<GuildData>(guildID);
-        if (oldconf == null) return Task.FromResult<object?>(new GuildData((JObject)config));
-        else return Task.FromResult<object?>(new GuildData((JObject)config, oldconf.WaitingList));
+        if (oldconf == null) {
+            var newconf = new GuildData((JObject)config);
+            Log(g, $"Configured for {newconf.WaitTime} seconds.");
+            return Task.FromResult<object?>(newconf);
+        } else {
+            var newconf = new GuildData((JObject)config, oldconf.WaitingList);
+            Log(g, $"Reconfigured for {newconf.WaitTime} seconds; keeping {newconf.WaitingList.Count} existing timers.");
+            return Task.FromResult<object?>(newconf);
+        }
     }
 
     /// <summary>

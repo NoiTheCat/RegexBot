@@ -3,7 +3,7 @@
 /// Provides a way to define highly configurable text-based commands for use by moderators within a guild.
 /// </summary>
 [RegexbotModule]
-public class ModCommands : RegexbotModule {
+internal class ModCommands : RegexbotModule {
     public ModCommands(RegexbotClient bot) : base(bot) {
         DiscordClient.MessageReceived += Client_MessageReceived;
     }
@@ -20,12 +20,10 @@ public class ModCommands : RegexbotModule {
 
         var conf = new ModuleConfig(this, config);
         if (conf.Commands.Count > 0) {
-            Log($"{conf.Commands.Count} commands loaded.");
+            Log(DiscordClient.GetGuild(guildID), $"{conf.Commands.Count} commands loaded.");
             return Task.FromResult<object?>(conf);
-        } else {
-            Log("'{nameof(ModLogs)}' is defined, but no command configuration exists.");
-            return Task.FromResult<object?>(null);
         }
+        return Task.FromResult<object?>(null);
     }
 
     private async Task CommandCheckInvoke(ModuleConfig cfg, SocketMessage arg) {

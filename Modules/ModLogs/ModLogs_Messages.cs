@@ -5,7 +5,7 @@ using System.Text;
 
 namespace RegexBot.Modules.ModLogs;
 // Contains handlers and all logic relating to logging message edits and deletions
-public partial class ModLogs {
+internal partial class ModLogs {
     const string PreviewCutoffNotify = "**Message too long to preview; showing first {0} characters.**\n\n";
     const string NotCached = "Message not cached.";
 

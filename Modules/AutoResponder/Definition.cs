@@ -84,7 +84,7 @@ class Definition {
         // Rate limiting
         var rlconf = def[nameof(RateLimit)];
         if (rlconf?.Type == JTokenType.Integer) {
-            var rlval = rlconf.Value<uint>();
+            var rlval = rlconf.Value<int>();
             RateLimit = new RateLimit<ulong>(rlval);
         } else if (rlconf != null) {
             throw new ModuleLoadException($"'{nameof(RateLimit)}' must be a non-negative integer{errpostfx}");

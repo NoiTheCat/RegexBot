@@ -17,7 +17,7 @@ class InstanceConfig {
     /// <summary>
     /// List of assemblies to load, by file. Paths are always relative to the bot directory.
     /// </summary>
-    internal string[] Assemblies { get; }
+    internal IReadOnlyList<string> Assemblies { get; }
 
     /// <summary>
     /// Webhook URL for bot log reporting.
@@ -31,7 +31,7 @@ class InstanceConfig {
     /// </summary>
     internal InstanceConfig() {
         var path = Path.GetDirectoryName(Assembly.GetEntryAssembly()!.Location)
-            + "." + Path.DirectorySeparatorChar + "config.json";
+            + "." + Path.DirectorySeparatorChar + "instance.json";
 
         JObject conf;
         try {
@@ -59,12 +59,12 @@ class InstanceConfig {
         if (string.IsNullOrEmpty(InstanceLogTarget))
             throw new Exception($"'{nameof(InstanceLogTarget)}' is not properly specified in configuration.");
 
-        var asmList = conf[nameof(Assemblies)];
-        if (asmList == null || asmList.Type != JTokenType.Array) {
+        try {
+            Assemblies = Common.Utilities.LoadStringOrStringArray(conf[nameof(Assemblies)]).AsReadOnly();
+        } catch (ArgumentNullException) {
+            Assemblies = Array.Empty<string>();
+        } catch (ArgumentException) {
             throw new Exception($"'{nameof(Assemblies)}' is not properly specified in configuration.");
         }
-        var asmListImport = new List<string>();
-        foreach (var line in asmList.Values<string>()) if (!string.IsNullOrEmpty(line)) asmListImport.Add(line);
-        Assemblies = asmListImport.ToArray();
     }
 }

@@ -4,7 +4,7 @@ namespace RegexBot.Modules.VoiceRoleSync;
 /// In other words: applies a role to a user entering a voice channel. Removes the role when exiting.
 /// </summary>
 [RegexbotModule]
-public class VoiceRoleSync : RegexbotModule {
+internal class VoiceRoleSync : RegexbotModule {
     // TODO wishlist? specify multiple definitions - multiple channels associated with multiple roles.
 
     public VoiceRoleSync(RegexbotClient bot) : base(bot) {
@@ -48,6 +48,9 @@ public class VoiceRoleSync : RegexbotModule {
         if (config == null) return Task.FromResult<object?>(null);
         if (config.Type != JTokenType.Object)
             throw new ModuleLoadException("Configuration for this section is invalid.");
-        return Task.FromResult<object?>(new ModuleConfig((JObject)config));
+
+        var newconf = new ModuleConfig((JObject)config);
+        Log(DiscordClient.GetGuild(guildID), $"Configured with {newconf.Count} pairing(s).");
+        return Task.FromResult<object?>(newconf);
     }
 }

@@ -6,7 +6,7 @@ namespace RegexBot.Modules.RegexModerator;
 /// When triggered, one or more actions are executed as defined in its configuration.
 /// </summary>
 [RegexbotModule]
-public class RegexModerator : RegexbotModule {
+internal class RegexModerator : RegexbotModule {
     public RegexModerator(RegexbotClient bot) : base(bot) {
         DiscordClient.MessageReceived += DiscordClient_MessageReceived;
         DiscordClient.MessageUpdated += DiscordClient_MessageUpdated;

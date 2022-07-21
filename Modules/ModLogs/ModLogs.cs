@@ -6,7 +6,7 @@ namespace RegexBot.Modules.ModLogs;
 /// Makes use of a helper class, <see cref="MessageCache"/>.
 /// </summary>
 [RegexbotModule]
-public partial class ModLogs : RegexbotModule {
+internal partial class ModLogs : RegexbotModule {
     // TODO consider resurrecting 2.x idea of logging actions to db, making it searchable?
 
     public ModLogs(RegexbotClient bot) : base(bot) {
@@ -20,7 +20,7 @@ public partial class ModLogs : RegexbotModule {
         if (config.Type != JTokenType.Object)
             throw new ModuleLoadException("Configuration for this section is invalid.");
         var newconf = new ModuleConfig((JObject)config);
-        Log($"Writing logs to {newconf.ReportingChannel}.");
+        Log(DiscordClient.GetGuild(guildID), $"Writing logs to {newconf.ReportingChannel}.");
         return Task.FromResult<object?>(new ModuleConfig((JObject)config));
     }
 

@@ -73,7 +73,7 @@ public abstract class RegexbotModule {
     /// <param name="message">The log message to send. Multi-line messages are acceptable.</param>
     protected void Log(SocketGuild guild, string? message) {
         var gname = guild.Name ?? $"Guild ID {guild.Id}";
-        Bot._svcLogging.DoLog(false, $"{Name}] [{gname}", message);
+        Bot._svcLogging.DoLog(false, $"{gname}] [{Name}", message);
     }
 
     /// <summary>

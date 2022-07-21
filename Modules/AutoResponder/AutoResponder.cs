@@ -8,7 +8,7 @@ namespace RegexBot.Modules.AutoResponder;
 /// fit for non-moderation use cases and has specific features suitable to that end.
 /// </summary>
 [RegexbotModule]
-public class AutoResponder : RegexbotModule {
+internal class AutoResponder : RegexbotModule {
     public AutoResponder(RegexbotClient bot) : base(bot) {
         DiscordClient.MessageReceived += DiscordClient_MessageReceived;
     }
