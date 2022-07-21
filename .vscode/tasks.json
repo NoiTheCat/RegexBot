@@ -7,7 +7,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/RegexBot.sln",
+                "${workspaceFolder}/RegexBot.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -19,7 +19,7 @@
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/RegexBot.sln",
+                "${workspaceFolder}/RegexBot.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -33,7 +33,7 @@
                 "watch",
                 "run",
                 "--project",
-                "${workspaceFolder}/RegexBot.sln"
+                "${workspaceFolder}/RegexBot.csproj"
             ],
             "problemMatcher": "$msCompile"
         }

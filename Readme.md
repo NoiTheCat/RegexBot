@@ -1,26 +1,14 @@
 # RegexBot
-**This branch is still a major work in progress, and is highly incomplete. See the legacy branch for the current working version.**
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/J3J65TW2E)
 
 RegexBot is a Discord moderation bot framework of sorts, inspired by the terrible state of Discord moderation tools a few years ago
 combined with my tendency to overengineer things until they into pseudo-libraries of their own right.
 
-### Features:
-* Provides a sort of in-between interface to Discord.Net that allows modules to be written for it, its benefits being:
-  * Putting together disparate bot features under a common interface.
-  * Reducing duplicate code potentially leading to an inconsistent user experience.
-* Versatile JSON-based configuration.
-* High detail logging and record-keeping prevents gaps in moderation that might occur with large public bots.
+This bot includes a number of features which assist in handling the tedious details in a busy server with the goal of minimizing
+the occurrence of hidden details, arbitrary restrictions, or annoyingly unmodifiable behavior. Its configuration allows for a very high
+level of flexibility, ensuring that the bot behaves in accordance to the exact needs of your server without compromise.
 
-This repository also contains...
-
-# RegexBot-Modules
-An optional set of features to add to RegexBot, some of them inspired by Reddit's Automoderator.
-
-This module provides a number of features to assist in watching over the tedious details in a busy server with no hidden details,
-arbitrary restrictions, or unmodifiable behavior. Its configuration allows for a very high level of flexibility, ensuring that the bot
-behaves in accordance to the exact needs of your server.
-
-### Features:
+### Features
 * Create rules based on regular expression patterns
   * Follow up with custom responses ranging from sending a DM to disciplinary action
 * Create pattern-based triggers to provide information and fun to your users
@@ -29,6 +17,14 @@ behaves in accordance to the exact needs of your server.
   * Make things interesting by setting triggers that only activate at random
 * Individual rules and triggers can be whitelisted or blacklisted per-user, per-channel, or per-role
   * Exemptions to these filters can be applied for additional flexibility
+* High detail logging and record-keeping prevents gaps in moderation that might occur with large public bots.
 
-## Documentation
+### Modules
+As mentioned above, this bot also serves as a framework of sorts, allowing others to write their own modules and expand
+the bot's feature set ever further. Its benefits are:
+* Putting together disparate bot features under a common, consistent interface.
+* Reducing duplicate code potentially leading to an inconsistent user experience.
+* Versatile JSON-based configuration.
+
+## User documentation
 Coming soon?
