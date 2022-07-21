@@ -29,7 +29,7 @@ class MessageCachingSubservice {
         if (isUpdate) {
             // Alternative for Discord.Net's MessageUpdated handler:
             // Notify subscribers of message update using EC entry for the previous message state
-            var oldMsg = cachedMsg?.MemberwiseClone();
+            var oldMsg = CachedGuildMessage.Clone(cachedMsg);
             await Task.Factory.StartNew(async () => await RunPreUpdateHandlersAsync(oldMsg, arg));
         }
 

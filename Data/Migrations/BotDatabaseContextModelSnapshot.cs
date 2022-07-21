@@ -18,7 +18,7 @@ namespace RegexBot.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.5")
+                .HasAnnotation("ProductVersion", "6.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -62,12 +62,12 @@ namespace RegexBot.Data.Migrations
                         .HasColumnName("guild_id");
 
                     b.HasKey("MessageId")
-                        .HasName("pk_cache_messages");
+                        .HasName("pk_cache_guildmessages");
 
                     b.HasIndex("AuthorId")
-                        .HasDatabaseName("ix_cache_messages_author_id");
+                        .HasDatabaseName("ix_cache_guildmessages_author_id");
 
-                    b.ToTable("cache_messages", (string)null);
+                    b.ToTable("cache_guildmessages", (string)null);
                 });
 
             modelBuilder.Entity("RegexBot.Data.CachedGuildUser", b =>
@@ -95,9 +95,9 @@ namespace RegexBot.Data.Migrations
                         .HasColumnName("nickname");
 
                     b.HasKey("UserId", "GuildId")
-                        .HasName("pk_cache_userguild");
+                        .HasName("pk_cache_usersinguild");
 
-                    b.ToTable("cache_userguild", (string)null);
+                    b.ToTable("cache_usersinguild", (string)null);
                 });
 
             modelBuilder.Entity("RegexBot.Data.CachedUser", b =>
@@ -127,47 +127,9 @@ namespace RegexBot.Data.Migrations
                         .HasColumnName("username");
 
                     b.HasKey("UserId")
-                        .HasName("pk_cache_user");
+                        .HasName("pk_cache_users");
 
-                    b.ToTable("cache_user", (string)null);
-                });
-
-            modelBuilder.Entity("RegexBot.Data.GuildLogLine", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<long>("GuildId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("guild_id");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("message");
-
-                    b.Property<string>("Source")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("source");
-
-                    b.Property<DateTimeOffset>("Timestamp")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("timestamp")
-                        .HasDefaultValueSql("now()");
-
-                    b.HasKey("Id")
-                        .HasName("pk_guild_log");
-
-                    b.HasIndex("GuildId")
-                        .HasDatabaseName("ix_guild_log_guild_id");
-
-                    b.ToTable("guild_log", (string)null);
+                    b.ToTable("cache_users", (string)null);
                 });
 
             modelBuilder.Entity("RegexBot.Data.CachedGuildMessage", b =>
@@ -177,7 +139,7 @@ namespace RegexBot.Data.Migrations
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_cache_messages_cache_user_author_id");
+                        .HasConstraintName("fk_cache_guildmessages_cache_users_author_id");
 
                     b.Navigation("Author");
                 });
@@ -189,7 +151,7 @@ namespace RegexBot.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_cache_userguild_cache_user_user_id");
+                        .HasConstraintName("fk_cache_usersinguild_cache_users_user_id");
 
                     b.Navigation("User");
                 });

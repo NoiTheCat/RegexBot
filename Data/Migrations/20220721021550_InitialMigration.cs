@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -12,7 +11,7 @@ namespace RegexBot.Data.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "cache_user",
+                name: "cache_users",
                 columns: table => new
                 {
                     user_id = table.Column<long>(type: "bigint", nullable: false),
@@ -23,27 +22,11 @@ namespace RegexBot.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_cache_user", x => x.user_id);
+                    table.PrimaryKey("pk_cache_users", x => x.user_id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "guild_log",
-                columns: table => new
-                {
-                    id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    guild_id = table.Column<long>(type: "bigint", nullable: false),
-                    timestamp = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
-                    source = table.Column<string>(type: "text", nullable: false),
-                    message = table.Column<string>(type: "text", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("pk_guild_log", x => x.id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "cache_messages",
+                name: "cache_guildmessages",
                 columns: table => new
                 {
                     message_id = table.Column<long>(type: "bigint", nullable: false),
@@ -57,17 +40,17 @@ namespace RegexBot.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_cache_messages", x => x.message_id);
+                    table.PrimaryKey("pk_cache_guildmessages", x => x.message_id);
                     table.ForeignKey(
-                        name: "fk_cache_messages_cache_user_author_id",
+                        name: "fk_cache_guildmessages_cache_users_author_id",
                         column: x => x.author_id,
-                        principalTable: "cache_user",
+                        principalTable: "cache_users",
                         principalColumn: "user_id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "cache_userguild",
+                name: "cache_usersinguild",
                 columns: table => new
                 {
                     user_id = table.Column<long>(type: "bigint", nullable: false),
@@ -78,39 +61,31 @@ namespace RegexBot.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_cache_userguild", x => new { x.user_id, x.guild_id });
+                    table.PrimaryKey("pk_cache_usersinguild", x => new { x.user_id, x.guild_id });
                     table.ForeignKey(
-                        name: "fk_cache_userguild_cache_user_user_id",
+                        name: "fk_cache_usersinguild_cache_users_user_id",
                         column: x => x.user_id,
-                        principalTable: "cache_user",
+                        principalTable: "cache_users",
                         principalColumn: "user_id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "ix_cache_messages_author_id",
-                table: "cache_messages",
+                name: "ix_cache_guildmessages_author_id",
+                table: "cache_guildmessages",
                 column: "author_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_guild_log_guild_id",
-                table: "guild_log",
-                column: "guild_id");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "cache_messages");
+                name: "cache_guildmessages");
 
             migrationBuilder.DropTable(
-                name: "cache_userguild");
+                name: "cache_usersinguild");
 
             migrationBuilder.DropTable(
-                name: "guild_log");
-
-            migrationBuilder.DropTable(
-                name: "cache_user");
+                name: "cache_users");
         }
     }
 }

@@ -59,4 +59,19 @@ public class CachedGuildMessage {
     [ForeignKey(nameof(AuthorId))]
     [InverseProperty(nameof(CachedUser.GuildMessages))]
     public CachedUser Author { get; set; } = null!;
+
+    // Used by MessageCachingSubservice
+    internal static CachedGuildMessage? Clone(CachedGuildMessage? original) {
+        if (original == null) return null;
+        return new() {
+            MessageId = original.MessageId,
+            AuthorId = original.AuthorId,
+            GuildId = original.GuildId,
+            ChannelId = original.ChannelId,
+            CreatedAt = original.CreatedAt,
+            EditedAt = original.EditedAt,
+            AttachmentNames = new(original.AttachmentNames),
+            Content = original.Content
+        };
+    }
 }
