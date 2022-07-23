@@ -1,5 +1,6 @@
-﻿using Newtonsoft.Json;
-using RegexBot.Data;
+﻿using CommandLine;
+using Newtonsoft.Json;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace RegexBot;
@@ -18,20 +19,20 @@ class InstanceConfig {
     /// List of assemblies to load, by file. Paths are always relative to the bot directory.
     /// </summary>
     internal IReadOnlyList<string> Assemblies { get; }
-
-    /// <summary>
-    /// Webhook URL for bot log reporting.
-    /// </summary>
     internal string InstanceLogTarget { get; }
 
-    // TODO add fields for services to be configurable: DMRelay
+    public string? SqlHost { get; }
+    public string? SqlDatabase { get; }
+    public string SqlUsername { get; }
+    public string SqlPassword { get; }
 
     /// <summary>
     /// Sets up instance configuration object from file and command line parameters.
     /// </summary>
     internal InstanceConfig() {
-        var path = Path.GetDirectoryName(Assembly.GetEntryAssembly()!.Location)
-            + "." + Path.DirectorySeparatorChar + "instance.json";
+        var args = CommandLineParameters.Parse(Environment.GetCommandLineArgs());
+        var path = args?.ConfigFile ?? Path.GetDirectoryName(Assembly.GetEntryAssembly()!.Location)
+            + Path.DirectorySeparatorChar + "." + Path.DirectorySeparatorChar + "instance.json";
 
         JObject conf;
         try {
@@ -45,19 +46,8 @@ class InstanceConfig {
             throw new Exception(pfx + ex.Message, ex);
         }
 
-        // Input validation - throw exception on errors. Exception messages printed as-is.
-        BotToken = conf[nameof(BotToken)]?.Value<string>()!;
-        if (string.IsNullOrEmpty(BotToken))
-            throw new Exception($"'{nameof(BotToken)}' is not properly specified in configuration.");
-
-        var pginput = conf[nameof(BotDatabaseContext.PostgresConnectionString)]?.Value<string>()!;
-        if (string.IsNullOrEmpty(pginput))
-            throw new Exception($"'{nameof(BotDatabaseContext.PostgresConnectionString)}' is not properly specified in configuration.");
-        BotDatabaseContext.PostgresConnectionString = pginput;
-
-        InstanceLogTarget = conf[nameof(InstanceLogTarget)]?.Value<string>()!;
-        if (string.IsNullOrEmpty(InstanceLogTarget))
-            throw new Exception($"'{nameof(InstanceLogTarget)}' is not properly specified in configuration.");
+        BotToken = ReadConfKey<string>(conf, nameof(BotToken), true);
+        InstanceLogTarget = ReadConfKey<string>(conf, nameof(InstanceLogTarget), true);
 
         try {
             Assemblies = Common.Utilities.LoadStringOrStringArray(conf[nameof(Assemblies)]).AsReadOnly();
@@ -65,6 +55,42 @@ class InstanceConfig {
             Assemblies = Array.Empty<string>();
         } catch (ArgumentException) {
             throw new Exception($"'{nameof(Assemblies)}' is not properly specified in configuration.");
+        }
+
+        SqlHost = ReadConfKey<string>(conf, nameof(SqlHost), false);
+        SqlDatabase = ReadConfKey<string?>(conf, nameof(SqlDatabase), false);
+        SqlUsername = ReadConfKey<string>(conf, nameof(SqlUsername), true);
+        SqlPassword = ReadConfKey<string>(conf, nameof(SqlPassword), true);
+    }
+
+    private static T? ReadConfKey<T>(JObject jc, string key, [DoesNotReturnIf(true)] bool failOnEmpty) {
+        if (jc.ContainsKey(key)) return jc[key]!.Value<T>();
+        if (failOnEmpty) throw new Exception($"'{key}' must be specified in the instance configuration.");
+        return default;
+    }
+
+    /// <summary>
+    /// Command line options
+    /// </summary>
+    class CommandLineParameters {
+        [Option('c', "config", Default = null,
+            HelpText = "Custom path to instance configuration. Defaults to instance.json in bot directory.")]
+        public string ConfigFile { get; set; } = null!;
+
+        /// <summary>
+        /// Command line arguments parsed here. Depending on inputs, the program can exit here.
+        /// </summary>
+        public static CommandLineParameters? Parse(string[] args) {
+            CommandLineParameters? result = null;
+
+            new Parser(settings => {
+                settings.IgnoreUnknownArguments = true;
+                settings.AutoHelp = false;
+                settings.AutoVersion = false;
+            }).ParseArguments<CommandLineParameters>(args)
+                .WithParsed(p => result = p)
+                .WithNotParsed(e => { /* ignore */ });
+            return result;
         }
     }
 }

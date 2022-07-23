@@ -1,22 +1,22 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace RegexBot.Data;
 /// <summary>
 /// Represents a database connection using the settings defined in the bot's global configuration.
 /// </summary>
 public class BotDatabaseContext : DbContext {
-    private static string? _npgsqlConnectionString;
-    internal static string PostgresConnectionString {
-#if DEBUG
-        get {
-            if (_npgsqlConnectionString != null) return _npgsqlConnectionString;
-            Console.WriteLine($"{nameof(RegexBot)} - {nameof(BotDatabaseContext)} note: Using hardcoded connection string!");
-            return _npgsqlConnectionString ?? "Host=localhost;Username=regexbot;Password=rb";
-        }
-#else
-        get => _npgsqlConnectionString!;
-#endif
-        set => _npgsqlConnectionString ??= value;
+    private static readonly string _connectionString;
+
+    static BotDatabaseContext() {
+        // Get our own config loaded just for the SQL stuff
+        var conf = new InstanceConfig();
+        _connectionString = new NpgsqlConnectionStringBuilder() {
+            Host = conf.SqlHost ?? "localhost", // default to localhost
+            Database = conf.SqlDatabase,
+            Username = conf.SqlUsername,
+            Password = conf.SqlPassword
+        }.ToString();
     }
 
     /// <summary>
@@ -37,7 +37,7 @@ public class BotDatabaseContext : DbContext {
     /// <inheritdoc />
     protected sealed override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
          => optionsBuilder
-            .UseNpgsql(PostgresConnectionString)
+            .UseNpgsql(_connectionString)
             .UseSnakeCaseNamingConvention();
 
     /// <inheritdoc />
