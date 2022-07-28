@@ -8,7 +8,7 @@ namespace RegexBot.Services.Logging;
 /// </summary>
 class LoggingService : Service {
     // NOTE: Service.Log's functionality is implemented here. DO NOT use within this class.
-    private readonly string? _logBasePath;
+    private readonly string _logBasePath;
 
     internal LoggingService(RegexbotClient bot) : base(bot) {
         _logBasePath = Path.GetDirectoryName(Assembly.GetEntryAssembly()!.Location)
@@ -17,8 +17,7 @@ class LoggingService : Service {
             if (!Directory.Exists(_logBasePath)) Directory.CreateDirectory(_logBasePath);
             Directory.GetFiles(_logBasePath);
         } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) {
-            _logBasePath = null;
-            DoLog(Name, "Cannot create or access logging directory. File logging will be disabled.");
+            throw new Exception("Cannot create or access logging directory.");
         }
 
         bot.DiscordClient.Log += DiscordClient_Log;
@@ -50,17 +49,15 @@ class LoggingService : Service {
     // Hooked
     internal void DoLog(string source, string? message) {
         message ??= "(null)";
-        var now = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.Now;
         var output = new StringBuilder();
-        var prefix = $"[{now:u}] [{source}] ";
+        var prefix = $"[{now:s}] [{source}] ";
         foreach (var line in message.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.None)) {
             output.Append(prefix).AppendLine(line);
         }
         var outstr = output.ToString();
         Console.Write(outstr);
-        if (_logBasePath != null) {
-            var filename = _logBasePath + Path.DirectorySeparatorChar + $"{now:yyyy-MM}.log";
-            File.AppendAllText(filename, outstr, Encoding.UTF8);
-        }
+        var filename = _logBasePath + Path.DirectorySeparatorChar + $"{now:yyyy-MM}.log";
+        File.AppendAllText(filename, outstr, Encoding.UTF8);
     }
 }
