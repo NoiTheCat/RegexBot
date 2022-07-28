@@ -29,9 +29,13 @@ internal class RegexModerator : RegexbotModule {
     }
 
     private Task DiscordClient_MessageReceived(SocketMessage arg) => ReceiveIncomingMessage(arg);
-    private Task DiscordClient_MessageUpdated(Cacheable<Discord.IMessage, ulong> arg1, SocketMessage arg2, ISocketMessageChannel arg3)
-        => ReceiveIncomingMessage(arg2);
-    
+    private Task DiscordClient_MessageUpdated(Cacheable<Discord.IMessage, ulong> arg1, SocketMessage arg2, ISocketMessageChannel arg3) {
+        // Ignore embed edits (see comment in MessageCachingSubservice)
+        if (!arg2.EditedTimestamp.HasValue) return Task.CompletedTask;
+
+        return ReceiveIncomingMessage(arg2);
+    }
+
     /// <summary>
     /// Does initial message checking before further processing.
     /// </summary>

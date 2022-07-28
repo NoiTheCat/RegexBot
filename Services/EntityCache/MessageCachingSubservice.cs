@@ -17,8 +17,12 @@ class MessageCachingSubservice {
 
     private Task DiscordClient_MessageReceived(SocketMessage arg)
         => AddOrUpdateCacheItemAsync(arg, false);
-    private Task DiscordClient_MessageUpdated(Cacheable<IMessage, ulong> arg1, SocketMessage arg2, ISocketMessageChannel arg3)
-        => AddOrUpdateCacheItemAsync(arg2, true);
+    private Task DiscordClient_MessageUpdated(Cacheable<IMessage, ulong> arg1, SocketMessage arg2, ISocketMessageChannel arg3) {
+        // This event is fired also when a link preview embed is added to a message. In those situations, the message's edited timestamp
+        // remains null, in addition to having other unusual and unexpected properties. We are not interested in these.
+        if (!arg2.EditedTimestamp.HasValue) return Task.CompletedTask;
+        return AddOrUpdateCacheItemAsync(arg2, true);
+    }
 
     private async Task AddOrUpdateCacheItemAsync(SocketMessage arg, bool isUpdate) {
         if (!Common.Utilities.IsValidUserMessage(arg, out _)) return;
