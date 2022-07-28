@@ -51,7 +51,7 @@ public class CachedGuildMessage {
     /// <summary>
     /// Gets this message's content.
     /// </summary>
-    public string Content { get; set; } = null!;
+    public string? Content { get; set; } = null!;
 
     /// <summary>
     /// If included in the query, references the associated <seealso cref="CachedUser"/> for this entry.

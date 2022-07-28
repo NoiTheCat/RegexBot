@@ -43,7 +43,6 @@ namespace RegexBot.Data.Migrations
                         .HasColumnName("channel_id");
 
                     b.Property<string>("Content")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("content");
 

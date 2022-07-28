@@ -8,6 +8,7 @@ namespace RegexBot.Modules.ModLogs;
 internal partial class ModLogs {
     const string PreviewCutoffNotify = "**Message too long to preview; showing first {0} characters.**\n\n";
     const string NotCached = "Message not cached.";
+    const string MessageContentNull = "(blank)";
 
     private async Task HandleDelete(Cacheable<IMessage, ulong> argMsg, Cacheable<IMessageChannel, ulong> argChannel) {
         const int MaxPreviewLength = 750;
@@ -32,7 +33,9 @@ internal partial class ModLogs {
             .WithCurrentTimestamp();
 
         if (cachedMsg != null) {
-            if (cachedMsg.Content.Length > MaxPreviewLength) {
+            if (cachedMsg.Content == null) {
+                reportEmbed.Description = MessageContentNull;
+            } else if (cachedMsg.Content.Length > MaxPreviewLength) {
                 reportEmbed.Description = string.Format(PreviewCutoffNotify, MaxPreviewLength) +
                     cachedMsg.Content[MaxPreviewLength..];
             } else {
@@ -82,17 +85,17 @@ internal partial class ModLogs {
         var reportEmbed = new EmbedBuilder()
             .WithTitle("Message edited")
             .WithCurrentTimestamp();
-        Console.WriteLine(reportEmbed.Build().ToString());
 
         reportEmbed.Author = new EmbedAuthorBuilder() {
             Name = $"{newMsg.Author.Username}#{newMsg.Author.Discriminator}",
             IconUrl = newMsg.Author.GetAvatarUrl() ?? newMsg.Author.GetDefaultAvatarUrl()
         };
-        Console.WriteLine(reportEmbed.Build().ToString());
 
         var oldField = new EmbedFieldBuilder() { Name = "Old" };
         if (oldMsg != null) {
-            if (oldMsg.Content.Length > MaxPreviewLength) {
+            if (oldMsg.Content == null) {
+                oldField.Value = MessageContentNull;
+            } else if (oldMsg.Content.Length > MaxPreviewLength) {
                 oldField.Value = string.Format(PreviewCutoffNotify, MaxPreviewLength) +
                     oldMsg.Content[MaxPreviewLength..];
             } else {
@@ -102,18 +105,18 @@ internal partial class ModLogs {
             oldField.Value = NotCached;
         }
         reportEmbed.AddField(oldField);
-        Console.WriteLine(reportEmbed.Build().ToString());
 
         // TODO shorten 'new' preview, add clickable? check if this would be good usability-wise
         var newField = new EmbedFieldBuilder() { Name = "New" };
-        if (newMsg.Content.Length > MaxPreviewLength) {
+        if (newMsg.Content == null) {
+            newField.Value = MessageContentNull;
+        } else if (newMsg.Content.Length > MaxPreviewLength) {
             newField.Value = string.Format(PreviewCutoffNotify, MaxPreviewLength) +
                 newMsg.Content[MaxPreviewLength..];
         } else {
             newField.Value = newMsg.Content;
         }
         reportEmbed.AddField(newField);
-        Console.WriteLine(reportEmbed.Build().ToString());
         
         var contextStr = new StringBuilder();
         contextStr.AppendLine($"User: <@!{newMsg.Author.Id}>");
@@ -126,7 +129,6 @@ internal partial class ModLogs {
             Value = contextStr.ToString()
         };
         reportEmbed.AddField(contextField);
-        Console.WriteLine(reportEmbed.Build().ToString());
 
         await reportChannel.SendMessageAsync(embed: reportEmbed.Build());
     }
