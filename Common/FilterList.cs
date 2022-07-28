@@ -49,22 +49,23 @@ public class FilterList {
     public FilterList(JObject config, string whitelistKey = "Whitelist", string blacklistKey = "Blacklist", string exemptKey = "Exempt") {
         if (whitelistKey != null && config[whitelistKey] != null &&
             blacklistKey != null && config[blacklistKey] != null) {
-            throw new FormatException($"Cannot have both '{whitelistKey}' and '{blacklistKey}' defined at once.");
+                // User has defined both keys at once, which is not allowed
+                throw new FormatException($"Cannot have both '{whitelistKey}' and '{blacklistKey}' defined at once.");
         }
 
-        JToken? valueSrc = null;
+        JToken? incoming = null;
         if (whitelistKey != null) {
             // Try getting a whitelist
-            valueSrc = config[whitelistKey];
+            incoming = config[whitelistKey];
             Mode = FilterMode.Whitelist;
         }
-        if (valueSrc != null && blacklistKey != null) {
+        if (incoming == null && blacklistKey != null) {
             // Try getting a blacklist
-            valueSrc = config[blacklistKey];
+            incoming = config[blacklistKey];
             Mode = FilterMode.Blacklist;
         }
 
-        if (valueSrc == null) {
+        if (incoming == null) {
             // Got neither. Have an empty list.
             Mode = FilterMode.None;
             FilteredList = new EntityList();
@@ -72,18 +73,22 @@ public class FilterList {
             return;
         }
 
-        // Verify that the specified array is actually an array.
-        if (valueSrc != null && valueSrc.Type != JTokenType.Array)
-            throw new ArgumentException("Given list must be a JSON array.");
-        FilteredList = new EntityList((JArray)valueSrc!, true);
+        if (incoming.Type != JTokenType.Array)
+            throw new FormatException("Filtering list must be a JSON array.");
+        FilteredList = new EntityList((JArray)incoming, true);
 
         // Verify the same for the exemption list.
-        FilterExemptions = new EntityList();
         if (exemptKey != null) {
-            var exc = config[exemptKey];
-            if (exc != null && exc.Type == JTokenType.Array) {
-                FilterExemptions = new EntityList(exc, true);
+            var incomingEx = config[exemptKey];
+            if (incomingEx == null) {
+                FilterExemptions = new EntityList();
+            } else if (incomingEx.Type != JTokenType.Array) {
+                throw new FormatException("Filtering exemption list must be a JSON array.");
+            } else {
+                FilterExemptions = new EntityList(incomingEx, true);
             }
+        } else {
+            FilterExemptions = new EntityList();
         }
     }
 

@@ -78,7 +78,7 @@ public class EntityList : IEnumerable<EntityName> {
         foreach (var entry in this) {
             if (entry.Type == EntityType.Role) {
                 if (entry.Id.HasValue) {
-                    return authorRoles.Any(r => r.Id == entry.Id.Value);
+                    if (authorRoles.Any(r => r.Id == entry.Id.Value)) return true;
                 } else {
                     foreach (var r in authorRoles) {
                         if (!string.Equals(r.Name, entry.Name, StringComparison.OrdinalIgnoreCase)) break;
@@ -88,16 +88,15 @@ public class EntityList : IEnumerable<EntityName> {
                 }
             } else if (entry.Type == EntityType.Channel) {
                 if (entry.Id.HasValue) {
-                    return entry.Id.Value == channel.Id;
+                    if (entry.Id.Value == channel.Id) return true;
                 } else {
                     if (!string.Equals(channel.Name, entry.Name, StringComparison.OrdinalIgnoreCase)) break;
                     if (keepId) entry.SetId(channel.Id);
                     return true;
                 }
-            } else // User
-              {
+            } else { // User
                 if (entry.Id.HasValue) {
-                    return entry.Id.Value == author.Id;
+                    if (entry.Id.Value == author.Id) return true;
                 } else {
                     if (!string.Equals(author.Username, entry.Name, StringComparison.OrdinalIgnoreCase)) break;
                     if (keepId) entry.SetId(author.Id);
