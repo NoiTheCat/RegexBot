@@ -22,7 +22,7 @@ class ModuleStateService : Service {
     }
 
     private async Task RefreshGuildState(SocketGuild arg) {
-        if (await ProcessConfiguration(arg.Id)) Log($"Configuration refreshed for server {arg.Id}.");
+        if (await ProcessConfiguration(arg)) Log($"Configuration refreshed for '{arg.Name}'.");
     }
 
     private Task RemoveGuildData(SocketGuild arg) {
@@ -60,8 +60,8 @@ class ModuleStateService : Service {
     /// This takes an all-or-nothing approach. Should there be a single issue in processing
     /// configuration, all existing state data is kept.
     /// </remarks>
-    private async Task<bool> ProcessConfiguration(ulong guildId) {
-        var jstr = await LoadConfigFile(guildId);
+    private async Task<bool> ProcessConfiguration(SocketGuild guild) {
+        var jstr = await LoadConfigFile(guild);
         JObject guildConf;
         try {
             var tok = JToken.Parse(jstr);
@@ -71,7 +71,7 @@ class ModuleStateService : Service {
                 throw new InvalidCastException("Configuration is not valid JSON.");
             }
         } catch (Exception ex) when (ex is JsonReaderException or InvalidCastException) {
-            Log($"Error loading configuration for server ID {guildId}: {ex.Message}");
+            Log($"Error loading configuration for server ID {guild.Id}: {ex.Message}");
             return false;
         }
 
@@ -83,40 +83,51 @@ class ModuleStateService : Service {
         foreach (var module in BotClient.Modules) {
             var t = module.GetType();
             try {
-                var state = await module.CreateGuildStateAsync(guildId, guildConf[module.Name]!);
+                var state = await module.CreateGuildStateAsync(guild.Id, guildConf[module.Name]!);
                 newStates.Add(t, state);
             } catch (ModuleLoadException ex) {
-                Log($"{guildId}: Error reading configuration regarding {module.Name}: {ex.Message}");
+                Log($"{guild.Id}: Error reading configuration regarding {module.Name}: {ex.Message}");
                 return false;
             } catch (Exception ex) when (ex is not ModuleLoadException) {
                 Log("Unhandled exception while initializing guild state for module:\n" +
                     $"Module: {module.Name} | " +
-                    $"Guild: {guildId} ({BotClient.DiscordClient.GetGuild(guildId)?.Name ?? "unknown name"})\n" +
+                    $"Guild: {guild.Id} ({BotClient.DiscordClient.GetGuild(guild.Id)?.Name ?? "unknown name"})\n" +
                     $"```\n{ex}\n```");
                 return false;
             }
         }
         lock (_storageLock) {
-            _moderators[guildId] = mods;
-            _stateData[guildId] = newStates;
+            _moderators[guild.Id] = mods;
+            _stateData[guild.Id] = newStates;
         }
         return true;
     }
 
-    private async Task<string> LoadConfigFile(ulong guildId) {
+    private async Task<string> LoadConfigFile(SocketGuild guild) {
         // Per-guild configuration exists under `config/(guild ID).json`
         var basePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly()!.Location) +
             Path.DirectorySeparatorChar + "config" + Path.DirectorySeparatorChar;
         if (!Directory.Exists(basePath)) Directory.CreateDirectory(basePath);
-        var path = basePath + guildId + ".json";
+        var path = basePath + guild.Id + ".json";
         if (File.Exists(path)) {
             return await File.ReadAllTextAsync(path);
-        } else {
-            // Write default configuration to new file
-            using var resStream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"{nameof(RegexBot)}.DefaultGuildConfig.json");
-            using (var newFile = File.OpenWrite(path)) resStream!.CopyTo(newFile);
-            Log($"Created initial configuration file in config{Path.DirectorySeparatorChar}{guildId}.json");
-            return await LoadConfigFile(guildId);
+        } else { // Write default configuration to new file
+            string fileContents;
+            using (var resStream = Assembly.GetExecutingAssembly()
+                .GetManifestResourceStream($"{nameof(RegexBot)}.DefaultGuildConfig.json")!) {
+                    using var readin = new StreamReader(resStream, encoding: System.Text.Encoding.UTF8);
+                    fileContents = readin.ReadToEnd();
+            }
+            var userex = BotClient.DiscordClient.CurrentUser;
+            fileContents = fileContents.Replace("SERVER NAME", guild.Name).Replace("MODERATOR", $"@{userex.Id}::{userex.Username}");
+            using (var newFile = File.OpenWrite(path)) {
+                var w = new StreamWriter(newFile);
+                w.Write(fileContents);
+                w.Flush();
+                w.Close();
+            }
+            Log($"Created initial configuration file in config{Path.DirectorySeparatorChar}{guild.Id}.json");
+            return await LoadConfigFile(guild);
         }
     }
 }

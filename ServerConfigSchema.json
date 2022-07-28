@@ -1,0 +1,21 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "object",
+    "properties": {
+        "Name": {
+            "type": "string",
+            "description": "The server's name. The value is unused by the application and is only for user reference."
+        },
+        "Moderators": {
+            "type": "array",
+            "description": "A list of entities which the bot should recognize as moderators.",
+            "items": {
+                "type": "string"
+            }
+        }
+        /* schema still a work in progress */
+    },
+    "required": [
+        "Moderators"
+    ]
+}
