@@ -30,7 +30,8 @@ internal partial class ModLogs {
 
         var reportEmbed = new EmbedBuilder()
             .WithTitle("Message deleted")
-            .WithCurrentTimestamp();
+            .WithCurrentTimestamp()
+            .WithFooter($"User ID: {(cachedMsg == null ? "Unknown" : cachedMsg.AuthorId)}");
 
         if (cachedMsg != null) {
             if (cachedMsg.Content == null) {
@@ -52,6 +53,8 @@ internal partial class ModLogs {
                     IconUrl = cachedMsg.Author.AvatarUrl ?? GetDefaultAvatarUrl(cachedMsg.Author.Discriminator)
                 };
             }
+            var attach = CheckAttachments(cachedMsg.AttachmentNames);
+            if (attach != null) reportEmbed.AddField(attach);
         } else {
             reportEmbed.Description = NotCached;
         }
@@ -84,7 +87,8 @@ internal partial class ModLogs {
 
         var reportEmbed = new EmbedBuilder()
             .WithTitle("Message edited")
-            .WithCurrentTimestamp();
+            .WithCurrentTimestamp()
+            .WithFooter($"User ID: {newMsg.Author.Id}");
 
         reportEmbed.Author = new EmbedAuthorBuilder() {
             Name = $"{newMsg.Author.Username}#{newMsg.Author.Discriminator}",
@@ -117,6 +121,9 @@ internal partial class ModLogs {
             newField.Value = newMsg.Content;
         }
         reportEmbed.AddField(newField);
+
+        var attach = CheckAttachments(newMsg.Attachments.Select(a => a.Filename));
+        if (attach != null) reportEmbed.AddField(attach);
         
         var contextStr = new StringBuilder();
         contextStr.AppendLine($"User: <@!{newMsg.Author.Id}>");
@@ -131,5 +138,18 @@ internal partial class ModLogs {
         reportEmbed.AddField(contextField);
 
         await reportChannel.SendMessageAsync(embed: reportEmbed.Build());
+    }
+
+    private static EmbedFieldBuilder? CheckAttachments(IEnumerable<string> attachments) {
+        if (attachments.Any()) {
+            var field = new EmbedFieldBuilder { Name = "Attachments" };
+            var attachNames = new StringBuilder();
+            foreach (var name in attachments) {
+                attachNames.AppendLine($"`{name}`");
+            }
+            field.Value = attachNames.ToString().TrimEnd();
+            return field;
+        }
+        return null;
     }
 }
