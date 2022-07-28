@@ -10,7 +10,7 @@ class EntityCacheService : Service {
 
     internal EntityCacheService(RegexbotClient bot) : base(bot) {
         // Currently we only have UserCache. May add Channel and Server caches later.
-        _uc = new UserCachingSubservice(bot);
+        _uc = new UserCachingSubservice(bot, Log);
         _mc = new MessageCachingSubservice(bot, Log);
     }
 

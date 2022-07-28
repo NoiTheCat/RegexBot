@@ -10,19 +10,23 @@ namespace RegexBot.Services.EntityCache;
 /// </summary>
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static")]
 class UserCachingSubservice {
-    internal UserCachingSubservice(RegexbotClient bot) {
+    private readonly Action<string> _log;
+
+    internal UserCachingSubservice(RegexbotClient bot, Action<string> logMethod) {
+        _log = logMethod;
         bot.DiscordClient.GuildMembersDownloaded += DiscordClient_GuildMembersDownloaded;
         bot.DiscordClient.GuildMemberUpdated += DiscordClient_GuildMemberUpdated;
         bot.DiscordClient.UserUpdated += DiscordClient_UserUpdated;
     }
-
     private async Task DiscordClient_GuildMembersDownloaded(SocketGuild arg) {
+        _log($"{arg.Name}: Full member list obtained. Cache update in progress.");
         using var db = new BotDatabaseContext();
         foreach (var user in arg.Users) {
             UpdateUser(user, db);
             UpdateGuildUser(user, db);
         }
-        await db.SaveChangesAsync();
+        var changes = await db.SaveChangesAsync();
+        _log($"{arg.Name}: Member caches updated ({changes} database writes).");
     }
 
     private async Task DiscordClient_GuildMemberUpdated(Discord.Cacheable<SocketGuildUser, ulong> old, SocketGuildUser current) {
