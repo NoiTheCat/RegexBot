@@ -5,7 +5,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <Authors>NoiTheCat</Authors>
     <Description>Advanced and flexible Discord moderation bot.</Description>
-    <Version>0.0.1</Version>
+    <Version>3.0.0</Version>
 	  <ImplicitUsings>enable</ImplicitUsings>
 	  <Nullable>enable</Nullable>
 	  <GenerateDocumentationFile>True</GenerateDocumentationFile>
