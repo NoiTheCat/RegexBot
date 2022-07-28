@@ -44,7 +44,7 @@ public class CachedGuildMessage {
     public DateTimeOffset? EditedAt { get; set; }
 
     /// <summary>
-    /// Gets a list of file names thata were attached to this message.
+    /// Gets a list of file names that were attached to this message.
     /// </summary>
     public List<string> AttachmentNames { get; set; } = null!;
 

@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 
 namespace RegexBot.Modules.AutoResponder;
-
 /// <summary>
 /// Provides the capability to define text responses to pattern-based triggers for fun or informational
 /// purposes. Although in essence similar to <see cref="RegexModerator.RegexModerator"/>, it is a better
@@ -20,7 +19,6 @@ internal class AutoResponder : RegexbotModule {
         if (config.Type != JTokenType.Array)
             throw new ModuleLoadException(Name + " configuration must be a JSON array.");
 
-        // TODO better error reporting during this process
         foreach (var def in config.Children<JObject>())
             defs.Add(new Definition(def));
 

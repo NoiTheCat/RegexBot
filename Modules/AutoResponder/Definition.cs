@@ -2,7 +2,6 @@
 using System.Text.RegularExpressions;
 
 namespace RegexBot.Modules.AutoResponder;
-
 /// <summary>
 /// Representation of a single <see cref="AutoResponder"/> configuration definition.
 /// </summary>
@@ -28,7 +27,6 @@ class Definition {
 
         // Regex
         var opts = RegexOptions.Compiled | RegexOptions.CultureInvariant;
-        // TODO consider adding an option to specify Singleline and Multiline mode. Defaulting to Singleline.
         // Reminder: in Singleline mode, all contents are subject to the same regex (useful if e.g. spammer separates words line by line)
         opts |= RegexOptions.Singleline;
         // IgnoreCase is enabled by default; must be explicitly set to false
