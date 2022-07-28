@@ -7,9 +7,9 @@ class MessageCachingSubservice {
     // Hooked
     public event EcMessageUpdateHandler? OnCachePreUpdate;
 
-    private readonly Action<string, bool> _log;
+    private readonly Action<string> _log;
 
-    internal MessageCachingSubservice(RegexbotClient bot, Action<string, bool> logMethod) {
+    internal MessageCachingSubservice(RegexbotClient bot, Action<string> logMethod) {
         _log = logMethod;
         bot.DiscordClient.MessageReceived += DiscordClient_MessageReceived;
         bot.DiscordClient.MessageUpdated += DiscordClient_MessageUpdated;
@@ -63,8 +63,8 @@ class MessageCachingSubservice {
             try {
                 await (Task)handler.DynamicInvoke(oldMsg, newMsg)!;
             } catch (Exception ex) {
-                _log($"Unhandled exception in {nameof(RegexbotClient.EcOnMessageUpdate)} handler '{handler.Method.Name}':", false);
-                _log(ex.ToString(), false);
+                _log($"Unhandled exception in {nameof(RegexbotClient.EcOnMessageUpdate)} handler '{handler.Method.Name}':\n"
+                    + ex.ToString());
             }
         }
     }

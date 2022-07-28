@@ -34,15 +34,13 @@ class Program {
             AlwaysDownloadUsers = true
         });
 
+        // Initialize services, load modules
         _main = new RegexbotClient(cfg, client);
 
         // Set up application close handler
         Console.CancelKeyPress += Console_CancelKeyPress;
 
-        // TODO Set up unhandled exception handler
-        // send error notification to instance log channel, if possible
-
-        // And off we go.
+        // Proceed to connect
         await _main.DiscordClient.LoginAsync(TokenType.Bot, cfg.BotToken);
         await _main.DiscordClient.StartAsync();
         await Task.Delay(-1);
@@ -51,7 +49,7 @@ class Program {
     private static void Console_CancelKeyPress(object? sender, ConsoleCancelEventArgs e) {
         e.Cancel = true;
 
-        _main._svcLogging.DoLog(true, nameof(RegexBot), "Shutting down. Reason: Interrupt signal.");
+        _main._svcLogging.DoLog(nameof(RegexBot), "Shutting down.");
 
         var finishingTasks = Task.Run(async () => {
             // TODO periodic task service: stop processing, wait for all tasks to finish
@@ -60,7 +58,7 @@ class Program {
         });
         
         if (!finishingTasks.Wait(5000))
-            _main._svcLogging.DoLog(false, nameof(RegexBot), "Could not disconnect properly. Exiting...");
+            _main._svcLogging.DoLog(nameof(RegexBot), "Warning: Normal shutdown is taking too long. Exiting now.");
         Environment.Exit(0);
     }
 }

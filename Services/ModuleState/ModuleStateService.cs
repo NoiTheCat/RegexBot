@@ -75,8 +75,6 @@ class ModuleStateService : Service {
             return false;
         }
 
-        // TODO Guild-specific service options? If implemented, this is where to load them.
-
         // Load moderator list
         var mods = new EntityList(guildConf["Moderators"]!, true);
 
@@ -94,7 +92,7 @@ class ModuleStateService : Service {
                 Log("Unhandled exception while initializing guild state for module:\n" +
                     $"Module: {module.Name} | " +
                     $"Guild: {guildId} ({BotClient.DiscordClient.GetGuild(guildId)?.Name ?? "unknown name"})\n" +
-                    $"```\n{ex}\n```", true);
+                    $"```\n{ex}\n```");
                 return false;
             }
         }

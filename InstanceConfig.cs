@@ -19,7 +19,6 @@ class InstanceConfig {
     /// List of assemblies to load, by file. Paths are always relative to the bot directory.
     /// </summary>
     internal IReadOnlyList<string> Assemblies { get; }
-    internal string InstanceLogTarget { get; }
 
     public string? SqlHost { get; }
     public string? SqlDatabase { get; }
@@ -47,7 +46,6 @@ class InstanceConfig {
         }
 
         BotToken = ReadConfKey<string>(conf, nameof(BotToken), true);
-        InstanceLogTarget = ReadConfKey<string>(conf, nameof(InstanceLogTarget), true);
 
         try {
             Assemblies = Common.Utilities.LoadStringOrStringArray(conf[nameof(Assemblies)]).AsReadOnly();

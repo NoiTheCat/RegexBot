@@ -51,7 +51,7 @@ static class ModuleLoader {
             newreport.Append($" {t.Name}");
             newmods.Add((RegexbotModule)mod);
         }
-        rb._svcLogging.DoLog(false, nameof(ModuleLoader), newreport.ToString());
+        rb._svcLogging.DoLog(nameof(ModuleLoader), newreport.ToString());
         return newmods;
     }
 }
