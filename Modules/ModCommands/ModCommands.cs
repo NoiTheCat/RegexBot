@@ -41,9 +41,9 @@ internal class ModCommands : RegexbotModule {
         if (cfg.Commands.TryGetValue(cmdchk, out var c)) {
             try {
                 await c.Invoke(g, arg);
-                Log($"[{g.Name}] {c.Command} invoked by {arg.Author} in #{arg.Channel.Name}.");
+                Log(g, $"{c.Command} invoked by {arg.Author} in #{arg.Channel.Name}.");
             } catch (Exception ex) {
-                Log($"Unhandled exception while processing '{c.Label}':\n" + ex.ToString());
+                Log(g, $"Unhandled exception while processing '{c.Label}':\n" + ex.ToString());
                 await arg.Channel.SendMessageAsync($":x: An error occurred during processing ({ex.GetType().FullName}). " +
                     "Check the console for details.");
             }

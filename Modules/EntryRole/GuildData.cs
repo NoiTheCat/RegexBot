@@ -1,7 +1,6 @@
 ﻿using RegexBot.Common;
 
 namespace RegexBot.Modules.EntryRole;
-
 /// <summary>
 /// Contains configuration data as well as per-guild timers for those awaiting role assignment.
 /// </summary>

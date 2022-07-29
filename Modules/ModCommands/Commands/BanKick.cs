@@ -19,7 +19,7 @@ class Ban : BanKick {
                 await msg.Channel.SendMessageAsync($"{SuccessMessage}\n{result.GetResultString(Module.Bot)}");
             } else {
                 // TODO custom fail message?
-                await msg.Channel.SendMessageAsync(SuccessMessage);
+                await msg.Channel.SendMessageAsync(result.GetResultString(Module.Bot));
             }
         } else {
             await msg.Channel.SendMessageAsync(result.GetResultString(Module.Bot));
