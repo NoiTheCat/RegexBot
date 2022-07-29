@@ -1,32 +1,36 @@
+using RegexBot.Common;
 using System.Collections.ObjectModel;
 
 namespace RegexBot.Modules.VoiceRoleSync;
-/// <summary>
-/// Dictionary wrapper. Key = voice channel ID, Value = role.
-/// </summary>
 class ModuleConfig {
+    /// <summary>
+    /// Key = voice channel ID, Value = role ID.
+    /// </summary>
     private readonly ReadOnlyDictionary<ulong, ulong> _values;
 
     public int Count { get => _values.Count; }
 
-    public ModuleConfig(JObject config) {
-        // Configuration format is expected to be an object that contains other objects.
-        // The objects themselves should have their name be the voice channel,
-        // and the value be the role to be applied.
-
-        // TODO Make it accept names; currently only accepts ulongs
-
+    public ModuleConfig(JObject config, SocketGuild g) {
+        // Configuration: Object with properties.
+        // Property name is a role entity name
+        // Value is a string or array of voice channel IDs.
         var values = new Dictionary<ulong, ulong>();
 
         foreach (var item in config.Properties()) {
-            if (!ulong.TryParse(item.Name, out var voice)) throw new ModuleLoadException($"{item.Name} is not a voice channel ID.");
-            var valstr = item.Value.Value<string>();
-            if (!ulong.TryParse(valstr, out var role)) throw new ModuleLoadException($"{valstr} is not a role ID.");
+            var name = new EntityName(item.Name);
+            if (name.Type != EntityType.Role) throw new ModuleLoadException($"'{item.Name}' is not specified as a role.");
+            var role = name.FindRoleIn(g);
+            if (role == null) throw new ModuleLoadException($"Unable to find role '{name}'.");
 
-            values[voice] = role;
+            var channels = Utilities.LoadStringOrStringArray(item.Value);
+            if (channels.Count == 0) throw new ModuleLoadException($"One or more channels must be defined under '{name}'.");
+            foreach (var id in channels) {
+                if (!ulong.TryParse(id, out var channelId)) throw new ModuleLoadException("Voice channel IDs must be numeric.");
+                if (values.ContainsKey(channelId)) throw new ModuleLoadException($"'{channelId}' cannot be specified more than once.");
+                values.Add(channelId, role.Id);
+            }
         }
-
-        _values = new ReadOnlyDictionary<ulong, ulong>(values);
+        _values = new(values);
     }
 
     public SocketRole? GetAssociatedRoleFor(SocketVoiceChannel voiceChannel) {
@@ -36,8 +40,9 @@ class ModuleConfig {
     }
 
     public IEnumerable<SocketRole> GetTrackedRoles(SocketGuild guild) {
-        foreach (var pair in _values) {
-            var r = guild.GetRole(pair.Value);
+        var roles = _values.Select(v => v.Value).Distinct();
+        foreach (var id in roles) {
+            var r = guild.GetRole(id);
             if (r != null) yield return r;
         }
     }
