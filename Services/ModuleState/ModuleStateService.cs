@@ -86,13 +86,10 @@ class ModuleStateService : Service {
                 var state = await module.CreateGuildStateAsync(guild.Id, guildConf[module.Name]!);
                 newStates.Add(t, state);
             } catch (ModuleLoadException ex) {
-                Log($"{guild.Id}: Error reading configuration regarding {module.Name}: {ex.Message}");
+                Log($"{module.Name} failed to read configuration for {guild.Name}: {ex.Message}");
                 return false;
-            } catch (Exception ex) when (ex is not ModuleLoadException) {
-                Log("Unhandled exception while initializing guild state for module:\n" +
-                    $"Module: {module.Name} | " +
-                    $"Guild: {guild.Id} ({BotClient.DiscordClient.GetGuild(guild.Id)?.Name ?? "unknown name"})\n" +
-                    $"```\n{ex}\n```");
+            } catch (Exception ex) {
+                Log($"Unhandled exception from {module.Name} while creating guild state for {guild.Name}:\n{ex}");
                 return false;
             }
         }
