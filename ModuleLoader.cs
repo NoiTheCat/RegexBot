@@ -17,7 +17,7 @@ static class ModuleLoader {
         foreach (var file in conf.Assemblies) {
             Assembly? a = null;
             try {
-                a = Assembly.LoadFile(path + file);
+                a = Assembly.LoadFrom(path + file);
             } catch (Exception ex) {
                 Console.WriteLine("An error occurred when attempting to load a module assembly.");
                 Console.WriteLine($"File: {file}");
