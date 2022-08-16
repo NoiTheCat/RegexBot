@@ -1,24 +1,17 @@
+#pragma warning disable CA1822 // "Mark members as static" - will not make static to encourage better structure
 using Discord.Net;
 
 namespace RegexBot.Services.CommonFunctions;
 internal partial class CommonFunctionsService : Service {
     // Hooked (indirectly)
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static")]
-    internal async Task<BanKickResult> BanOrKickAsync(RemovalType t,
-                                                      SocketGuild guild,
-                                                      string source,
-                                                      ulong target,
-                                                      int banPurgeDays,
-                                                      string? logReason,
-                                                      bool sendDmToTarget) {
+    internal async Task<BanKickResult> BanOrKickAsync(RemovalType t, SocketGuild guild, string source, ulong target,
+                                                      int banPurgeDays, string? logReason, bool sendDmToTarget) {
         if (t == RemovalType.None) throw new ArgumentException("Removal type must be 'ban' or 'kick'.");
         var dmSuccess = true;
 
         SocketGuildUser utarget = guild.GetUser(target);
         // Can't kick without obtaining user object. Quit here.
         if (t == RemovalType.Kick && utarget == null) return new BanKickResult(null, false, true, RemovalType.Kick, 0);
-
-        // TODO notify services here as soon as we get some who will want to listen to this (use source parameter)
 
         // Send DM notification
         if (sendDmToTarget) {
@@ -35,10 +28,13 @@ internal partial class CommonFunctionsService : Service {
             return new BanKickResult(ex, dmSuccess, false, t, target);
         }
 
-        return new BanKickResult(null, dmSuccess, false, t, target);
+        // Report successful action
+        var result = new BanKickResult(null, dmSuccess, false, t, target);
+        ModLogsProcessRemoval(guild.Id, target, t == RemovalType.Ban ? ModLogType.Ban : ModLogType.Kick, source, logReason);
+        return result;
     }
 
-    private static async Task<bool> BanKickSendNotificationAsync(SocketGuildUser target, RemovalType action, string? reason) {
+    private async Task<bool> BanKickSendNotificationAsync(SocketGuildUser target, RemovalType action, string? reason) {
         const string DMTemplate = "You have been {0} from {1}";
         const string DMTemplateReason = " for the following reason:\n{2}";
 

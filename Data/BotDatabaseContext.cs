@@ -34,6 +34,11 @@ public class BotDatabaseContext : DbContext {
     /// </summary>
     public DbSet<CachedGuildMessage> GuildMessageCache { get; set; } = null!;
 
+    /// <summary>
+    /// Retrieves the <seealso cref="ModLogEntry">moderator logs</seealso>.
+    /// </summary>
+    public DbSet<ModLogEntry> ModLogs { get; set; } = null!;
+
     /// <inheritdoc />
     protected sealed override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
          => optionsBuilder
@@ -43,10 +48,12 @@ public class BotDatabaseContext : DbContext {
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
         modelBuilder.Entity<CachedUser>(entity => entity.Property(e => e.Discriminator).HasMaxLength(4).IsFixedLength());
-        modelBuilder.Entity<CachedGuildUser>(entity => {
-            entity.HasKey(e => new { e.UserId, e.GuildId });
-            entity.Property(e => e.FirstSeenTime).HasDefaultValueSql("now()");
+        modelBuilder.Entity<CachedGuildUser>(e => {
+            e.HasKey(p => new { p.UserId, p.GuildId });
+            e.Property(p => p.FirstSeenTime).HasDefaultValueSql("now()");
         });
-        modelBuilder.Entity<CachedGuildMessage>(entity => entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()"));
+        modelBuilder.Entity<CachedGuildMessage>(e => e.Property(p => p.CreatedAt).HasDefaultValueSql("now()"));
+        modelBuilder.HasPostgresEnum<ModLogType>();
+        modelBuilder.Entity<ModLogEntry>(e => e.Property(p => p.Timestamp).HasDefaultValueSql("now()"));
     }
 }
