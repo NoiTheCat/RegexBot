@@ -1,8 +1,6 @@
 ﻿using Discord.Net;
 using RegexBot.Common;
 
-// Instances of this class are created by CommonFunctionService and are meant to be sent to modules,
-// therefore we put this in the root RegexBot namespace despite being specific to this service.
 namespace RegexBot;
 /// <summary>
 /// Contains information on various success/failure outcomes for a ban or kick operation.
