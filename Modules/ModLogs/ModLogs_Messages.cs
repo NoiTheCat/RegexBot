@@ -73,6 +73,12 @@ internal partial class ModLogs {
         await reportChannel.SendMessageAsync(embed: reportEmbed.Build());
     }
 
+    private async Task FilterIncomingEvents(ISharedEvent ev) {
+        if (ev is MessageCacheUpdateEvent upd) {
+            await HandleUpdate(upd.OldMessage, upd.NewMessage);
+        }
+    }
+
     private async Task HandleUpdate(CachedGuildMessage? oldMsg, SocketMessage newMsg) {
         const int MaxPreviewLength = 500;
         var channel = (SocketTextChannel)newMsg.Channel;

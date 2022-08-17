@@ -12,7 +12,7 @@ internal partial class ModLogs : RegexbotModule {
     public ModLogs(RegexbotClient bot) : base(bot) {
         // TODO missing logging features: joins, leaves, bans, kicks, user edits (nick/username/discr)
         DiscordClient.MessageDeleted += HandleDelete;
-        bot.EcOnMessageUpdate += HandleUpdate;
+        bot.SharedEventReceived += FilterIncomingEvents;
     }
 
     public override Task<object?> CreateGuildStateAsync(ulong guildID, JToken config) {
