@@ -6,22 +6,28 @@
 /// </summary>
 public class EntityName {
     /// <summary>
-    /// The entity's type, if specified in configuration.
+    /// The entity's type, as specified in configuration.
     /// </summary>
     public EntityType Type { get; private set; }
 
+    private ulong? _id;
     /// <summary>
     /// Entity's unique ID value (snowflake). May be null if the value is not known.
     /// </summary>
-    public ulong? Id { get; private set; }
+    /// <remarks>
+    /// This value may be updated during runtime if the parent <see cref="EntityList"/> was instructed to
+    /// update the ID for persistence.
+    /// </remarks>
+    public ulong? Id {
+        get => _id;
+        internal set => _id ??= value;
+    }
 
     /// <summary>
     /// Entity's name as specified in configuration. May be null if it was not specified.
-    /// This value is not updated during runtime.
     /// </summary>
+    /// <remarks>This value is not updated during runtime.</remarks>
     public string? Name { get; private set; }
-
-    // TODO elsewhere: find a way to emit a warning if the user specified a name without ID in configuration.
 
     /// <summary>
     /// Creates a new object instance from the given input string.
@@ -72,14 +78,23 @@ public class EntityName {
         }
     }
 
-    internal void SetId(ulong id) {
-        if (!Id.HasValue) Id = id;
+    /// <summary>
+    /// Creates a new object instance from the given input string.
+    /// Documentation for the EntityName format can be found elsewhere in this project's documentation.
+    /// </summary>
+    /// <param name="input">Input string in EntityName format.</param>
+    /// <param name="expectedType">The <see cref="EntityType"/> expected for this instance.</param>
+    /// <exception cref="ArgumentNullException">Input string is null or blank.</exception>
+    /// <exception cref="ArgumentException">Input string cannot be resolved to an entity type.</exception>
+    /// <exception cref="FormatException">Input string was resolved to a type other than specified.</exception>
+    public EntityName(string input, EntityType expectedType) : this(input) {
+        if (Type != expectedType) throw new FormatException("Resolved EntityType does not match expected type.");
     }
 
     /// <summary>
     /// Returns the appropriate prefix corresponding to an EntityType.
     /// </summary>
-    public static char Prefix(EntityType t) => t switch {
+    public static char GetPrefix(EntityType t) => t switch {
         EntityType.Role => '&',
         EntityType.Channel => '#',
         EntityType.User => '@',
@@ -90,7 +105,7 @@ public class EntityName {
     /// Returns a string representation of this item in proper EntityName format.
     /// </summary>
     public override string ToString() {
-        var pf = Prefix(Type);
+        var pf = GetPrefix(Type);
 
         if (Id.HasValue && Name != null)
             return $"{pf}{Id.Value}::{Name}";

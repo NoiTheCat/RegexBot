@@ -26,13 +26,10 @@ class GuildData {
     public GuildData(JObject conf, Dictionary<ulong, DateTimeOffset> _waitingList) {
         WaitingList = _waitingList;
 
-        var cfgRole = conf["Role"]?.Value<string>();
-        if (string.IsNullOrWhiteSpace(cfgRole))
-            throw new ModuleLoadException("Role value not specified.");
         try {
-            TargetRole = new EntityName(cfgRole);
-        } catch (ArgumentException) {
-            throw new ModuleLoadException("Role config value was not properly specified to be a role.");
+            TargetRole = new EntityName(conf["Role"]?.Value<string>()!, EntityType.Role);
+        } catch (Exception) {
+            throw new ModuleLoadException("'Role' was not properly specified.");
         }
 
         try {

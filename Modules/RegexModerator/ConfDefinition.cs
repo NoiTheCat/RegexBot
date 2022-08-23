@@ -34,9 +34,11 @@ class ConfDefinition {
 
         var rptch = def[nameof(ReportingChannel)]?.Value<string>();
         if (rptch != null) {
-            ReportingChannel = new EntityName(rptch);
-            if (ReportingChannel.Type != EntityType.Channel)
+            try {
+                ReportingChannel = new EntityName(rptch, EntityType.Channel);
+            } catch (FormatException) {
                 throw new ModuleLoadException($"'{nameof(ReportingChannel)}' is not defined as a channel{errpostfx}");
+            }
         }
 
         // Regex loading

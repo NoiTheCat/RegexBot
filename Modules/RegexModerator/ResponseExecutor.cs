@@ -160,14 +160,14 @@ class ResponseExecutor {
         SocketGuildUser? tuser;
         SocketRole? trole;
         try {
-            var userName = new EntityName(param[0]);
+            var userName = new EntityName(param[0], EntityType.User);
             if (userName.Id.HasValue) tuser = _guild.GetUser(userName.Id.Value);
             else {
                 if (userName.Name == "_") tuser = _user;
                 else tuser = userName.FindUserIn(_guild);
             }
             if (tuser == null) return FromError($"Unable to find user '{userName.Name}'.");
-            var roleName = new EntityName(param[1]);
+            var roleName = new EntityName(param[1], EntityType.Role);
             if (roleName.Id.HasValue) trole = _guild.GetRole(roleName.Id.Value);
             else trole = roleName.FindRoleIn(_guild);
             if (trole == null) return FromError($"Unable to find role '{roleName.Name}'.");

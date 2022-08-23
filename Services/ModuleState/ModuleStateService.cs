@@ -69,7 +69,7 @@ class ModuleStateService : Service {
         }
 
         // Load moderator list
-        var mods = new EntityList(guildConf["Moderators"]!, true);
+        var mods = new EntityList(guildConf["Moderators"]!);
 
         // Create guild state objects for all existing modules
         var newStates = new Dictionary<Type, object?>();

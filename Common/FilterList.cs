@@ -75,7 +75,7 @@ public class FilterList {
 
         if (incoming.Type != JTokenType.Array)
             throw new FormatException("Filtering list must be a JSON array.");
-        FilteredList = new EntityList((JArray)incoming, true);
+        FilteredList = new EntityList((JArray)incoming);
 
         // Verify the same for the exemption list.
         if (exemptKey != null) {
@@ -85,7 +85,7 @@ public class FilterList {
             } else if (incomingEx.Type != JTokenType.Array) {
                 throw new FormatException("Filtering exemption list must be a JSON array.");
             } else {
-                FilterExemptions = new EntityList(incomingEx, true);
+                FilterExemptions = new EntityList(incomingEx);
             }
         } else {
             FilterExemptions = new EntityList();

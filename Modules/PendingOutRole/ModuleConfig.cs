@@ -5,11 +5,13 @@ class ModuleConfig {
     public EntityName Role { get; }
 
     public ModuleConfig(JObject conf) {
-        var cfgRole = conf[nameof(Role)]?.Value<string>();
-        if (string.IsNullOrWhiteSpace(cfgRole))
-            throw new ModuleLoadException("Role was not specified.");
-        Role = new EntityName(cfgRole);
-        if (Role.Type != EntityType.Role)
-            throw new ModuleLoadException("Name specified in configuration is not a role.");
+        try {
+            Role = new EntityName(conf[nameof(Role)]?.Value<string>()!, EntityType.Role);
+        } catch (ArgumentException) {
+                throw new ModuleLoadException("Role was not properly specified.");
+        } catch (FormatException) {
+                throw new ModuleLoadException("Name specified in configuration is not a role.");
+        }
+            
     }
 }

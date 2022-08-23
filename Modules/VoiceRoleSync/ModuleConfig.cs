@@ -17,8 +17,12 @@ class ModuleConfig {
         var values = new Dictionary<ulong, ulong>();
 
         foreach (var item in config.Properties()) {
-            var name = new EntityName(item.Name);
-            if (name.Type != EntityType.Role) throw new ModuleLoadException($"'{item.Name}' is not specified as a role.");
+            EntityName name;
+            try {
+                name = new EntityName(item.Name, EntityType.Role);
+            } catch (FormatException) {
+                throw new ModuleLoadException($"'{item.Name}' is not specified as a role.");
+            }
             var role = name.FindRoleIn(g);
             if (role == null) throw new ModuleLoadException($"Unable to find role '{name}'.");
 
