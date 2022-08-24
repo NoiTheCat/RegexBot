@@ -15,8 +15,7 @@ public class EntityName {
     /// Entity's unique ID value (snowflake). May be null if the value is not known.
     /// </summary>
     /// <remarks>
-    /// This value may be updated during runtime if the parent <see cref="EntityList"/> was instructed to
-    /// update the ID for persistence.
+    /// This property may be updated during runtime if instructed to update the ID for persistence.
     /// </remarks>
     public ulong? Id {
         get => _id;
@@ -39,16 +38,12 @@ public class EntityName {
     public EntityName(string input) {
         if (string.IsNullOrWhiteSpace(input))
             throw new ArgumentNullException(nameof(input), "Specified name is blank.");
+        if (input.Length < 2) throw new ArgumentException("Input is not in a valid entity name format.");
 
-        // Check if type prefix was specified and extract it
-        Type = default;
-        if (input.Length >= 2) {
-            if (input[0] == '&') Type = EntityType.Role;
-            else if (input[0] == '#') Type = EntityType.Channel;
-            else if (input[0] == '@') Type = EntityType.User;
-        }
-        if (Type == default)
-            throw new ArgumentException("Entity type unable to be inferred by given input.");
+        if (input[0] == '&') Type = EntityType.Role;
+        else if (input[0] == '#') Type = EntityType.Channel;
+        else if (input[0] == '@') Type = EntityType.User;
+        else throw new ArgumentException("Entity type unable to be inferred by given input.");
 
         input = input[1..]; // Remove prefix
 
@@ -116,6 +111,7 @@ public class EntityName {
     }
 
     #region Helper methods
+    // TODO convert all to extension methods
     /// <summary>
     /// Attempts to find the corresponding role within the given guild.
     /// </summary>
