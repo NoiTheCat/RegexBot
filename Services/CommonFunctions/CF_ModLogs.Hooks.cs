@@ -1,4 +1,4 @@
-#pragma warning disable CA1822 // "Mark members as static" - will not make static to encourage better structure
+#pragma warning disable CA1822 // "Mark members as static" - members should only be callable by code with access to this instance
 using Discord.Net;
 using RegexBot.Common;
 using RegexBot.Data;
@@ -22,7 +22,7 @@ partial class RegexbotClient {
     /// <returns>
     /// The resulting <see cref="ModLogEntry"/> from the creation of this note.
     /// </returns>
-    public ModLogEntry AddUserNote(SocketGuild guild, ulong targetUser, string source, string? message) {
+    public async Task<ModLogEntry> AddUserNote(SocketGuild guild, ulong targetUser, string source, string? message) {
         var entry = new ModLogEntry() {
             GuildId = (long)guild.Id,
             UserId = (long)targetUser,
@@ -32,9 +32,9 @@ partial class RegexbotClient {
         };
         using (var db = new BotDatabaseContext()) {
             db.Add(entry);
-            db.SaveChanges();
+            await db.SaveChangesAsync();
         }
-        // TODO notify
+        await PushSharedEventAsync(entry);
         return entry;
     }
 
@@ -63,7 +63,7 @@ partial class RegexbotClient {
             db.Add(entry);
             await db.SaveChangesAsync();
         }
-        // TODO notify
+        await PushSharedEventAsync(entry);
 
         // Attempt warning message
         var userSearch = _svcEntityCache.QueryUserCache(targetUser.ToString());

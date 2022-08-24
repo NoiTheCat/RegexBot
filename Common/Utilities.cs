@@ -1,5 +1,6 @@
 ﻿using Discord;
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace RegexBot.Common;
@@ -63,5 +64,46 @@ public static class Utilities {
             throw new ArgumentException(ExNotString, nameof(token));
         }
         return results;
+    }
+
+    /// <summary>
+    /// Builds and returns an embed which displays this log entry.
+    /// </summary>
+    public static Embed BuildEmbed(this Data.ModLogEntry entry, RegexbotClient bot) {
+        var logEmbed = new EmbedBuilder()
+            .WithTitle("Moderation log entry")
+            .WithTimestamp(entry.Timestamp)
+            .WithFooter($"Log ID {entry.LogId}");
+
+        string? issuedDisplay = null;
+        try {
+            var entityTry = new EntityName(entry.IssuedBy, EntityType.User);
+            var issueq = bot.EcQueryUser(entityTry.Id!.Value.ToString());
+            if (issueq != null) issuedDisplay = $"<@{issueq.UserId}> - {issueq.Username}#{issueq.Discriminator} `{issueq.UserId}`";
+            else issuedDisplay = $"Unknown user with ID `{entityTry.Id!.Value}`";
+        } catch (Exception) { }
+        issuedDisplay ??= entry.IssuedBy;
+        string targetDisplay;
+        var targetq = bot.EcQueryUser(entry.UserId.ToString());
+        if (targetq != null) targetDisplay = $"<@{targetq.UserId}> - {targetq.Username}#{targetq.Discriminator} `{targetq.UserId}`";
+        else targetDisplay = $"Unknown user with ID `{entry.UserId}`";
+
+        var contextStr = new StringBuilder();
+        contextStr.AppendLine($"Log type: {Enum.GetName(typeof(ModLogType), entry.LogType)}");
+        contextStr.AppendLine($"Regarding user: {targetDisplay}");
+        contextStr.AppendLine($"Logged by: {issuedDisplay}");
+
+        logEmbed.AddField(new EmbedFieldBuilder() {
+            Name = "Context",
+            Value = contextStr.ToString()
+        });
+        if (entry.Message != null) {
+            logEmbed.AddField(new EmbedFieldBuilder() {
+                Name = "Message",
+                Value = entry.Message
+            });
+        }
+
+        return logEmbed.Build();
     }
 }

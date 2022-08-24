@@ -14,11 +14,11 @@ internal partial class ModLogs {
         const int MaxPreviewLength = 750;
         if (argChannel.Value is not SocketTextChannel channel) return;
         var conf = GetGuildState<ModuleConfig>(channel.Guild.Id);
+        if ((conf?.LogMessageDeletions ?? false) == false) return;
         var reportChannel = conf?.ReportingChannel?.FindChannelIn(channel.Guild, true);
         if (reportChannel == null) return;
-        if ((conf?.LogMessageDeletions ?? false) == false) return;
         if (reportChannel.Id == channel.Id) {
-            Log($"[{channel.Guild.Name}] Message deletion detected in the reporting channel. Regular report has been suppressed.");
+            Log(channel.Guild, "Message deleted in the reporting channel. Suppressing report.");
             return;
         }
 
@@ -53,41 +53,27 @@ internal partial class ModLogs {
                     IconUrl = cachedMsg.Author.AvatarUrl ?? GetDefaultAvatarUrl(cachedMsg.Author.Discriminator)
                 };
             }
-            var attach = CheckAttachments(cachedMsg.AttachmentNames);
-            if (attach != null) reportEmbed.AddField(attach);
+            SetAttachmentsField(reportEmbed, cachedMsg.AttachmentNames);
         } else {
             reportEmbed.Description = NotCached;
         }
-        
-        var contextStr = new StringBuilder();
-        contextStr.AppendLine($"User: {(cachedMsg != null ? $"<@!{cachedMsg.AuthorId}>" : "Unknown")}");
-        contextStr.AppendLine($"Channel: <#{channel.Id}> (#{channel.Name})");
-        contextStr.AppendLine($"Posted: {MakeTimestamp(SnowflakeUtils.FromSnowflake(argMsg.Id))}");
-        if (cachedMsg?.EditedAt != null) contextStr.AppendLine($"Last edit: {MakeTimestamp(cachedMsg.EditedAt.Value)}");
-        contextStr.AppendLine($"Message ID: {argMsg.Id}");
-        reportEmbed.AddField(new EmbedFieldBuilder() {
-            Name = "Context",
-            Value = contextStr.ToString()
-        });
+
+        var editLine = $"Posted: {MakeTimestamp(SnowflakeUtils.FromSnowflake(argMsg.Id))}";
+        if (cachedMsg?.EditedAt != null) editLine += $"\nLast edit: {MakeTimestamp(cachedMsg.EditedAt.Value)}";
+        SetContextField(reportEmbed, (ulong?)cachedMsg?.AuthorId, channel, editLine, argMsg.Id);
 
         await reportChannel.SendMessageAsync(embed: reportEmbed.Build());
-    }
-
-    private async Task FilterIncomingEvents(ISharedEvent ev) {
-        if (ev is MessageCacheUpdateEvent upd) {
-            await HandleUpdate(upd.OldMessage, upd.NewMessage);
-        }
     }
 
     private async Task HandleUpdate(CachedGuildMessage? oldMsg, SocketMessage newMsg) {
         const int MaxPreviewLength = 500;
         var channel = (SocketTextChannel)newMsg.Channel;
         var conf = GetGuildState<ModuleConfig>(channel.Guild.Id);
+        
         var reportChannel = conf?.ReportingChannel?.FindChannelIn(channel.Guild, true);
         if (reportChannel == null) return;
-        if ((conf?.LogMessageEdits ?? false) == false) return;
         if (reportChannel.Id == channel.Id) {
-            Log($"[{channel.Guild.Name}] Message edit detected in the reporting channel. Regular report has been suppressed.");
+            Log(channel.Guild, "Message edited in the reporting channel. Suppressing report.");
             return;
         }
 
@@ -128,25 +114,39 @@ internal partial class ModLogs {
         }
         reportEmbed.AddField(newField);
 
-        var attach = CheckAttachments(newMsg.Attachments.Select(a => a.Filename));
-        if (attach != null) reportEmbed.AddField(attach);
-        
-        var contextStr = new StringBuilder();
-        contextStr.AppendLine($"User: <@!{newMsg.Author.Id}>");
-        contextStr.AppendLine($"Channel: <#{channel.Id}> (#{channel.Name})");
-        if ((oldMsg?.EditedAt) == null) contextStr.AppendLine($"Posted: {MakeTimestamp(SnowflakeUtils.FromSnowflake(newMsg.Id))}");
-        else contextStr.AppendLine($"Previous edit: {MakeTimestamp(oldMsg.EditedAt.Value)}");
-        contextStr.AppendLine($"Message ID: {newMsg.Id}");
-        var contextField = new EmbedFieldBuilder() {
-            Name = "Context",
-            Value = contextStr.ToString()
-        };
-        reportEmbed.AddField(contextField);
+        SetAttachmentsField(reportEmbed, newMsg.Attachments.Select(a => a.Filename));
+
+        string editLine;
+        if ((oldMsg?.EditedAt) == null) editLine = $"Posted: {MakeTimestamp(SnowflakeUtils.FromSnowflake(newMsg.Id))}";
+        else editLine = $"Previous edit: {MakeTimestamp(oldMsg.EditedAt.Value)}";
+        SetContextField(reportEmbed, newMsg.Author.Id, channel, editLine, newMsg.Id);
 
         await reportChannel.SendMessageAsync(embed: reportEmbed.Build());
     }
 
-    private static EmbedFieldBuilder? CheckAttachments(IEnumerable<string> attachments) {
+    private void SetContextField(EmbedBuilder e, ulong? userId, SocketTextChannel channel, string editLine, ulong msgId) {
+        string userDisplay;
+        if (userId.HasValue) {
+            var q = Bot.EcQueryUser(userId.Value.ToString());
+            if (q != null) userDisplay = $"<@{q.UserId}> - {q.Username}#{q.Discriminator} `{q.UserId}`";
+            else userDisplay = $"Unknown user with ID `{userId}`";
+        } else {
+            userDisplay = "Unknown";
+        }
+
+        var contextStr = new StringBuilder();
+        contextStr.AppendLine($"User: {userDisplay}");
+        contextStr.AppendLine($"Channel: <#{channel.Id}> (#{channel.Name})");
+        contextStr.AppendLine(editLine);
+        contextStr.AppendLine($"Message ID: {msgId}");
+
+        e.AddField(new EmbedFieldBuilder() {
+            Name = "Context",
+            Value = contextStr.ToString()
+        });
+    }
+
+    private static void SetAttachmentsField(EmbedBuilder e, IEnumerable<string> attachments) {
         if (attachments.Any()) {
             var field = new EmbedFieldBuilder { Name = "Attachments" };
             var attachNames = new StringBuilder();
@@ -154,8 +154,7 @@ internal partial class ModLogs {
                 attachNames.AppendLine($"`{name}`");
             }
             field.Value = attachNames.ToString().TrimEnd();
-            return field;
+            e.AddField(field);
         }
-        return null;
     }
 }

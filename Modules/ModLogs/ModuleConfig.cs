@@ -6,6 +6,7 @@ class ModuleConfig {
 
     public bool LogMessageDeletions { get; }
     public bool LogMessageEdits { get; }
+    public bool LogModLogs { get; }
 
     public ModuleConfig(JObject config) {
         const string RptChError = $"'{nameof(ReportingChannel)}' must be set to a valid channel name.";
@@ -18,5 +19,6 @@ class ModuleConfig {
         // Individual logging settings - all default to false
         LogMessageDeletions = config[nameof(LogMessageDeletions)]?.Value<bool>() ?? false;
         LogMessageEdits = config[nameof(LogMessageEdits)]?.Value<bool>() ?? false;
+        LogModLogs = config[nameof(LogModLogs)]?.Value<bool>() ?? false;
     }
 }

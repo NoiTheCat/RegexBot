@@ -10,9 +10,9 @@ internal partial class ModLogs : RegexbotModule {
     // TODO consider resurrecting 2.x idea of logging actions to db, making it searchable?
 
     public ModLogs(RegexbotClient bot) : base(bot) {
-        // TODO missing logging features: joins, leaves, bans, kicks, user edits (nick/username/discr)
+        // TODO missing logging features: joins, leaves, user edits (nick/username/discr)
         DiscordClient.MessageDeleted += HandleDelete;
-        bot.SharedEventReceived += FilterIncomingEvents;
+        bot.SharedEventReceived += HandleReceivedSharedEvent;
     }
 
     public override Task<object?> CreateGuildStateAsync(ulong guildID, JToken config) {
@@ -22,6 +22,11 @@ internal partial class ModLogs : RegexbotModule {
         var newconf = new ModuleConfig((JObject)config);
         Log(DiscordClient.GetGuild(guildID), $"Writing logs to {newconf.ReportingChannel}.");
         return Task.FromResult<object?>(new ModuleConfig((JObject)config));
+    }
+
+    private async Task HandleReceivedSharedEvent(ISharedEvent ev) {
+        if (ev is MessageCacheUpdateEvent upd) await HandleUpdate(upd.OldMessage, upd.NewMessage);    
+        else if (ev is Data.ModLogEntry log) await HandleLog(log);
     }
 
     private static string MakeTimestamp(DateTimeOffset time) {
