@@ -54,6 +54,11 @@ public class BotDatabaseContext : DbContext {
         });
         modelBuilder.Entity<CachedGuildMessage>(e => e.Property(p => p.CreatedAt).HasDefaultValueSql("now()"));
         modelBuilder.HasPostgresEnum<ModLogType>();
-        modelBuilder.Entity<ModLogEntry>(e => e.Property(p => p.Timestamp).HasDefaultValueSql("now()"));
+        modelBuilder.Entity<ModLogEntry>(e => {
+            e.Property(p => p.Timestamp).HasDefaultValueSql("now()");
+            e.HasOne(entry => entry.User)
+                .WithMany(gu => gu.Logs)
+                .HasForeignKey(entry => new {entry.GuildId, entry.UserId});
+        });
     }
 }

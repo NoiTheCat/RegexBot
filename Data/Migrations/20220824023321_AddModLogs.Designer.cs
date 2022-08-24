@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using RegexBot.Data;
@@ -12,9 +13,10 @@ using RegexBot.Data;
 namespace RegexBot.Data.Migrations
 {
     [DbContext(typeof(BotDatabaseContext))]
-    partial class BotDatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20220824023321_AddModLogs")]
+    partial class AddModLogs
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

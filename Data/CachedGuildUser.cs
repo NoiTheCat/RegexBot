@@ -33,4 +33,9 @@ public class CachedGuildUser {
     [ForeignKey(nameof(UserId))]
     [InverseProperty(nameof(CachedUser.Guilds))]
     public CachedUser User { get; set; } = null!;
+
+    /// <summary>
+    /// If included in the query, references all <seealso cref="ModLogEntry"/> items associated with this entry.
+    /// </summary>
+    public ICollection<ModLogEntry> Logs { get; set; } = null!;
 }
