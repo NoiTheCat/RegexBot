@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace RegexBot;
-
 /// <summary>
 /// Contains essential instance configuration for this bot including Discord connection settings, service configuration,
 /// and command-line options.
@@ -67,17 +66,10 @@ class InstanceConfig {
         return default;
     }
 
-    /// <summary>
-    /// Command line options
-    /// </summary>
     class CommandLineParameters {
-        [Option('c', "config", Default = null,
-            HelpText = "Custom path to instance configuration. Defaults to instance.json in bot directory.")]
-        public string ConfigFile { get; set; } = null!;
+        [Option('c', "config", Default = null)]
+        public string? ConfigFile { get; set; } = null!;
 
-        /// <summary>
-        /// Command line arguments parsed here. Depending on inputs, the program can exit here.
-        /// </summary>
         public static CommandLineParameters? Parse(string[] args) {
             CommandLineParameters? result = null;
 

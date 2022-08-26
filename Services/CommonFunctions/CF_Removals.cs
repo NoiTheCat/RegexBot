@@ -1,4 +1,4 @@
-#pragma warning disable CA1822 // "Mark members as static" - will not make static to encourage better structure
+#pragma warning disable CA1822 // "Mark members as static" - members should only be callable by code with access to this instance
 using Discord.Net;
 
 namespace RegexBot.Services.CommonFunctions;
