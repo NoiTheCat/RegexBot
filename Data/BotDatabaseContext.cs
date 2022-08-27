@@ -12,6 +12,9 @@ public class BotDatabaseContext : DbContext {
         // Get our own config loaded just for the SQL stuff
         var conf = new InstanceConfig();
         _connectionString = new NpgsqlConnectionStringBuilder() {
+#if DEBUG
+            IncludeErrorDetail = true,
+#endif
             Host = conf.SqlHost ?? "localhost", // default to localhost
             Database = conf.SqlDatabase,
             Username = conf.SqlUsername,
@@ -49,7 +52,7 @@ public class BotDatabaseContext : DbContext {
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
         modelBuilder.Entity<CachedUser>(entity => entity.Property(e => e.Discriminator).HasMaxLength(4).IsFixedLength());
         modelBuilder.Entity<CachedGuildUser>(e => {
-            e.HasKey(p => new { p.UserId, p.GuildId });
+            e.HasKey(p => new { p.GuildId, p.UserId });
             e.Property(p => p.FirstSeenTime).HasDefaultValueSql("now()");
         });
         modelBuilder.Entity<CachedGuildMessage>(e => e.Property(p => p.CreatedAt).HasDefaultValueSql("now()"));
@@ -58,7 +61,7 @@ public class BotDatabaseContext : DbContext {
             e.Property(p => p.Timestamp).HasDefaultValueSql("now()");
             e.HasOne(entry => entry.User)
                 .WithMany(gu => gu.Logs)
-                .HasForeignKey(entry => new {entry.GuildId, entry.UserId});
+                .HasForeignKey(entry => new { entry.GuildId, entry.UserId });
         });
     }
 }

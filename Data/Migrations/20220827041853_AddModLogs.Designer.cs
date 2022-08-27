@@ -13,7 +13,7 @@ using RegexBot.Data;
 namespace RegexBot.Data.Migrations
 {
     [DbContext(typeof(BotDatabaseContext))]
-    [Migration("20220824023321_AddModLogs")]
+    [Migration("20220827041853_AddModLogs")]
     partial class AddModLogs
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -74,13 +74,13 @@ namespace RegexBot.Data.Migrations
 
             modelBuilder.Entity("RegexBot.Data.CachedGuildUser", b =>
                 {
-                    b.Property<long>("UserId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("user_id");
-
                     b.Property<long>("GuildId")
                         .HasColumnType("bigint")
                         .HasColumnName("guild_id");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("user_id");
 
                     b.Property<DateTimeOffset>("FirstSeenTime")
                         .ValueGeneratedOnAdd()
@@ -96,8 +96,11 @@ namespace RegexBot.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("nickname");
 
-                    b.HasKey("UserId", "GuildId")
+                    b.HasKey("GuildId", "UserId")
                         .HasName("pk_cache_usersinguild");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_cache_usersinguild_user_id");
 
                     b.ToTable("cache_usersinguild", (string)null);
                 });

@@ -10,8 +10,17 @@ namespace RegexBot.Data.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropPrimaryKey(
+                name: "pk_cache_usersinguild",
+                table: "cache_usersinguild");
+
             migrationBuilder.AlterDatabase()
                 .Annotation("Npgsql:Enum:mod_log_type", "other,note,warn,timeout,kick,ban");
+
+            migrationBuilder.AddPrimaryKey(
+                name: "pk_cache_usersinguild",
+                table: "cache_usersinguild",
+                columns: new[] { "guild_id", "user_id" });
 
             migrationBuilder.CreateTable(
                 name: "modlogs",
@@ -33,9 +42,14 @@ namespace RegexBot.Data.Migrations
                         name: "fk_modlogs_cache_usersinguild_user_temp_id",
                         columns: x => new { x.guild_id, x.user_id },
                         principalTable: "cache_usersinguild",
-                        principalColumns: new[] { "user_id", "guild_id" },
+                        principalColumns: new[] { "guild_id", "user_id" },
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "ix_cache_usersinguild_user_id",
+                table: "cache_usersinguild",
+                column: "user_id");
 
             migrationBuilder.CreateIndex(
                 name: "ix_modlogs_guild_id_user_id",
@@ -48,8 +62,21 @@ namespace RegexBot.Data.Migrations
             migrationBuilder.DropTable(
                 name: "modlogs");
 
+            migrationBuilder.DropPrimaryKey(
+                name: "pk_cache_usersinguild",
+                table: "cache_usersinguild");
+
+            migrationBuilder.DropIndex(
+                name: "ix_cache_usersinguild_user_id",
+                table: "cache_usersinguild");
+
             migrationBuilder.AlterDatabase()
                 .OldAnnotation("Npgsql:Enum:mod_log_type", "other,note,warn,timeout,kick,ban");
+
+            migrationBuilder.AddPrimaryKey(
+                name: "pk_cache_usersinguild",
+                table: "cache_usersinguild",
+                columns: new[] { "user_id", "guild_id" });
         }
     }
 }

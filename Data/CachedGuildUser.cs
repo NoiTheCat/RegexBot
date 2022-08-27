@@ -6,13 +6,13 @@ namespace RegexBot.Data;
 /// </summary>
 [Table("cache_usersinguild")]
 public class CachedGuildUser {
-    /// <inheritdoc cref="CachedUser.UserId"/>
-    public long UserId { get; set; }
-
     /// <summary>
     /// Gets the associated guild's snowflake ID.
     /// </summary>
     public long GuildId { get; set; }
+
+    /// <inheritdoc cref="CachedUser.UserId"/>
+    public long UserId { get; set; }
 
     /// <inheritdoc cref="CachedUser.ULastUpdateTime"/>
     public DateTimeOffset GULastUpdateTime { get; set; }
