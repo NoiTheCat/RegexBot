@@ -28,18 +28,18 @@ internal partial class CommonFunctionsService : Service {
     }
 
     internal async Task<HttpException?> SendUserWarningAsync(SocketGuildUser target, string? reason) {
-        const string DMTemplate = "You were warned in {0}";
+        const string DMTemplate = "You have been issued a warning in {0}";
         const string DMTemplateReason = " with the following message:\n{1}";
 
         var outMessage = string.IsNullOrWhiteSpace(reason)
             ? string.Format(DMTemplate + ".", target.Guild.Name)
             : string.Format(DMTemplate + DMTemplateReason, target.Guild.Name, reason);
-        var dch = await target.CreateDMChannelAsync();
         try {
+            var dch = await target.CreateDMChannelAsync();
             await dch.SendMessageAsync(outMessage);
         } catch (HttpException ex) {
             return ex;
         }
-        return default;
+        return null;
     }
 }

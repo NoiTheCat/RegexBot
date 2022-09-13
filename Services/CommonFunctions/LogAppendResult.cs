@@ -40,7 +40,7 @@ public class LogAppendResult {
     /// </summary>
     public string GetResultString() {
         var msg = $":white_check_mark: Warning \\#{_logId} logged for {_rptDisplayName}.";
-        if (!Success) msg += "\n:warning: **User did not receive warning message.** This must be discussed manually.";
+        if (!Success) msg += "\n:warning: **User did not receive warning message.** Consider sending a message manually.";
         return msg;
     }
 }

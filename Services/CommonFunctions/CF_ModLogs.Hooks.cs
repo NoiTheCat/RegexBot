@@ -22,7 +22,7 @@ partial class RegexbotClient {
     /// <returns>
     /// The resulting <see cref="ModLogEntry"/> from the creation of this note.
     /// </returns>
-    public async Task<ModLogEntry> AddUserNote(SocketGuild guild, ulong targetUser, string source, string? message) {
+    public async Task<ModLogEntry> AddUserNoteAsync(SocketGuild guild, ulong targetUser, string source, string? message) {
         var entry = new ModLogEntry() {
             GuildId = (long)guild.Id,
             UserId = (long)targetUser,

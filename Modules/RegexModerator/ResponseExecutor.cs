@@ -8,6 +8,8 @@ namespace RegexBot.Modules.RegexModerator;
 /// Transient helper class which handles response interpreting and execution.
 /// </summary>
 class ResponseExecutor {
+    private const string ErrParamNeedNone = "This response type does not accept parameters.";
+    private const string ErrParamWrongAmount = "Incorrect number of parameters defined in the response.";
     delegate Task<ResponseResult> ResponseHandler(string? parameter);
 
     private readonly ConfDefinition _rule;
@@ -19,6 +21,8 @@ class ResponseExecutor {
 
     private readonly List<(string, ResponseResult)> _reports;
     private Action<string> Log { get; }
+
+    private string LogSource => $"Rule '{_rule.Label}'";
 
     public ResponseExecutor(ConfDefinition rule, RegexbotClient bot, SocketMessage msg, Action<string> logger) {
         _rule = rule;
@@ -114,7 +118,7 @@ class ResponseExecutor {
                 )
                 .WithDescription(invokingLine)
                 .WithFooter(
-                    text: $"Rule: {_rule.Label}",
+                    text: LogSource,
                     iconUrl: _bot.DiscordClient.CurrentUser.GetAvatarUrl()
                 )
                 .WithCurrentTimestamp()
@@ -135,10 +139,10 @@ class ResponseExecutor {
     private async Task<ResponseResult> CmdBanKick(RemovalType rt, string? parameter) {
         BanKickResult result;
         if (rt == RemovalType.Ban) {
-            result = await _bot.BanAsync(_guild, $"Rule '{_rule.Label}'", _user.Id,
+            result = await _bot.BanAsync(_guild, LogSource, _user.Id,
                                          _rule.BanPurgeDays, parameter, _rule.NotifyUserOfRemoval);
         } else {
-            result = await _bot.KickAsync(_guild, $"Rule '{_rule.Label}'", _user.Id,
+            result = await _bot.KickAsync(_guild, LogSource, _user.Id,
                                           parameter, _rule.NotifyUserOfRemoval);
         }
         if (result.ErrorForbidden) return FromError(Messages.ForbiddenGenericError);
@@ -151,10 +155,9 @@ class ResponseExecutor {
     private Task<ResponseResult> CmdRoleDel(string? parameter) => CmdRoleManipulation(parameter, false);
     private async Task<ResponseResult> CmdRoleManipulation(string? parameter, bool add) {
         // parameters: @_, &, reason?
-        // TODO add persistence option if/when implemented
-        if (string.IsNullOrWhiteSpace(parameter)) return FromError("This response requires parameters.");
+        if (string.IsNullOrWhiteSpace(parameter)) return FromError(ErrParamWrongAmount);
         var param = parameter.Split(' ', 3, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (param.Length < 2) return FromError("Incorrect number of parameters.");
+        if (param.Length != 2) return FromError(ErrParamWrongAmount);
         
         // Find targets
         SocketGuildUser? tuser;
@@ -176,21 +179,17 @@ class ResponseExecutor {
         }
         
         // Do action
-        var rq = new RequestOptions() { AuditLogReason = $"Rule '{_rule.Label}'" };
-        if (param.Length == 3 && !string.IsNullOrWhiteSpace(param[2])) {
-            rq.AuditLogReason += " - " + param[2];
-        }
+        var rq = new RequestOptions() { AuditLogReason = LogSource };
         if (add) await tuser.AddRoleAsync(trole, rq);
         else await tuser.RemoveRoleAsync(trole, rq);
         return FromSuccess($"{(add ? "Set" : "Unset")} {trole.Mention}.");
     }
 
     private async Task<ResponseResult> CmdDelete(string? parameter) {
-        // TODO detailed audit log deletion reason?
-        if (parameter != null) return FromError("This response does not accept parameters.");
+        if (!string.IsNullOrWhiteSpace(parameter)) return FromError(ErrParamNeedNone);
 
         try {
-            await _msg.DeleteAsync(new RequestOptions { AuditLogReason = $"Rule {_rule.Label}" });
+            await _msg.DeleteAsync(new RequestOptions { AuditLogReason = LogSource });
             return FromSuccess();
         } catch (Discord.Net.HttpException ex) when (ex.HttpCode == System.Net.HttpStatusCode.NotFound) {
             return FromError("The message had already been deleted.");
@@ -199,9 +198,9 @@ class ResponseExecutor {
 
     private async Task<ResponseResult> CmdSay(string? parameter) {
         // parameters: [#_/@_] message
-        if (string.IsNullOrWhiteSpace(parameter)) return FromError("This response requires parameters.");
+        if (string.IsNullOrWhiteSpace(parameter)) return FromError(ErrParamWrongAmount);
         var param = parameter.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (param.Length != 2) return FromError("Incorrect number of parameters.");
+        if (param.Length != 2) return FromError(ErrParamWrongAmount);
 
         // Get target
         IMessageChannel? targetCh;
@@ -233,17 +232,21 @@ class ResponseExecutor {
         return FromSuccess($"Sent to {(isUser ? "user DM" : $"<#{targetCh.Id}>")}.");
     }
 
-    private Task<ResponseResult> CmdNote(string? parameter) {
-        #warning Not implemented
-        return Task.FromResult(FromError("not implemented"));
+    private async Task<ResponseResult> CmdNote(string? parameter) {
+        if (string.IsNullOrWhiteSpace(parameter)) return FromError(ErrParamWrongAmount);
+        var log = await _bot.AddUserNoteAsync(_guild, _user.Id, LogSource, parameter);
+        return FromSuccess($"Note \\#{log.LogId} logged for {_user}.");
     }
     private Task<ResponseResult> CmdTimeout(string? parameter) {
         #warning Not implemented
         return Task.FromResult(FromError("not implemented"));
     }
-    private Task<ResponseResult> CmdWarn(string? parameter) {
-        #warning Not implemented
-        return Task.FromResult(FromError("not implemented"));
+    private async Task<ResponseResult> CmdWarn(string? parameter) {
+        if (string.IsNullOrWhiteSpace(parameter)) return FromError(ErrParamWrongAmount);
+        var (log, result) = await _bot.AddUserWarnAsync(_guild, _user.Id, LogSource, parameter);
+        var resultMsg = $"Warning \\#{log.LogId} logged for {_user}.";
+        if (result.Success) return FromSuccess(resultMsg);
+        else return FromError(resultMsg + " Failed to send DM.");
     }
     #endregion
 
