@@ -60,7 +60,7 @@ abstract class BanKick : CommandConfig {
     // "PurgeDays"       - integer; Number of days of target's post history to delete, if banning.
     //                     Must be between 0-7 inclusive. Defaults to 0.
     // "SendNotify"      - boolean; Whether to send a notification DM explaining the action. Defaults to true.
-    // "SuccessMessage"  - string; Message to display on command success. Overrides default.
+    // "SuccessMessage"  - string; Additional message to display on command success.
     protected BanKick(ModCommands module, JObject config, bool ban) : base(module, config) {
         ForceReason = config[nameof(ForceReason)]?.Value<bool>() ?? false;
         PurgeDays = config[nameof(PurgeDays)]?.Value<int>() ?? 0;
@@ -68,7 +68,7 @@ abstract class BanKick : CommandConfig {
         SendNotify = config[nameof(SendNotify)]?.Value<bool>() ?? true;
         SuccessMessage = config[nameof(SuccessMessage)]?.Value<string>();
 
-        _usage = $"{Command} `user or user ID` `" + (ForceReason ? "reason" : "[reason]") + "`\n"
+        _usage = $"{Command} `user ID or tag` `" + (ForceReason ? "reason" : "[reason]") + "`\n"
             + "Removes the given user from this server"
             + (ban ? " and prevents the user from rejoining" : "") + ". "
             + (ForceReason ? "L" : "Optionally l") + "ogs the reason for the "
@@ -80,7 +80,7 @@ abstract class BanKick : CommandConfig {
     private readonly string _usage;
     protected override string DefaultUsageMsg => _usage;
 
-    // Usage: (command) (mention) (reason)
+    // Usage: (command) (user) (reason)
     public override async Task Invoke(SocketGuild g, SocketMessage msg) {
         var line = msg.Content.Split(new char[] { ' ' }, 3, StringSplitOptions.RemoveEmptyEntries);
         string targetstr;
