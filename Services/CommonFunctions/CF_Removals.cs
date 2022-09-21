@@ -14,6 +14,7 @@ internal partial class CommonFunctionsService : Service {
         if (t == RemovalType.Kick && utarget == null) return new BanKickResult(null, false, true, RemovalType.Kick, 0);
 
         // Send DM notification
+        // Must be done before removal, or we risk not being able to send a notification afterwards
         if (sendDmToTarget) {
             if (utarget != null) dmSuccess = await BanKickSendNotificationAsync(utarget, t, logReason);
             else dmSuccess = false;
@@ -27,11 +28,9 @@ internal partial class CommonFunctionsService : Service {
         } catch (HttpException ex) {
             return new BanKickResult(ex, dmSuccess, false, t, target);
         }
-
-        // Report successful action
-        var result = new BanKickResult(null, dmSuccess, false, t, target);
         ModLogsProcessRemoval(guild.Id, target, t == RemovalType.Ban ? ModLogType.Ban : ModLogType.Kick, source, logReason);
-        return result;
+
+        return new BanKickResult(null, dmSuccess, false, t, target);
     }
 
     private async Task<bool> BanKickSendNotificationAsync(SocketGuildUser target, RemovalType action, string? reason) {
@@ -41,10 +40,9 @@ internal partial class CommonFunctionsService : Service {
         var outMessage = string.IsNullOrWhiteSpace(reason)
             ? string.Format(DMTemplate + ".", action == RemovalType.Ban ? "banned" : "kicked", target.Guild.Name)
             : string.Format(DMTemplate + DMTemplateReason, action == RemovalType.Ban ? "banned" : "kicked", target.Guild.Name, reason);
+            
         var dch = await target.CreateDMChannelAsync();
-
         try { await dch.SendMessageAsync(outMessage); } catch (HttpException) { return false; }
-
         return true;
     }
 }

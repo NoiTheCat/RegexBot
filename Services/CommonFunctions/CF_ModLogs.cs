@@ -4,12 +4,6 @@ using RegexBot.Data;
 
 namespace RegexBot.Services.CommonFunctions;
 internal partial class CommonFunctionsService : Service {
-
-    // things this should do:
-    // set a note
-    // set a warn (like note, but spicy)
-    // -> return with a WarnLogResult? And send it down the chute...
-
     // Called by EF_Removals, this processes a removal into a log entry.
     // A notification for this entry is then propagated.
     private void ModLogsProcessRemoval(ulong guildId, ulong targetId, ModLogType remType, string source, string? logReason) {
