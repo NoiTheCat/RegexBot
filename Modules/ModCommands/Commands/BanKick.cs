@@ -13,14 +13,9 @@ class Ban : BanKick {
                                                  ulong targetId, CachedGuildUser? targetQuery, SocketUser? targetUser) {
         // Ban: Unlike kick, the minimum required is just the target ID
         var result = await Module.Bot.BanAsync(g, msg.Author.ToString(), targetId, PurgeDays, reason, SendNotify);
-        if (result.OperationSuccess) {
-            if (SuccessMessage != null) {
-                // TODO customization
-                await msg.Channel.SendMessageAsync($"{SuccessMessage}\n{result.GetResultString(Module.Bot)}");
-            } else {
-                // TODO custom fail message?
-                await msg.Channel.SendMessageAsync(result.GetResultString(Module.Bot));
-            }
+        if (result.OperationSuccess && SuccessMessage != null) {
+            // TODO string replacement, formatting, etc
+            await msg.Channel.SendMessageAsync($"{SuccessMessage}\n{result.GetResultString(Module.Bot)}");
         } else {
             await msg.Channel.SendMessageAsync(result.GetResultString(Module.Bot));
         }
@@ -39,13 +34,12 @@ class Kick : BanKick {
         }
 
         var result = await Module.Bot.KickAsync(g, msg.Author.ToString(), targetId, reason, SendNotify);
-        if (result.OperationSuccess) {
-            if (SuccessMessage != null) {
-                // TODO string replacement, formatting, etc
-                await msg.Channel.SendMessageAsync($"{SuccessMessage}\n{result.GetResultString(Module.Bot)}");
-            }
+        if (result.OperationSuccess && SuccessMessage != null) {
+            // TODO string replacement, formatting, etc
+            await msg.Channel.SendMessageAsync($"{SuccessMessage}\n{result.GetResultString(Module.Bot)}");
+        } else {
+            await msg.Channel.SendMessageAsync(result.GetResultString(Module.Bot));
         }
-        await msg.Channel.SendMessageAsync(result.GetResultString(Module.Bot));
     }
 }
 

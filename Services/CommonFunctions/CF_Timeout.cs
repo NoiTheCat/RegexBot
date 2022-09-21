@@ -29,13 +29,14 @@ internal partial class CommonFunctionsService : Service {
             UserId = (long)target.Id,
             LogType = ModLogType.Timeout,
             IssuedBy = source,
-            Message = reason
+            Message = $"Duration: {Math.Floor(duration.TotalMinutes)}min{(reason == null ? "." : " - " + reason)}"
         };
         using (var db = new BotDatabaseContext()) {
             db.Add(entry);
             await db.SaveChangesAsync();
         }
         // TODO check if this log entry should be propagated now or if (to be implemented) will do it for us later
+        await BotClient.PushSharedEventAsync(entry); // Until then, we for sure propagate our own
 
         bool dmSuccess;
         // DM notification

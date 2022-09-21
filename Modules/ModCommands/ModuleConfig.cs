@@ -36,6 +36,7 @@ class ModuleConfig {
             { "note",       typeof(Note) },
             { "addnote",    typeof(Note) },
             { "warn",       typeof(Warn) },
+            { "timeout",    typeof(Commands.Timeout) },
             { "addrole",    typeof(RoleAdd) },
             { "roleadd",    typeof(RoleAdd) },
             { "delrole",    typeof(RoleDel) },

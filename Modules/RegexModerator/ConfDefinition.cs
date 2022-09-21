@@ -23,8 +23,8 @@ class ConfDefinition {
     public EntityName? ReportingChannel { get; }
     public IReadOnlyList<string> Response { get; }
     public int BanPurgeDays { get; }
-    public bool NotifyChannelOfRemoval { get; }
-    public bool NotifyUserOfRemoval { get; }
+    public bool NotifyChannel { get; }
+    public bool NotifyUser { get; }
 
     public ConfDefinition(JObject def) {
         Label = def[nameof(Label)]?.Value<string>()
@@ -83,8 +83,8 @@ class ConfDefinition {
             throw new ModuleLoadException($"'{nameof(Response)}' is not properly defined{errpostfx}");
         }
         BanPurgeDays = def[nameof(BanPurgeDays)]?.Value<int>() ?? 0;
-        NotifyChannelOfRemoval = def[nameof(NotifyChannelOfRemoval)]?.Value<bool>() ?? true;
-        NotifyUserOfRemoval = def[nameof(NotifyUserOfRemoval)]?.Value<bool>() ?? true;
+        NotifyChannel = def[nameof(NotifyChannel)]?.Value<bool>() ?? true;
+        NotifyUser = def[nameof(NotifyUser)]?.Value<bool>() ?? true;
     }
 
     /// <summary>

@@ -3,13 +3,14 @@ using RegexBot.Common;
 using System.Text;
 
 namespace RegexBot.Modules.RegexModerator;
-
 /// <summary>
 /// Transient helper class which handles response interpreting and execution.
 /// </summary>
 class ResponseExecutor {
     private const string ErrParamNeedNone = "This response type does not accept parameters.";
     private const string ErrParamWrongAmount = "Incorrect number of parameters defined in the response.";
+    private const string ErrMissingUser = "The target user is no longer in the server.";
+
     delegate Task<ResponseResult> ResponseHandler(string? parameter);
 
     private readonly ConfDefinition _rule;
@@ -140,14 +141,14 @@ class ResponseExecutor {
         BanKickResult result;
         if (rt == RemovalType.Ban) {
             result = await _bot.BanAsync(_guild, LogSource, _user.Id,
-                                         _rule.BanPurgeDays, parameter, _rule.NotifyUserOfRemoval);
+                                         _rule.BanPurgeDays, parameter, _rule.NotifyUser);
         } else {
             result = await _bot.KickAsync(_guild, LogSource, _user.Id,
-                                          parameter, _rule.NotifyUserOfRemoval);
+                                          parameter, _rule.NotifyUser);
         }
         if (result.ErrorForbidden) return FromError(Messages.ForbiddenGenericError);
-        if (result.ErrorNotFound) return FromError("The target user is no longer in the server.");
-        if (_rule.NotifyChannelOfRemoval) await _msg.Channel.SendMessageAsync(result.GetResultString(_bot));
+        if (result.ErrorNotFound) return FromError(ErrMissingUser);
+        if (_rule.NotifyChannel) await _msg.Channel.SendMessageAsync(result.GetResultString(_bot));
         return FromSuccess(result.MessageSendSuccess ? null : "Unable to send notification DM.");
     }
 
@@ -237,16 +238,34 @@ class ResponseExecutor {
         var log = await _bot.AddUserNoteAsync(_guild, _user.Id, LogSource, parameter);
         return FromSuccess($"Note \\#{log.LogId} logged for {_user}.");
     }
-    private Task<ResponseResult> CmdTimeout(string? parameter) {
-        #warning Not implemented
-        return Task.FromResult(FromError("not implemented"));
-    }
+
     private async Task<ResponseResult> CmdWarn(string? parameter) {
         if (string.IsNullOrWhiteSpace(parameter)) return FromError(ErrParamWrongAmount);
         var (log, result) = await _bot.AddUserWarnAsync(_guild, _user.Id, LogSource, parameter);
         var resultMsg = $"Warning \\#{log.LogId} logged for {_user}.";
         if (result.Success) return FromSuccess(resultMsg);
         else return FromError(resultMsg + " Failed to send DM.");
+    }
+
+    private async Task<ResponseResult> CmdTimeout(string? parameter) {
+        // parameters: (time in minutes) [reason]
+        if (string.IsNullOrWhiteSpace(parameter)) return FromError(ErrParamWrongAmount);
+        var param = parameter.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (param.Length < 1) return FromError(ErrParamWrongAmount);
+
+        if (!int.TryParse(param[0], out var timemin)) {
+            return FromError($"Couldn't parse '{param[0]}' as amount of time in minutes.");
+        }
+        string? reason = null;
+        if (param.Length == 2) reason = param[1];
+
+        var result = await _bot.SetTimeoutAsync(_guild, LogSource, _user,
+                                                TimeSpan.FromMinutes(timemin), reason, _rule.NotifyUser);
+        if (result.ErrorForbidden) return FromError(Messages.ForbiddenGenericError);
+        if (result.ErrorNotFound) return FromError(ErrMissingUser);
+        if (result.Error != null) return FromError(result.Error.Message);
+        if (_rule.NotifyChannel) await _msg.Channel.SendMessageAsync(result.ToResultString());
+        return FromSuccess(result.Success ? null : "Unable to send notification DM.");
     }
     #endregion
 

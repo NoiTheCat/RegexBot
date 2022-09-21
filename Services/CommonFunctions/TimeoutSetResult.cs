@@ -37,8 +37,10 @@ public class TimeoutSetResult : IOperationResult {
             return msg;
         } else {
             var msg = ":x: Failed to set timeout: ";
-            if (ErrorNotFound) msg += ": The specified user could not be found.";
-            else if (ErrorForbidden) msg += ": " + Messages.ForbiddenGenericError;
+            if (ErrorNotFound) msg += "The specified user could not be found.";
+            else if (ErrorForbidden) msg += Messages.ForbiddenGenericError;
+            else if (Error != null) msg += Error.Message;
+            else msg += "Unknown error.";
             return msg;
         }
     }
