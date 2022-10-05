@@ -70,14 +70,7 @@ public static class Utilities {
     /// Builds and returns an embed which displays this log entry.
     /// </summary>
     public static Embed BuildEmbed(this Data.ModLogEntry entry, RegexbotClient bot) {
-        string? issuedDisplay = null;
-        try {
-            var entityTry = new EntityName(entry.IssuedBy, EntityType.User);
-            var issueq = bot.EcQueryUser(entityTry.Id!.Value.ToString());
-            if (issueq != null) issuedDisplay = $"<@{issueq.UserId}> - {issueq.Username}#{issueq.Discriminator} `{issueq.UserId}`";
-            else issuedDisplay = $"Unknown user with ID `{entityTry.Id!.Value}`";
-        } catch (Exception) { }
-        issuedDisplay ??= entry.IssuedBy;
+        var issuedDisplay = TryFromEntityNameString(entry.IssuedBy, bot);
         string targetDisplay;
         var targetq = bot.EcQueryUser(entry.UserId.ToString());
         if (targetq != null) targetDisplay = $"<@{targetq.UserId}> - {targetq.Username}#{targetq.Discriminator} `{targetq.UserId}`";
@@ -107,4 +100,20 @@ public static class Utilities {
     /// Returns a representation of this entity that can be parsed by the <seealso cref="EntityName"/> constructor.
     /// </summary>
     public static string AsEntityNameString(this IUser entity) => $"@{entity.Id}::{entity.Username}";
+
+    /// <summary>
+    /// If given string is in an EntityName format, returns a displayable representation of it based on
+    /// a cache query. Otherwise, returns the input string as-is.
+    /// </summary>
+    [return: NotNullIfNotNull("input")]
+    public static string? TryFromEntityNameString(string? input, RegexbotClient bot) {
+        string? result = null;
+        try {
+            var entityTry = new EntityName(input!, EntityType.User);
+            var issueq = bot.EcQueryUser(entityTry.Id!.Value.ToString());
+            if (issueq != null) result = $"<@{issueq.UserId}> - {issueq.Username}#{issueq.Discriminator} `{issueq.UserId}`";
+            else result = $"Unknown user with ID `{entityTry.Id!.Value}`";
+        } catch (Exception) { }
+        return result ?? input;
+    }
 }

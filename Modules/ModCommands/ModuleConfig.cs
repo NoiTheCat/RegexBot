@@ -41,7 +41,9 @@ class ModuleConfig {
             { "addrole",    typeof(RoleAdd) },
             { "roleadd",    typeof(RoleAdd) },
             { "delrole",    typeof(RoleDel) },
-            { "roledel",    typeof(RoleDel) }
+            { "roledel",    typeof(RoleDel) },
+            { "modlogs",    typeof(ShowModLogs) },
+            { "showmodlogs", typeof(ShowModLogs) }
         }
     );
 
