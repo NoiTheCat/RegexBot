@@ -23,7 +23,7 @@ class ResponseExecutor {
     private readonly List<(string, ResponseResult)> _reports;
     private Action<string> Log { get; }
 
-    private string LogSource => $"Rule '{_rule.Label}'";
+    private string LogSource => $"{_rule.Label} ({nameof(RegexModerator)})";
 
     public ResponseExecutor(ConfDefinition rule, RegexbotClient bot, SocketMessage msg, Action<string> logger) {
         _rule = rule;
