@@ -6,12 +6,13 @@ namespace RegexBot.Services.EntityCache;
 /// </summary>
 class EntityCacheService : Service {
     private readonly UserCachingSubservice _uc;
+    #pragma warning disable IDE0052
     private readonly MessageCachingSubservice _mc;
+    #pragma warning restore IDE0052
 
     internal EntityCacheService(RegexbotClient bot) : base(bot) {
-        // Currently we only have UserCache. May add Channel and Server caches later.
         _uc = new UserCachingSubservice(bot, Log);
-        _mc = new MessageCachingSubservice(bot, Log);
+        _mc = new MessageCachingSubservice(bot);
     }
 
     // Hooked
@@ -21,10 +22,4 @@ class EntityCacheService : Service {
     // Hooked
     internal CachedGuildUser? QueryGuildUserCache(ulong guildId, string search)
         => _uc.DoGuildUserQuery(guildId, search);
-
-    // Hooked
-    internal event RegexbotClient.EcMessageUpdateHandler? OnCachePreUpdate {
-        add { lock (_mc) _mc.OnCachePreUpdate += value; }
-        remove { lock (_mc) _mc.OnCachePreUpdate -= value; }
-    }
 }

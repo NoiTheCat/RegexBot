@@ -1,5 +1,6 @@
 ﻿using Discord;
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace RegexBot.Common;
@@ -63,5 +64,56 @@ public static class Utilities {
             throw new ArgumentException(ExNotString, nameof(token));
         }
         return results;
+    }
+
+    /// <summary>
+    /// Builds and returns an embed which displays this log entry.
+    /// </summary>
+    public static Embed BuildEmbed(this Data.ModLogEntry entry, RegexbotClient bot) {
+        var issuedDisplay = TryFromEntityNameString(entry.IssuedBy, bot);
+        string targetDisplay;
+        var targetq = bot.EcQueryUser(entry.UserId.ToString());
+        if (targetq != null) targetDisplay = $"<@{targetq.UserId}> - {targetq.Username}#{targetq.Discriminator} `{targetq.UserId}`";
+        else targetDisplay = $"User with ID `{entry.UserId}`";
+
+        var logEmbed = new EmbedBuilder()
+            .WithTitle(Enum.GetName(typeof(ModLogType), entry.LogType) + " logged:")
+            .WithTimestamp(entry.Timestamp)
+            .WithFooter($"Log #{entry.LogId}", bot.DiscordClient.CurrentUser.GetAvatarUrl()); // Escaping '#' not necessary here
+        if (entry.Message != null) {
+            logEmbed.Description = entry.Message;
+        }
+
+        var contextStr = new StringBuilder();
+        contextStr.AppendLine($"User: {targetDisplay}");
+        contextStr.AppendLine($"Logged by: {issuedDisplay}");
+
+        logEmbed.AddField(new EmbedFieldBuilder() {
+            Name = "Context",
+            Value = contextStr.ToString()
+        });
+
+        return logEmbed.Build();
+    }
+
+    /// <summary>
+    /// Returns a representation of this entity that can be parsed by the <seealso cref="EntityName"/> constructor.
+    /// </summary>
+    public static string AsEntityNameString(this IUser entity) => $"@{entity.Id}::{entity.Username}";
+
+    /// <summary>
+    /// If given string is in an EntityName format, returns a displayable representation of it based on
+    /// a cache query. Otherwise, returns the input string as-is.
+    /// </summary>
+    [return: NotNullIfNotNull("input")]
+    public static string? TryFromEntityNameString(string? input, RegexbotClient bot) {
+        string? result = null;
+        try {
+            var entityTry = new EntityName(input!, EntityType.User);
+            var issueq = bot.EcQueryUser(entityTry.Id!.Value.ToString());
+            if (issueq != null) result = $"<@{issueq.UserId}> - {issueq.Username}#{issueq.Discriminator} `{issueq.UserId}`";
+            else result = $"Unknown user with ID `{entityTry.Id!.Value}`";
+        } catch (Exception) { }
+        return result ?? input;
     }
 }

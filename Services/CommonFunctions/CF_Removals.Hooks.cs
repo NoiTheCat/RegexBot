@@ -1,9 +1,5 @@
-﻿using RegexBot.Services.CommonFunctions;
-
-namespace RegexBot;
+﻿namespace RegexBot;
 partial class RegexbotClient {
-    private readonly CommonFunctionsService _svcCommonFunctions;
-
     /// <summary>
     /// Attempts to ban the given user from the specified guild. It is greatly preferred to call this method
     /// instead of manually executing the equivalent method found in Discord.Net. It notifies other services

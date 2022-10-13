@@ -33,26 +33,23 @@ internal class AutoResponder : RegexbotModule {
         var definitions = GetGuildState<IEnumerable<Definition>>(ch.Guild.Id);
         if (definitions == null) return; // No configuration in this guild; do no further processing
 
-        var tasks = new List<Task>();
         foreach (var def in definitions) {
-            tasks.Add(Task.Run(async () => await ProcessMessageAsync(arg, def)));
+            await ProcessMessageAsync(arg, def, ch);
         }
-
-        await Task.WhenAll(tasks);
     }
 
-    private async Task ProcessMessageAsync(SocketMessage msg, Definition def) {
+    private async Task ProcessMessageAsync(SocketMessage msg, Definition def, SocketTextChannel ch) {
         if (!def.Match(msg)) return;
 
+        Log(ch.Guild, $"Definition '{def.Label}' triggered by {msg.Author}.");
         if (def.Command == null) {
             await msg.Channel.SendMessageAsync(def.GetResponse());
         } else {
-            var ch = (SocketGuildChannel)msg.Channel;
             var cmdline = def.Command.Split(new char[] { ' ' }, 2);
 
             var ps = new ProcessStartInfo() {
                 FileName = cmdline[0],
-                Arguments = (cmdline.Length == 2 ? cmdline[1] : ""),
+                Arguments = cmdline.Length == 2 ? cmdline[1] : "",
                 UseShellExecute = false, // ???
                 CreateNoWindow = true,
                 RedirectStandardOutput = true

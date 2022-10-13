@@ -53,12 +53,11 @@ public class CachedGuildMessage {
     /// </summary>
     public string? Content { get; set; } = null!;
 
-    /// <summary>
-    /// If included in the query, references the associated <seealso cref="CachedUser"/> for this entry.
-    /// </summary>
+    /// <inheritdoc cref="CachedGuildUser.User" />
     [ForeignKey(nameof(AuthorId))]
     [InverseProperty(nameof(CachedUser.GuildMessages))]
     public CachedUser Author { get; set; } = null!;
+    // TODO set up composite foreign key. will require rewriting some parts in modules...
 
     // Used by MessageCachingSubservice
     internal static CachedGuildMessage? Clone(CachedGuildMessage? original) {

@@ -29,10 +29,14 @@ abstract class RoleManipulation : CommandConfig {
     // "role" - string; The given role that applies to this command.
     // "successmsg" - string; Messages to display on command success. Overrides default.
     protected RoleManipulation(ModCommands module, JObject config) : base(module, config) {
-        var rolestr = config[nameof(Role)]?.Value<string>();
-        if (string.IsNullOrWhiteSpace(rolestr)) throw new ModuleLoadException($"'{nameof(Role)}' must be provided.");
-        Role = new EntityName(rolestr);
-        if (Role.Type != EntityType.Role) throw new ModuleLoadException($"The value in '{nameof(Role)}' is not a role.");
+        try {
+            Role = new EntityName(config[nameof(Role)]?.Value<string>()!, EntityType.Role);
+        } catch (ArgumentNullException) {
+            throw new ModuleLoadException($"'{nameof(Role)}' must be provided.");
+        } catch (FormatException) {
+            throw new ModuleLoadException($"The value in '{nameof(Role)}' is not a role.");
+        }
+        
         SuccessMessage = config[nameof(SuccessMessage)]?.Value<string>();
 
         _usage = $"{Command} `user or user ID`\n" +

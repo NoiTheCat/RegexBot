@@ -8,7 +8,7 @@ namespace RegexBot.Data;
 [Table("cache_users")]
 public class CachedUser {
     /// <summary>
-    /// Gets the user's snowflake ID.
+    /// Gets the associated user's snowflake ID.
     /// </summary>
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.None)]

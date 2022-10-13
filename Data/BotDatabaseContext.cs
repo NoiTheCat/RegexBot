@@ -12,6 +12,9 @@ public class BotDatabaseContext : DbContext {
         // Get our own config loaded just for the SQL stuff
         var conf = new InstanceConfig();
         _connectionString = new NpgsqlConnectionStringBuilder() {
+#if DEBUG
+            IncludeErrorDetail = true,
+#endif
             Host = conf.SqlHost ?? "localhost", // default to localhost
             Database = conf.SqlDatabase,
             Username = conf.SqlUsername,
@@ -34,6 +37,11 @@ public class BotDatabaseContext : DbContext {
     /// </summary>
     public DbSet<CachedGuildMessage> GuildMessageCache { get; set; } = null!;
 
+    /// <summary>
+    /// Retrieves the <seealso cref="ModLogEntry">moderator logs</seealso>.
+    /// </summary>
+    public DbSet<ModLogEntry> ModLogs { get; set; } = null!;
+
     /// <inheritdoc />
     protected sealed override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
          => optionsBuilder
@@ -43,10 +51,17 @@ public class BotDatabaseContext : DbContext {
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
         modelBuilder.Entity<CachedUser>(entity => entity.Property(e => e.Discriminator).HasMaxLength(4).IsFixedLength());
-        modelBuilder.Entity<CachedGuildUser>(entity => {
-            entity.HasKey(e => new { e.UserId, e.GuildId });
-            entity.Property(e => e.FirstSeenTime).HasDefaultValueSql("now()");
+        modelBuilder.Entity<CachedGuildUser>(e => {
+            e.HasKey(p => new { p.GuildId, p.UserId });
+            e.Property(p => p.FirstSeenTime).HasDefaultValueSql("now()");
         });
-        modelBuilder.Entity<CachedGuildMessage>(entity => entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()"));
+        modelBuilder.Entity<CachedGuildMessage>(e => e.Property(p => p.CreatedAt).HasDefaultValueSql("now()"));
+        modelBuilder.HasPostgresEnum<ModLogType>();
+        modelBuilder.Entity<ModLogEntry>(e => {
+            e.Property(p => p.Timestamp).HasDefaultValueSql("now()");
+            e.HasOne(entry => entry.User)
+                .WithMany(gu => gu.Logs)
+                .HasForeignKey(entry => new { entry.GuildId, entry.UserId });
+        });
     }
 }

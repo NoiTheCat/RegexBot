@@ -22,7 +22,8 @@ class ModuleStateService : Service {
     }
 
     private async Task RefreshGuildState(SocketGuild arg) {
-        if (await ProcessConfiguration(arg)) Log($"Configuration refreshed for '{arg.Name}'.");
+        if (await ProcessConfiguration(arg)) Log($"'{arg.Name}': Configuration refreshed.");
+        else Log($"'{arg.Name}': Configuration refresh failed. Retaining existing configuration and state, if any.");
     }
 
     private Task RemoveGuildData(SocketGuild arg) {
@@ -52,14 +53,6 @@ class ModuleStateService : Service {
         }
     }
 
-    /// <summary>
-    /// Configuration is loaded from database, and appropriate sections dispatched to their
-    /// respective methods for further processing.
-    /// </summary>
-    /// <remarks>
-    /// This takes an all-or-nothing approach. Should there be a single issue in processing
-    /// configuration, all existing state data is kept.
-    /// </remarks>
     private async Task<bool> ProcessConfiguration(SocketGuild guild) {
         var jstr = await LoadConfigFile(guild);
         JObject guildConf;
@@ -76,7 +69,7 @@ class ModuleStateService : Service {
         }
 
         // Load moderator list
-        var mods = new EntityList(guildConf["Moderators"]!, true);
+        var mods = new EntityList(guildConf["Moderators"]!);
 
         // Create guild state objects for all existing modules
         var newStates = new Dictionary<Type, object?>();

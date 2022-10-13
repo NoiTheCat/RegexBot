@@ -33,10 +33,17 @@ class ModuleConfig {
             { "kick",       typeof(Kick) },
             { "say",        typeof(Say) },
             { "unban",      typeof(Unban) },
+            { "note",       typeof(Note) },
+            { "addnote",    typeof(Note) },
+            { "warn",       typeof(Warn) },
+            { "timeout",    typeof(Commands.Timeout) },
+            { "untimeout",  typeof(Untimeout)},
             { "addrole",    typeof(RoleAdd) },
             { "roleadd",    typeof(RoleAdd) },
             { "delrole",    typeof(RoleDel) },
-            { "roledel",    typeof(RoleDel) }
+            { "roledel",    typeof(RoleDel) },
+            { "modlogs",    typeof(ShowModLogs) },
+            { "showmodlogs", typeof(ShowModLogs) }
         }
     );
 

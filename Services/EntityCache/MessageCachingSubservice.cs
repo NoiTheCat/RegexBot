@@ -1,16 +1,12 @@
 ﻿using Discord;
 using RegexBot.Data;
-using static RegexBot.RegexbotClient;
 
 namespace RegexBot.Services.EntityCache;
 class MessageCachingSubservice {
-    // Hooked
-    public event EcMessageUpdateHandler? OnCachePreUpdate;
+    private readonly RegexbotClient _bot;
 
-    private readonly Action<string> _log;
-
-    internal MessageCachingSubservice(RegexbotClient bot, Action<string> logMethod) {
-        _log = logMethod;
+    internal MessageCachingSubservice(RegexbotClient bot) {
+        _bot = bot;
         bot.DiscordClient.MessageReceived += DiscordClient_MessageReceived;
         bot.DiscordClient.MessageUpdated += DiscordClient_MessageUpdated;
     }
@@ -34,7 +30,8 @@ class MessageCachingSubservice {
             // Alternative for Discord.Net's MessageUpdated handler:
             // Notify subscribers of message update using EC entry for the previous message state
             var oldMsg = CachedGuildMessage.Clone(cachedMsg);
-            await Task.Factory.StartNew(async () => await RunPreUpdateHandlersAsync(oldMsg, arg));
+            var updEvent = new MessageCacheUpdateEvent(oldMsg, arg);
+            await _bot.PushSharedEventAsync(updEvent);
         }
 
         if (cachedMsg == null) {
@@ -54,22 +51,5 @@ class MessageCachingSubservice {
             db.GuildMessageCache.Update(cachedMsg);
         }
         await db.SaveChangesAsync();
-    }
-
-    private async Task RunPreUpdateHandlersAsync(CachedGuildMessage? oldMsg, SocketMessage newMsg) {
-        Delegate[]? subscribers;
-        lock (this) {
-            subscribers = OnCachePreUpdate?.GetInvocationList();
-            if (subscribers == null || subscribers.Length == 0) return;
-        }
-
-        foreach (var handler in subscribers) {
-            try {
-                await (Task)handler.DynamicInvoke(oldMsg, newMsg)!;
-            } catch (Exception ex) {
-                _log($"Unhandled exception in {nameof(RegexbotClient.EcOnMessageUpdate)} handler '{handler.Method.Name}':\n"
-                    + ex.ToString());
-            }
-        }
     }
 }

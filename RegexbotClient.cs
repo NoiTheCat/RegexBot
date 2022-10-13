@@ -26,6 +26,7 @@ public partial class RegexbotClient {
 
         // Get all services started up
         _svcLogging = new Services.Logging.LoggingService(this);
+        _svcSharedEvents = new Services.SharedEventService.SharedEventService(this);
         _svcGuildState = new Services.ModuleState.ModuleStateService(this);
         _svcCommonFunctions = new Services.CommonFunctions.CommonFunctionsService(this);
         _svcEntityCache = new Services.EntityCache.EntityCacheService(this);

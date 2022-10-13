@@ -13,14 +13,9 @@ class Ban : BanKick {
                                                  ulong targetId, CachedGuildUser? targetQuery, SocketUser? targetUser) {
         // Ban: Unlike kick, the minimum required is just the target ID
         var result = await Module.Bot.BanAsync(g, msg.Author.ToString(), targetId, PurgeDays, reason, SendNotify);
-        if (result.OperationSuccess) {
-            if (SuccessMessage != null) {
-                // TODO customization
-                await msg.Channel.SendMessageAsync($"{SuccessMessage}\n{result.GetResultString(Module.Bot)}");
-            } else {
-                // TODO custom fail message?
-                await msg.Channel.SendMessageAsync(SuccessMessage);
-            }
+        if (result.OperationSuccess && SuccessMessage != null) {
+            // TODO string replacement, formatting, etc
+            await msg.Channel.SendMessageAsync($"{SuccessMessage}\n{result.GetResultString(Module.Bot)}");
         } else {
             await msg.Channel.SendMessageAsync(result.GetResultString(Module.Bot));
         }
@@ -39,13 +34,12 @@ class Kick : BanKick {
         }
 
         var result = await Module.Bot.KickAsync(g, msg.Author.ToString(), targetId, reason, SendNotify);
-        if (result.OperationSuccess) {
-            if (SuccessMessage != null) {
-                // TODO string replacement, formatting, etc
-                await msg.Channel.SendMessageAsync($"{SuccessMessage}\n{result.GetResultString(Module.Bot)}");
-            }
+        if (result.OperationSuccess && SuccessMessage != null) {
+            // TODO string replacement, formatting, etc
+            await msg.Channel.SendMessageAsync($"{SuccessMessage}\n{result.GetResultString(Module.Bot)}");
+        } else {
+            await msg.Channel.SendMessageAsync(result.GetResultString(Module.Bot));
         }
-        await msg.Channel.SendMessageAsync(result.GetResultString(Module.Bot));
     }
 }
 
@@ -60,7 +54,7 @@ abstract class BanKick : CommandConfig {
     // "PurgeDays"       - integer; Number of days of target's post history to delete, if banning.
     //                     Must be between 0-7 inclusive. Defaults to 0.
     // "SendNotify"      - boolean; Whether to send a notification DM explaining the action. Defaults to true.
-    // "SuccessMessage"  - string; Message to display on command success. Overrides default.
+    // "SuccessMessage"  - string; Additional message to display on command success.
     protected BanKick(ModCommands module, JObject config, bool ban) : base(module, config) {
         ForceReason = config[nameof(ForceReason)]?.Value<bool>() ?? false;
         PurgeDays = config[nameof(PurgeDays)]?.Value<int>() ?? 0;
@@ -68,7 +62,7 @@ abstract class BanKick : CommandConfig {
         SendNotify = config[nameof(SendNotify)]?.Value<bool>() ?? true;
         SuccessMessage = config[nameof(SuccessMessage)]?.Value<string>();
 
-        _usage = $"{Command} `user or user ID` `" + (ForceReason ? "reason" : "[reason]") + "`\n"
+        _usage = $"{Command} `user ID or tag` `" + (ForceReason ? "reason" : "[reason]") + "`\n"
             + "Removes the given user from this server"
             + (ban ? " and prevents the user from rejoining" : "") + ". "
             + (ForceReason ? "L" : "Optionally l") + "ogs the reason for the "
@@ -80,7 +74,7 @@ abstract class BanKick : CommandConfig {
     private readonly string _usage;
     protected override string DefaultUsageMsg => _usage;
 
-    // Usage: (command) (mention) (reason)
+    // Usage: (command) (user) (reason)
     public override async Task Invoke(SocketGuild g, SocketMessage msg) {
         var line = msg.Content.Split(new char[] { ' ' }, 3, StringSplitOptions.RemoveEmptyEntries);
         string targetstr;

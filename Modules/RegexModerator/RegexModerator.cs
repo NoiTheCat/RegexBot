@@ -46,29 +46,15 @@ internal class RegexModerator : RegexbotModule {
         var defs = GetGuildState<IEnumerable<ConfDefinition>>(ch.Guild.Id);
         if (defs == null) return;
 
-        // Send further processing to thread pool.
-        // Match checking is a CPU-intensive task, thus very little checking is done here.
-        var msgProcessingTasks = new List<Task>();
+        // Matching and response processing
         foreach (var item in defs) {
             // Need to check sender's moderator status here. Definition can't access mod list.
             var isMod = GetModerators(ch.Guild.Id).IsListMatch(msg, true);
 
-            var match = item.IsMatch(msg, isMod);
-            msgProcessingTasks.Add(Task.Run(async () => await ProcessMessage(item, ch.Guild, msg, isMod)));
+            if (!item.IsMatch(msg, isMod)) continue;
+            Log(ch.Guild, $"Rule '{item.Label}' triggered by {msg.Author}.");
+            var exec = new ResponseExecutor(item, Bot, msg, (string logLine) => Log(ch.Guild, logLine));
+            await exec.Execute();
         }
-        await Task.WhenAll(msgProcessingTasks);
-    }
-
-    /// <summary>
-    /// Does further message checking and response execution.
-    /// Invocations of this method are meant to be placed onto a thread separate from the caller.
-    /// </summary>
-    private async Task ProcessMessage(ConfDefinition def, SocketGuild g, SocketMessage msg, bool isMod) {
-        if (!def.IsMatch(msg, isMod)) return;
-
-        // TODO logging options for match result; handle here?
-
-        var executor = new ResponseExecutor(def, Bot, msg, (string logLine) => Log(g, logLine));
-        await executor.Execute();
     }
 }

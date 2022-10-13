@@ -5,8 +5,6 @@ namespace RegexBot.Modules.VoiceRoleSync;
 /// </summary>
 [RegexbotModule]
 internal class VoiceRoleSync : RegexbotModule {
-    // TODO wishlist? specify multiple definitions - multiple channels associated with multiple roles.
-
     public VoiceRoleSync(RegexbotClient bot) : base(bot) {
         DiscordClient.UserVoiceStateUpdated += Client_UserVoiceStateUpdated;
     }
@@ -18,7 +16,8 @@ internal class VoiceRoleSync : RegexbotModule {
         if (settings == null) return; // not enabled here
 
         async Task RemoveAllAssociatedRoles()
-            => await user.RemoveRolesAsync(settings.GetTrackedRoles(user.Guild).Intersect(user.Roles));
+            => await user.RemoveRolesAsync(settings.GetTrackedRoles(user.Guild).Intersect(user.Roles),
+                new Discord.RequestOptions() { AuditLogReason = nameof(VoiceRoleSync) + ": No longer in associated voice channel." });
 
         if (after.VoiceChannel == null) {
             // Not in any voice channel. Remove all roles being tracked by this instance. Clear.
@@ -35,10 +34,10 @@ internal class VoiceRoleSync : RegexbotModule {
                     await RemoveAllAssociatedRoles();
                 } else {
                     // In a tracked voice channel: Clear all except target, add target if needed.
-                    await user.RemoveRolesAsync(settings.GetTrackedRoles(user.Guild)
-                        .Where(role => role.Id != targetRole.Id)
-                        .Intersect(user.Roles));
-                    if (!user.Roles.Contains(targetRole)) await user.AddRoleAsync(targetRole);
+                    var toRemove = settings.GetTrackedRoles(user.Guild).Where(role => role.Id != targetRole.Id).Intersect(user.Roles);
+                    if (toRemove.Any()) await user.RemoveRolesAsync(toRemove);
+                    if (!user.Roles.Contains(targetRole)) await user.AddRoleAsync(targetRole,
+                        new Discord.RequestOptions() { AuditLogReason = nameof(VoiceRoleSync) + ": Joined associated voice channel." });
                 }
             }
         }
@@ -49,7 +48,7 @@ internal class VoiceRoleSync : RegexbotModule {
         if (config.Type != JTokenType.Object)
             throw new ModuleLoadException("Configuration for this section is invalid.");
 
-        var newconf = new ModuleConfig((JObject)config);
+        var newconf = new ModuleConfig((JObject)config, Bot.DiscordClient.GetGuild(guildID));
         Log(DiscordClient.GetGuild(guildID), $"Configured with {newconf.Count} pairing(s).");
         return Task.FromResult<object?>(newconf);
     }

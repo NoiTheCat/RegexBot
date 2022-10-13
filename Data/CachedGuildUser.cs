@@ -6,13 +6,13 @@ namespace RegexBot.Data;
 /// </summary>
 [Table("cache_usersinguild")]
 public class CachedGuildUser {
-    /// <inheritdoc cref="CachedUser.UserId"/>
-    public long UserId { get; set; }
-
     /// <summary>
     /// Gets the associated guild's snowflake ID.
     /// </summary>
     public long GuildId { get; set; }
+
+    /// <inheritdoc cref="CachedUser.UserId"/>
+    public long UserId { get; set; }
 
     /// <inheritdoc cref="CachedUser.ULastUpdateTime"/>
     public DateTimeOffset GULastUpdateTime { get; set; }
@@ -33,4 +33,9 @@ public class CachedGuildUser {
     [ForeignKey(nameof(UserId))]
     [InverseProperty(nameof(CachedUser.Guilds))]
     public CachedUser User { get; set; } = null!;
+
+    /// <summary>
+    /// If included in the query, references all <seealso cref="ModLogEntry"/> items associated with this entry.
+    /// </summary>
+    public ICollection<ModLogEntry> Logs { get; set; } = null!;
 }

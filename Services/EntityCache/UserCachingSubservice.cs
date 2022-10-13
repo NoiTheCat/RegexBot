@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿#pragma warning disable CA1822 // "Mark members as static" - members should only be callable by code with access to this instance
+using Microsoft.EntityFrameworkCore;
 using RegexBot.Common;
 using RegexBot.Data;
 
@@ -8,7 +9,6 @@ namespace RegexBot.Services.EntityCache;
 /// It is meant to work as a supplement to Discord.Net's own user caching capabilities. Its purpose is to 
 /// provide information on users which the library may not be aware about, such as users no longer in a guild.
 /// </summary>
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static")]
 class UserCachingSubservice {
     private readonly Action<string> _log;
 

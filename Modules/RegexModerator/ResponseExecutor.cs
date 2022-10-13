@@ -3,11 +3,14 @@ using RegexBot.Common;
 using System.Text;
 
 namespace RegexBot.Modules.RegexModerator;
-
 /// <summary>
 /// Transient helper class which handles response interpreting and execution.
 /// </summary>
 class ResponseExecutor {
+    private const string ErrParamNeedNone = "This response type does not accept parameters.";
+    private const string ErrParamWrongAmount = "Incorrect number of parameters defined in the response.";
+    private const string ErrMissingUser = "The target user is no longer in the server.";
+
     delegate Task<ResponseResult> ResponseHandler(string? parameter);
 
     private readonly ConfDefinition _rule;
@@ -19,6 +22,8 @@ class ResponseExecutor {
 
     private readonly List<(string, ResponseResult)> _reports;
     private Action<string> Log { get; }
+
+    private string LogSource => $"{_rule.Label} ({nameof(RegexModerator)})";
 
     public ResponseExecutor(ConfDefinition rule, RegexbotClient bot, SocketMessage msg, Action<string> logger) {
         _rule = rule;
@@ -114,7 +119,7 @@ class ResponseExecutor {
                 )
                 .WithDescription(invokingLine)
                 .WithFooter(
-                    text: $"Rule: {_rule.Label}",
+                    text: LogSource,
                     iconUrl: _bot.DiscordClient.CurrentUser.GetAvatarUrl()
                 )
                 .WithCurrentTimestamp()
@@ -135,15 +140,15 @@ class ResponseExecutor {
     private async Task<ResponseResult> CmdBanKick(RemovalType rt, string? parameter) {
         BanKickResult result;
         if (rt == RemovalType.Ban) {
-            result = await _bot.BanAsync(_guild, $"Rule '{_rule.Label}'", _user.Id,
-                                         _rule.BanPurgeDays, parameter, _rule.NotifyUserOfRemoval);
+            result = await _bot.BanAsync(_guild, LogSource, _user.Id,
+                                         _rule.BanPurgeDays, parameter, _rule.NotifyUser);
         } else {
-            result = await _bot.KickAsync(_guild, $"Rule '{_rule.Label}'", _user.Id,
-                                          parameter, _rule.NotifyUserOfRemoval);
+            result = await _bot.KickAsync(_guild, LogSource, _user.Id,
+                                          parameter, _rule.NotifyUser);
         }
         if (result.ErrorForbidden) return FromError(Messages.ForbiddenGenericError);
-        if (result.ErrorNotFound) return FromError("The target user is no longer in the server.");
-        if (_rule.NotifyChannelOfRemoval) await _msg.Channel.SendMessageAsync(result.GetResultString(_bot));
+        if (result.ErrorNotFound) return FromError(ErrMissingUser);
+        if (_rule.NotifyChannel) await _msg.Channel.SendMessageAsync(result.GetResultString(_bot));
         return FromSuccess(result.MessageSendSuccess ? null : "Unable to send notification DM.");
     }
 
@@ -151,23 +156,22 @@ class ResponseExecutor {
     private Task<ResponseResult> CmdRoleDel(string? parameter) => CmdRoleManipulation(parameter, false);
     private async Task<ResponseResult> CmdRoleManipulation(string? parameter, bool add) {
         // parameters: @_, &, reason?
-        // TODO add persistence option if/when implemented
-        if (string.IsNullOrWhiteSpace(parameter)) return FromError("This response requires parameters.");
+        if (string.IsNullOrWhiteSpace(parameter)) return FromError(ErrParamWrongAmount);
         var param = parameter.Split(' ', 3, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (param.Length < 2) return FromError("Incorrect number of parameters.");
+        if (param.Length != 2) return FromError(ErrParamWrongAmount);
         
         // Find targets
         SocketGuildUser? tuser;
         SocketRole? trole;
         try {
-            var userName = new EntityName(param[0]);
+            var userName = new EntityName(param[0], EntityType.User);
             if (userName.Id.HasValue) tuser = _guild.GetUser(userName.Id.Value);
             else {
                 if (userName.Name == "_") tuser = _user;
                 else tuser = userName.FindUserIn(_guild);
             }
             if (tuser == null) return FromError($"Unable to find user '{userName.Name}'.");
-            var roleName = new EntityName(param[1]);
+            var roleName = new EntityName(param[1], EntityType.Role);
             if (roleName.Id.HasValue) trole = _guild.GetRole(roleName.Id.Value);
             else trole = roleName.FindRoleIn(_guild);
             if (trole == null) return FromError($"Unable to find role '{roleName.Name}'.");
@@ -176,21 +180,17 @@ class ResponseExecutor {
         }
         
         // Do action
-        var rq = new RequestOptions() { AuditLogReason = $"Rule '{_rule.Label}'" };
-        if (param.Length == 3 && !string.IsNullOrWhiteSpace(param[2])) {
-            rq.AuditLogReason += " - " + param[2];
-        }
+        var rq = new RequestOptions() { AuditLogReason = LogSource };
         if (add) await tuser.AddRoleAsync(trole, rq);
         else await tuser.RemoveRoleAsync(trole, rq);
         return FromSuccess($"{(add ? "Set" : "Unset")} {trole.Mention}.");
     }
 
     private async Task<ResponseResult> CmdDelete(string? parameter) {
-        // TODO detailed audit log deletion reason?
-        if (parameter != null) return FromError("This response does not accept parameters.");
+        if (!string.IsNullOrWhiteSpace(parameter)) return FromError(ErrParamNeedNone);
 
         try {
-            await _msg.DeleteAsync(new RequestOptions { AuditLogReason = $"Rule {_rule.Label}" });
+            await _msg.DeleteAsync(new RequestOptions { AuditLogReason = LogSource });
             return FromSuccess();
         } catch (Discord.Net.HttpException ex) when (ex.HttpCode == System.Net.HttpStatusCode.NotFound) {
             return FromError("The message had already been deleted.");
@@ -199,9 +199,9 @@ class ResponseExecutor {
 
     private async Task<ResponseResult> CmdSay(string? parameter) {
         // parameters: [#_/@_] message
-        if (string.IsNullOrWhiteSpace(parameter)) return FromError("This response requires parameters.");
+        if (string.IsNullOrWhiteSpace(parameter)) return FromError(ErrParamWrongAmount);
         var param = parameter.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (param.Length != 2) return FromError("Incorrect number of parameters.");
+        if (param.Length != 2) return FromError(ErrParamWrongAmount);
 
         // Get target
         IMessageChannel? targetCh;
@@ -233,17 +233,39 @@ class ResponseExecutor {
         return FromSuccess($"Sent to {(isUser ? "user DM" : $"<#{targetCh.Id}>")}.");
     }
 
-    private Task<ResponseResult> CmdNote(string? parameter) {
-        #warning Not implemented
-        return Task.FromResult(FromError("not implemented"));
+    private async Task<ResponseResult> CmdNote(string? parameter) {
+        if (string.IsNullOrWhiteSpace(parameter)) return FromError(ErrParamWrongAmount);
+        var log = await _bot.AddUserNoteAsync(_guild, _user.Id, LogSource, parameter);
+        return FromSuccess($"Note \\#{log.LogId} logged for {_user}.");
     }
-    private Task<ResponseResult> CmdTimeout(string? parameter) {
-        #warning Not implemented
-        return Task.FromResult(FromError("not implemented"));
+
+    private async Task<ResponseResult> CmdWarn(string? parameter) {
+        if (string.IsNullOrWhiteSpace(parameter)) return FromError(ErrParamWrongAmount);
+        var (log, result) = await _bot.AddUserWarnAsync(_guild, _user.Id, LogSource, parameter);
+        var resultMsg = $"Warning \\#{log.LogId} logged for {_user}.";
+        if (result.Success) return FromSuccess(resultMsg);
+        else return FromError(resultMsg + " Failed to send DM.");
     }
-    private Task<ResponseResult> CmdWarn(string? parameter) {
-        #warning Not implemented
-        return Task.FromResult(FromError("not implemented"));
+
+    private async Task<ResponseResult> CmdTimeout(string? parameter) {
+        // parameters: (time in minutes) [reason]
+        if (string.IsNullOrWhiteSpace(parameter)) return FromError(ErrParamWrongAmount);
+        var param = parameter.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (param.Length < 1) return FromError(ErrParamWrongAmount);
+
+        if (!int.TryParse(param[0], out var timemin)) {
+            return FromError($"Couldn't parse '{param[0]}' as amount of time in minutes.");
+        }
+        string? reason = null;
+        if (param.Length == 2) reason = param[1];
+
+        var result = await _bot.SetTimeoutAsync(_guild, LogSource, _user,
+                                                TimeSpan.FromMinutes(timemin), reason, _rule.NotifyUser);
+        if (result.ErrorForbidden) return FromError(Messages.ForbiddenGenericError);
+        if (result.ErrorNotFound) return FromError(ErrMissingUser);
+        if (result.Error != null) return FromError(result.Error.Message);
+        if (_rule.NotifyChannel) await _msg.Channel.SendMessageAsync(result.ToResultString());
+        return FromSuccess(result.Success ? null : "Unable to send notification DM.");
     }
     #endregion
 

@@ -22,13 +22,12 @@ public class EntityList : IEnumerable<EntityName> {
     /// <summary>
     /// Creates a new EntityList instance with no data.
     /// </summary>
-    public EntityList() : this(null, false) { }
+    public EntityList() : this(null) { }
 
     /// <summary>
     /// Creates a new EntityList instance using the given JSON token as input.
     /// </summary>
     /// <param name="input">JSON array to be used for input. For ease of use, null values are also accepted.</param>
-    /// <param name="enforceTypes">Specifies if all entities defined in configuration must have their type specified.</param>
     /// <exception cref="ArgumentException">The input is not a JSON array.</exception>
     /// <exception cref="ArgumentNullException">
     /// Unintiutively, this exception is thrown if a user-provided configuration value is blank.
@@ -36,7 +35,7 @@ public class EntityList : IEnumerable<EntityName> {
     /// <exception cref="FormatException">
     /// When enforceTypes is set, this is thrown if an EntityName results in having its Type be Unspecified.
     /// </exception>
-    public EntityList(JToken? input, bool enforceTypes) {
+    public EntityList(JToken? input) {
         if (input == null) {
             _innerList = new List<EntityName>().AsReadOnly();
             return;
@@ -50,8 +49,6 @@ public class EntityList : IEnumerable<EntityName> {
         foreach (var item in inputArray.Values<string>()) {
             if (string.IsNullOrWhiteSpace(item)) continue;
             var itemName = new EntityName(item);
-            if (enforceTypes && itemName.Type == EntityType.Unspecified)
-                throw new FormatException($"The following value is not prefixed: {item}");
             list.Add(itemName);
         }
         _innerList = list.AsReadOnly();
@@ -82,7 +79,7 @@ public class EntityList : IEnumerable<EntityName> {
                 } else {
                     foreach (var r in authorRoles) {
                         if (!string.Equals(r.Name, entry.Name, StringComparison.OrdinalIgnoreCase)) break;
-                        if (keepId) entry.SetId(r.Id);
+                        if (keepId) entry.Id = r.Id;
                         return true;
                     }
                 }
@@ -91,7 +88,7 @@ public class EntityList : IEnumerable<EntityName> {
                     if (entry.Id.Value == channel.Id) return true;
                 } else {
                     if (!string.Equals(channel.Name, entry.Name, StringComparison.OrdinalIgnoreCase)) break;
-                    if (keepId) entry.SetId(channel.Id);
+                    if (keepId) entry.Id = channel.Id;
                     return true;
                 }
             } else { // User
@@ -99,7 +96,7 @@ public class EntityList : IEnumerable<EntityName> {
                     if (entry.Id.Value == author.Id) return true;
                 } else {
                     if (!string.Equals(author.Username, entry.Name, StringComparison.OrdinalIgnoreCase)) break;
-                    if (keepId) entry.SetId(author.Id);
+                    if (keepId) entry.Id = author.Id;
                     return true;
                 }
             }
