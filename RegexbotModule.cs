@@ -43,7 +43,7 @@ public abstract class RegexbotModule {
     /// <returns>
     /// An object instance containing state and/or configuration information for the guild currently being processed.
     /// </returns>
-    public abstract Task<object?> CreateGuildStateAsync(ulong guildID, JToken config);
+    public abstract Task<object?> CreateGuildStateAsync(ulong guildID, JToken? config);
 
     /// <summary>
     /// Retrieves the state object that corresponds with the given guild.

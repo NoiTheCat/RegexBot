@@ -76,7 +76,7 @@ class ModuleStateService : Service {
         foreach (var module in BotClient.Modules) {
             var t = module.GetType();
             try {
-                var state = await module.CreateGuildStateAsync(guild.Id, guildConf[module.Name]!);
+                var state = await module.CreateGuildStateAsync(guild.Id, guildConf[module.Name]);
                 newStates.Add(t, state);
             } catch (ModuleLoadException ex) {
                 Log($"{module.Name} failed to read configuration for {guild.Name}: {ex.Message}");
