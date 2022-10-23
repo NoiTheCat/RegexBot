@@ -65,10 +65,10 @@ abstract class NoteWarn : CommandConfig {
         var targetUser = g.GetUser(targetId);
 
         // Go to specific action
-        try {
+        if (targetUser == null) {
+            await msg.Channel.SendMessageAsync(":x: Unable to find the specified user.");
+        } else {
             await ContinueInvoke(g, msg, logMessage, targetUser);
-        } catch (Discord.Net.HttpException ex) when (ex.HttpCode == System.Net.HttpStatusCode.Forbidden) {
-            await msg.Channel.SendMessageAsync(":x: " + Messages.ForbiddenGenericError);
         }
     }
 
