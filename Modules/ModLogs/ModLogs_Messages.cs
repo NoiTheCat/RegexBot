@@ -31,7 +31,7 @@ internal partial class ModLogs {
         var reportEmbed = new EmbedBuilder()
             .WithTitle("Message deleted")
             .WithCurrentTimestamp()
-            .WithFooter($"User ID: {(cachedMsg == null ? "Unknown" : cachedMsg.AuthorId)}");
+            .WithFooter($"Message ID: {argMsg.Id}");
 
         if (cachedMsg != null) {
             if (cachedMsg.Content == null) {
@@ -80,7 +80,7 @@ internal partial class ModLogs {
         var reportEmbed = new EmbedBuilder()
             .WithTitle("Message edited")
             .WithCurrentTimestamp()
-            .WithFooter($"User ID: {newMsg.Author.Id}");
+            .WithFooter($"Message ID: {newMsg.Id}");
 
         reportEmbed.Author = new EmbedAuthorBuilder() {
             Name = $"{newMsg.Author.Username}#{newMsg.Author.Discriminator}",
@@ -138,7 +138,6 @@ internal partial class ModLogs {
         contextStr.AppendLine($"User: {userDisplay}");
         contextStr.AppendLine($"Channel: <#{channel.Id}> (#{channel.Name})");
         contextStr.AppendLine(editLine);
-        contextStr.AppendLine($"Message ID: {msgId}");
 
         e.AddField(new EmbedFieldBuilder() {
             Name = "Context",

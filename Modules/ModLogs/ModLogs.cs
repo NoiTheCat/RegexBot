@@ -8,6 +8,7 @@ namespace RegexBot.Modules.ModLogs;
 [RegexbotModule]
 internal partial class ModLogs : RegexbotModule {
     // TODO consider resurrecting 2.x idea of logging actions to db, making it searchable?
+    // TODO more robust channel filtering. define channels in config array, add check to it out here.
 
     public ModLogs(RegexbotClient bot) : base(bot) {
         // TODO missing logging features: joins, leaves, user edits (nick/username/discr)
