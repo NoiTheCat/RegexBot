@@ -7,7 +7,6 @@ namespace RegexBot;
 /// </summary>
 public class BanKickResult {
     private readonly bool _userNotFound; // possible to receive this error by means other than exception
-    private readonly RemovalType _rptRemovalType;
     private readonly ulong _rptTargetId;
 
     /// <summary>
@@ -59,12 +58,22 @@ public class BanKickResult {
     /// </value>
     public bool MessageSendSuccess { get; }
 
+    /// <summary>
+    /// Gets a value indicating if this result represents a ban.
+    /// </summary>
+    public bool IsBan { get; }
+
+    /// <summary>
+    /// Gets a value indicating if this result represents a kick.
+    /// </summary>
+    public bool IsKick { get => !IsBan; }
+
     internal BanKickResult(HttpException? error, bool notificationSuccess, bool errorNotFound,
-        RemovalType rtype, ulong rtarget) {
+        bool isBan, ulong rtarget) {
         OperationError = error;
         MessageSendSuccess = notificationSuccess;
         _userNotFound = errorNotFound;
-        _rptRemovalType = rtype;
+        IsBan = isBan;
         _rptTargetId = rtarget;
     }
 
@@ -78,14 +87,12 @@ public class BanKickResult {
         if (OperationSuccess) msg = ":white_check_mark: ";
         else msg = ":x: Failed to ";
 
-        if (_rptRemovalType == RemovalType.Ban) {
+        if (IsBan) {
             if (OperationSuccess) msg += "Banned";
             else msg += "ban";
-        } else if (_rptRemovalType == RemovalType.Kick) {
+        } else {
             if (OperationSuccess) msg += "Kicked";
             else msg += "kick";
-        } else {
-            throw new InvalidOperationException("Cannot create a message for removal type of None.");
         }
 
         if (_rptTargetId != 0) {

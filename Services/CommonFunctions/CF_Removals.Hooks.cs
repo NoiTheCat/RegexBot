@@ -18,7 +18,7 @@ partial class RegexbotClient {
                                         int purgeDays,
                                         string? reason,
                                         bool sendDMToTarget)
-        => _svcCommonFunctions.BanOrKickAsync(RemovalType.Ban, guild, source, targetUser, purgeDays, reason, sendDMToTarget);
+        => _svcCommonFunctions.BanOrKickAsync(true, guild, source, targetUser, purgeDays, reason, sendDMToTarget);
 
     /// <summary>
     /// Similar to <see cref="BanAsync(SocketGuild, string, ulong, int, string, bool)"/>, but making use of an
@@ -37,7 +37,7 @@ partial class RegexbotClient {
                                               string? reason,
                                               bool sendDMToTarget) {
         var result = EcQueryGuildUser(guild.Id, targetSearch);
-        if (result == null) return new BanKickResult(null, false, true, RemovalType.Ban, 0);
+        if (result == null) return new BanKickResult(null, false, true, true, 0);
         return await BanAsync(guild, source, (ulong)result.UserId, purgeDays, reason, sendDMToTarget);
     }
 
@@ -60,7 +60,7 @@ partial class RegexbotClient {
                                          ulong targetUser,
                                          string? reason,
                                          bool sendDMToTarget)
-        => _svcCommonFunctions.BanOrKickAsync(RemovalType.Kick, guild, source, targetUser, default, reason, sendDMToTarget);
+        => _svcCommonFunctions.BanOrKickAsync(false, guild, source, targetUser, default, reason, sendDMToTarget);
 
     /// <summary>
     /// Similar to <see cref="KickAsync(SocketGuild, string, ulong, string, bool)"/>, but making use of an
@@ -80,7 +80,7 @@ partial class RegexbotClient {
                                                string? reason,
                                                bool sendDMToTarget) {
         var result = EcQueryGuildUser(guild.Id, targetSearch);
-        if (result == null) return new BanKickResult(null, false, true, RemovalType.Kick, 0);
+        if (result == null) return new BanKickResult(null, false, true, false, 0);
         return await KickAsync(guild, source, (ulong)result.UserId, reason, sendDMToTarget);
     }
 }
