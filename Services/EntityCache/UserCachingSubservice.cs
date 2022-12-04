@@ -1,5 +1,4 @@
 ﻿#pragma warning disable CA1822 // "Mark members as static" - members should only be callable by code with access to this instance
-using Microsoft.EntityFrameworkCore;
 using RegexBot.Common;
 using RegexBot.Data;
 
@@ -112,7 +111,7 @@ class UserCachingSubservice {
     internal CachedGuildUser? DoGuildUserQuery(ulong guildId, string search) {
         static CachedGuildUser? innerQuery(ulong guildId, ulong? sID, (string name, string? disc)? nameSearch) {
             var db = new BotDatabaseContext();
-            var query = db.GuildUserCache.Include(gu => gu.User).Where(c => c.GuildId == guildId);
+            var query = db.GuildUserCache.Where(c => c.GuildId == guildId);
             if (sID.HasValue)
                 query = query.Where(c => c.UserId == sID.Value);
             if (nameSearch != null) {

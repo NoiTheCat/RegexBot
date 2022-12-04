@@ -53,11 +53,8 @@ public class CachedGuildMessage {
     /// </summary>
     public string? Content { get; set; } = null!;
 
-    /// <inheritdoc cref="CachedGuildUser.User" />
-    [ForeignKey(nameof(AuthorId))]
-    [InverseProperty(nameof(CachedUser.GuildMessages))]
-    public CachedUser Author { get; set; } = null!;
-    // TODO set up composite foreign key. will require rewriting some parts in modules...
+    /// <inheritdoc cref="ModLogEntry.User"/>
+    public CachedGuildUser Author { get; set; } = null!;
 
     // Used by MessageCachingSubservice
     internal static CachedGuildMessage? Clone(CachedGuildMessage? original) {

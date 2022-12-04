@@ -37,12 +37,10 @@ public class CachedUser {
     /// <summary>
     /// If included in the query, gets the list of associated <seealso cref="CachedGuildUser"/> entries for this entry.
     /// </summary>
-    [InverseProperty(nameof(CachedGuildUser.User))]
     public ICollection<CachedGuildUser> Guilds { get; set; } = null!;
 
     /// <summary>
     /// If included in the query, gets the list of associated <seealso cref="CachedGuildMessage"/> entries for this entry.
     /// </summary>
-    [InverseProperty(nameof(CachedGuildMessage.Author))]
     public ICollection<CachedGuildMessage> GuildMessages { get; set; } = null!;
 }

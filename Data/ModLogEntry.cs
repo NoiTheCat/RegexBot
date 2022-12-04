@@ -44,7 +44,7 @@ public class ModLogEntry : ISharedEvent {
     public string? Message { get; set; }
 
     /// <summary>
-    /// If included in the query, gets the associated <seealso cref="CachedGuildUser"/> for this entry.
+    /// Gets the associated <seealso cref="CachedGuildUser"/> for this entry. This entity is auto-included.
     /// </summary>
     public CachedGuildUser User { get; set; } = null!;
 }

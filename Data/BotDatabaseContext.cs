@@ -54,6 +54,10 @@ public class BotDatabaseContext : DbContext {
         modelBuilder.Entity<CachedGuildUser>(e => {
             e.HasKey(p => new { p.GuildId, p.UserId });
             e.Property(p => p.FirstSeenTime).HasDefaultValueSql("now()");
+            e.HasOne(entry => entry.User)
+                .WithMany(u => u.Guilds)
+                .HasForeignKey(entry => entry.UserId);
+            e.Navigation(entry => entry.User).AutoInclude();
         });
         modelBuilder.Entity<CachedGuildMessage>(e => e.Property(p => p.CreatedAt).HasDefaultValueSql("now()"));
         modelBuilder.HasPostgresEnum<ModLogType>();
@@ -62,6 +66,14 @@ public class BotDatabaseContext : DbContext {
             e.HasOne(entry => entry.User)
                 .WithMany(gu => gu.Logs)
                 .HasForeignKey(entry => new { entry.GuildId, entry.UserId });
+            e.Navigation(entry => entry.User).AutoInclude();
+        });
+        modelBuilder.Entity<CachedGuildMessage>(e => {
+            e.HasOne(entry => entry.Author)
+                .WithMany(gu => gu.Messages)
+                .HasForeignKey(cgm => new { cgm.GuildId, cgm.AuthorId })
+                .HasPrincipalKey(cgu => new { cgu.GuildId, cgu.UserId });
+            e.Navigation(entry => entry.Author).AutoInclude();
         });
     }
 }

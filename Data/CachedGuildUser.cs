@@ -28,14 +28,17 @@ public class CachedGuildUser {
     public string? Nickname { get; set; }
 
     /// <summary>
-    /// If included in the query, references the associated <seealso cref="CachedUser"/> for this entry.
+    /// Gets the associated <seealso cref="CachedUser"/> for this entry. This entity is auto-included.
     /// </summary>
-    [ForeignKey(nameof(UserId))]
-    [InverseProperty(nameof(CachedUser.Guilds))]
     public CachedUser User { get; set; } = null!;
 
     /// <summary>
     /// If included in the query, references all <seealso cref="ModLogEntry"/> items associated with this entry.
     /// </summary>
     public ICollection<ModLogEntry> Logs { get; set; } = null!;
+
+    /// <summary>
+    /// If included in the query, references all <seealso cref="CachedGuildMessage"/> items associated with this entry.
+    /// </summary>
+    public ICollection<CachedGuildMessage> Messages { get; set; } = null!;
 }

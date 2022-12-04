@@ -1,5 +1,4 @@
 using Discord;
-using Microsoft.EntityFrameworkCore;
 using RegexBot.Data;
 using System.Text;
 
@@ -24,7 +23,6 @@ internal partial class ModLogs {
 
         using var db = new BotDatabaseContext();
         var cachedMsg = db.GuildMessageCache
-            .Include(gm => gm.Author)
             .Where(gm => gm.MessageId == argMsg.Id)
             .SingleOrDefault();
 
@@ -50,8 +48,8 @@ internal partial class ModLogs {
                 };
             } else {
                 reportEmbed.Author = new EmbedAuthorBuilder() {
-                    Name = $"{cachedMsg.Author.Username}#{cachedMsg.Author.Discriminator}",
-                    IconUrl = cachedMsg.Author.AvatarUrl ?? GetDefaultAvatarUrl(cachedMsg.Author.Discriminator)
+                    Name = $"{cachedMsg.Author.User.Username}#{cachedMsg.Author.User.Discriminator}",
+                    IconUrl = cachedMsg.Author.User.AvatarUrl ?? GetDefaultAvatarUrl(cachedMsg.Author.User.Discriminator)
                 };
             }
             SetAttachmentsField(reportEmbed, cachedMsg.AttachmentNames);
