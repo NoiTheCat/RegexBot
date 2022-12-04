@@ -28,7 +28,7 @@ class MessageCachingSubservice {
         if (arg is SocketSystemMessage) return;
 
         using var db = new BotDatabaseContext();
-        CachedGuildMessage? cachedMsg = db.GuildMessageCache.Where(m => m.MessageId == (long)arg.Id).SingleOrDefault();
+        CachedGuildMessage? cachedMsg = db.GuildMessageCache.Where(m => m.MessageId == arg.Id).SingleOrDefault();
 
         if (isUpdate) {
             // Alternative for Discord.Net's MessageUpdated handler:
@@ -40,10 +40,10 @@ class MessageCachingSubservice {
 
         if (cachedMsg == null) {
             cachedMsg = new() {
-                MessageId = (long)arg.Id,
-                AuthorId = (long)arg.Author.Id,
-                GuildId = (long)((SocketGuildUser)arg.Author).Guild.Id,
-                ChannelId = (long)arg.Channel.Id,
+                MessageId = arg.Id,
+                AuthorId = arg.Author.Id,
+                GuildId = ((SocketGuildUser)arg.Author).Guild.Id,
+                ChannelId = arg.Channel.Id,
                 AttachmentNames = arg.Attachments.Select(a => a.Filename).ToList(),
                 Content = arg.Content
             };

@@ -24,8 +24,8 @@ partial class RegexbotClient {
     /// </returns>
     public async Task<ModLogEntry> AddUserNoteAsync(SocketGuild guild, ulong targetUser, string source, string? message) {
         var entry = new ModLogEntry() {
-            GuildId = (long)guild.Id,
-            UserId = (long)targetUser,
+            GuildId = guild.Id,
+            UserId = targetUser,
             LogType = ModLogType.Note,
             IssuedBy = source,
             Message = message
@@ -53,8 +53,8 @@ partial class RegexbotClient {
     /// </returns>
     public async Task<(ModLogEntry, LogAppendResult)> AddUserWarnAsync(SocketGuild guild, ulong targetUser, string source, string? message) {
         var entry = new ModLogEntry() {
-            GuildId = (long)guild.Id,
-            UserId = (long)targetUser,
+            GuildId = guild.Id,
+            UserId = targetUser,
             LogType = ModLogType.Warn,
             IssuedBy = source,
             Message = message

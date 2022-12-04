@@ -25,7 +25,7 @@ internal partial class ModLogs {
         using var db = new BotDatabaseContext();
         var cachedMsg = db.GuildMessageCache
             .Include(gm => gm.Author)
-            .Where(gm => gm.MessageId == (long)argMsg.Id)
+            .Where(gm => gm.MessageId == argMsg.Id)
             .SingleOrDefault();
 
         var reportEmbed = new EmbedBuilder()

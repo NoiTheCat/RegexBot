@@ -12,22 +12,22 @@ public class CachedGuildMessage {
     /// </summary>
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.None)]
-    public long MessageId { get; set; }
+    public ulong MessageId { get; set; }
 
     /// <summary>
     /// Gets the message author's snowflake ID.
     /// </summary>
-    public long AuthorId { get; set; }
+    public ulong AuthorId { get; set; }
 
     /// <summary>
     /// Gets the associated guild's snowflake ID.
     /// </summary>
-    public long GuildId { get; set; }
+    public ulong GuildId { get; set; }
 
     /// <summary>
     /// Gets the corresponding channel's snowflake ID.
     /// </summary>
-    public long ChannelId { get; set; }
+    public ulong ChannelId { get; set; }
 
     /// <summary>
     /// Gets the timestamp showing when this message was originally created.

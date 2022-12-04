@@ -12,7 +12,7 @@ public class CachedUser {
     /// </summary>
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.None)]
-    public long UserId { get; set; }
+    public ulong UserId { get; set; }
 
     /// <summary>
     /// Gets the timestamp showing when this cache entry was last updated.

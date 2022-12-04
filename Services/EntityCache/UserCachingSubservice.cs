@@ -52,9 +52,9 @@ class UserCachingSubservice {
 
     // IMPORTANT: Do NOT forget to save changes in database after calling this!
     private static void UpdateUser(SocketUser user, BotDatabaseContext db) {
-        var uinfo = db.UserCache.Where(c => c.UserId == (long)user.Id).SingleOrDefault();
+        var uinfo = db.UserCache.Where(c => c.UserId == user.Id).SingleOrDefault();
         if (uinfo == null) {
-            uinfo = new() { UserId = (long)user.Id };
+            uinfo = new() { UserId = user.Id };
             db.UserCache.Add(uinfo);
         }
 
@@ -65,9 +65,9 @@ class UserCachingSubservice {
     }
 
     private static void UpdateGuildUser(SocketGuildUser user, BotDatabaseContext db) {
-        var guinfo = db.GuildUserCache.Where(c => c.GuildId == (long)user.Guild.Id && c.UserId == (long)user.Id).SingleOrDefault();
+        var guinfo = db.GuildUserCache.Where(c => c.GuildId == user.Guild.Id && c.UserId == user.Id).SingleOrDefault();
         if (guinfo == null) {
-            guinfo = new() { GuildId = (long)user.Guild.Id, UserId = (long)user.Id };
+            guinfo = new() { GuildId = user.Guild.Id, UserId = user.Id };
             db.GuildUserCache.Add(guinfo);
         }
 
@@ -83,7 +83,7 @@ class UserCachingSubservice {
 
             var query = db.UserCache.AsQueryable();
             if (sID.HasValue)
-                query = query.Where(c => c.UserId == (long)sID.Value);
+                query = query.Where(c => c.UserId == sID.Value);
             if (nameSearch != null) {
                 query = query.Where(c => c.Username.ToLower() == nameSearch.Value.name.ToLower());
                 if (nameSearch.Value.disc != null) query = query.Where(c => c.Discriminator == nameSearch.Value.disc);
@@ -112,9 +112,9 @@ class UserCachingSubservice {
     internal CachedGuildUser? DoGuildUserQuery(ulong guildId, string search) {
         static CachedGuildUser? innerQuery(ulong guildId, ulong? sID, (string name, string? disc)? nameSearch) {
             var db = new BotDatabaseContext();
-            var query = db.GuildUserCache.Include(gu => gu.User).Where(c => c.GuildId == (long)guildId);
+            var query = db.GuildUserCache.Include(gu => gu.User).Where(c => c.GuildId == guildId);
             if (sID.HasValue)
-                query = query.Where(c => c.UserId == (long)sID.Value);
+                query = query.Where(c => c.UserId == sID.Value);
             if (nameSearch != null) {
                 query = query.Where(c => (c.Nickname != null && c.Nickname.ToLower() == nameSearch.Value.name.ToLower()) ||
                     c.User.Username.ToLower() == nameSearch.Value.name.ToLower());

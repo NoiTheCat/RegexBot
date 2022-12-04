@@ -8,8 +8,8 @@ internal partial class CommonFunctionsService : Service {
     // A notification for this entry is then propagated.
     private void ModLogsProcessRemoval(ulong guildId, ulong targetId, ModLogType remType, string source, string? logReason) {
         var entry = new ModLogEntry() {
-            GuildId = (long)guildId,
-            UserId = (long)targetId,
+            GuildId = guildId,
+            UserId = targetId,
             LogType = remType,
             IssuedBy = source,
             Message = logReason

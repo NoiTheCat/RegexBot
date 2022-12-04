@@ -25,8 +25,8 @@ internal partial class CommonFunctionsService : Service {
             return new TimeoutSetResult(ex, false, target);
         }
         var entry = new ModLogEntry() {
-            GuildId = (long)guild.Id,
-            UserId = (long)target.Id,
+            GuildId = guild.Id,
+            UserId = target.Id,
             LogType = ModLogType.Timeout,
             IssuedBy = source,
             Message = $"Duration: {Math.Floor(duration.TotalMinutes)}min{(reason == null ? "." : " - " + reason)}"

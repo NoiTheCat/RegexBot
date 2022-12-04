@@ -20,12 +20,12 @@ public class ModLogEntry : ISharedEvent {
     public DateTimeOffset Timestamp { get; set; }
 
     /// <inheritdoc cref="CachedGuildUser.GuildId"/>
-    public long GuildId { get; set; }
+    public ulong GuildId { get; set; }
 
     /// <summary>
     /// Gets the ID of the users for which this log entry pertains.
     /// </summary>
-    public long UserId { get; set; }
+    public ulong UserId { get; set; }
 
     /// <summary>
     /// Gets the type of log message this represents.

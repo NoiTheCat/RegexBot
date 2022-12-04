@@ -9,10 +9,10 @@ public class CachedGuildUser {
     /// <summary>
     /// Gets the associated guild's snowflake ID.
     /// </summary>
-    public long GuildId { get; set; }
+    public ulong GuildId { get; set; }
 
     /// <inheritdoc cref="CachedUser.UserId"/>
-    public long UserId { get; set; }
+    public ulong UserId { get; set; }
 
     /// <inheritdoc cref="CachedUser.ULastUpdateTime"/>
     public DateTimeOffset GULastUpdateTime { get; set; }
