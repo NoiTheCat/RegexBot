@@ -29,6 +29,7 @@ internal partial class ModLogs {
             .SingleOrDefault();
 
         var reportEmbed = new EmbedBuilder()
+            .WithColor(Color.Red)
             .WithTitle("Message deleted")
             .WithCurrentTimestamp()
             .WithFooter($"Message ID: {argMsg.Id}");
@@ -60,7 +61,7 @@ internal partial class ModLogs {
 
         var editLine = $"Posted: {MakeTimestamp(SnowflakeUtils.FromSnowflake(argMsg.Id))}";
         if (cachedMsg?.EditedAt != null) editLine += $"\nLast edit: {MakeTimestamp(cachedMsg.EditedAt.Value)}";
-        SetContextField(reportEmbed, (ulong?)cachedMsg?.AuthorId, channel, editLine, argMsg.Id);
+        SetContextField(reportEmbed, (ulong?)cachedMsg?.AuthorId, channel, editLine);
 
         await reportChannel.SendMessageAsync(embed: reportEmbed.Build());
     }
@@ -78,6 +79,7 @@ internal partial class ModLogs {
         }
 
         var reportEmbed = new EmbedBuilder()
+            .WithColor(new Color(0xffff00)) // yellow
             .WithTitle("Message edited")
             .WithCurrentTimestamp()
             .WithFooter($"Message ID: {newMsg.Id}");
@@ -119,12 +121,12 @@ internal partial class ModLogs {
         string editLine;
         if ((oldMsg?.EditedAt) == null) editLine = $"Posted: {MakeTimestamp(SnowflakeUtils.FromSnowflake(newMsg.Id))}";
         else editLine = $"Previous edit: {MakeTimestamp(oldMsg.EditedAt.Value)}";
-        SetContextField(reportEmbed, newMsg.Author.Id, channel, editLine, newMsg.Id);
+        SetContextField(reportEmbed, newMsg.Author.Id, channel, editLine);
 
         await reportChannel.SendMessageAsync(embed: reportEmbed.Build());
     }
 
-    private void SetContextField(EmbedBuilder e, ulong? userId, SocketTextChannel channel, string editLine, ulong msgId) {
+    private void SetContextField(EmbedBuilder e, ulong? userId, SocketTextChannel channel, string editLine) {
         string userDisplay;
         if (userId.HasValue) {
             var q = Bot.EcQueryUser(userId.Value.ToString());
