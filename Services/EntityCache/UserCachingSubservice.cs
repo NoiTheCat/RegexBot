@@ -18,15 +18,22 @@ class UserCachingSubservice {
         bot.DiscordClient.GuildMemberUpdated += DiscordClient_GuildMemberUpdated;
         bot.DiscordClient.UserUpdated += DiscordClient_UserUpdated;
     }
-    private async Task DiscordClient_GuildMembersDownloaded(SocketGuild arg) {
-        _log($"{arg.Name}: Full member list obtained. Cache update in progress.");
-        using var db = new BotDatabaseContext();
-        foreach (var user in arg.Users) {
-            UpdateUser(user, db);
-            UpdateGuildUser(user, db);
-        }
-        var changes = await db.SaveChangesAsync();
-        _log($"{arg.Name}: Member caches updated ({changes} database writes).");
+    private Task DiscordClient_GuildMembersDownloaded(SocketGuild arg) {
+        var userlist = arg.Users.ToList();
+        _ = Task.Run(async () => {
+            try {
+                using var db = new BotDatabaseContext();
+                foreach (var user in userlist) {
+                    UpdateUser(user, db);
+                    UpdateGuildUser(user, db);
+                }
+                var changes = await db.SaveChangesAsync();
+                _log($"{arg.Name}: Member caches updated ({changes} database writes).");
+            } catch (Exception ex) {
+                _log($"{arg.Name}: {ex}");
+            }
+        });
+        return Task.CompletedTask;
     }
 
     private async Task DiscordClient_GuildMemberUpdated(Discord.Cacheable<SocketGuildUser, ulong> old, SocketGuildUser current) {
