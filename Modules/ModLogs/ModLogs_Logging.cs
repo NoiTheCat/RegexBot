@@ -21,7 +21,7 @@ internal partial class ModLogs {
     /// Builds and returns an embed which displays this log entry.
     /// </summary>
     private Embed BuildLogEmbed(ModLogEntry entry) {
-        var issuedDisplay = Utilities.TryFromEntityNameString(entry.IssuedBy, bot);
+        var issuedDisplay = Utilities.TryFromEntityNameString(entry.IssuedBy, Bot);
         string targetDisplay;
         var targetq = Bot.EcQueryUser(entry.UserId.ToString());
         if (targetq != null) targetDisplay = $"<@{targetq.UserId}> - {targetq.Username}#{targetq.Discriminator} `{targetq.UserId}`";
