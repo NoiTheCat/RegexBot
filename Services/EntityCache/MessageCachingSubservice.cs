@@ -21,7 +21,11 @@ class MessageCachingSubservice {
     }
 
     private async Task AddOrUpdateCacheItemAsync(SocketMessage arg, bool isUpdate) {
-        if (!Common.Utilities.IsValidUserMessage(arg, out _)) return;
+        //if (!Common.Utilities.IsValidUserMessage(arg, out _)) return;
+        if (arg.Channel is not SocketTextChannel) return;
+        if (arg.Author.IsWebhook) return; // do get bot messages, don't get webhooks
+        if (((IMessage)arg).Type != MessageType.Default) return;
+        if (arg is SocketSystemMessage) return;
 
         using var db = new BotDatabaseContext();
         CachedGuildMessage? cachedMsg = db.GuildMessageCache.Where(m => m.MessageId == (long)arg.Id).SingleOrDefault();
