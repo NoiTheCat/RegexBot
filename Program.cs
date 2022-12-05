@@ -15,9 +15,9 @@ class Program {
         StartTime = DateTimeOffset.UtcNow;
         Console.WriteLine("Bot start time: " + StartTime.ToString("u"));
 
-        InstanceConfig cfg;
+        Configuration cfg;
         try {
-            cfg = new InstanceConfig(); // Program may exit within here.
+            cfg = new Configuration(); // Program may exit within here.
         } catch (Exception ex) {
             Console.WriteLine(ex.Message);
             Environment.ExitCode = 1;

@@ -1,14 +1,9 @@
 ﻿using CommandLine;
 using Newtonsoft.Json;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 
 namespace RegexBot;
-/// <summary>
-/// Contains essential instance configuration for this bot including Discord connection settings, service configuration,
-/// and command-line options.
-/// </summary>
-class InstanceConfig {
+class Configuration {
     /// <summary>
     /// Token used for Discord authentication.
     /// </summary>
@@ -19,18 +14,20 @@ class InstanceConfig {
     /// </summary>
     internal IReadOnlyList<string> Assemblies { get; }
 
-    public string? SqlHost { get; }
-    public string? SqlDatabase { get; }
-    public string SqlUsername { get; }
-    public string SqlPassword { get; }
+    public JObject ServerConfigs { get; }
+
+    // SQL properties:
+    public string? Host { get; }
+    public string? Database { get; }
+    public string Username { get; }
+    public string Password { get; }
 
     /// <summary>
     /// Sets up instance configuration object from file and command line parameters.
     /// </summary>
-    internal InstanceConfig() {
+    internal Configuration() {
         var args = CommandLineParameters.Parse(Environment.GetCommandLineArgs());
-        var path = args?.ConfigFile ?? Path.GetDirectoryName(Assembly.GetEntryAssembly()!.Location)
-            + Path.DirectorySeparatorChar + "." + Path.DirectorySeparatorChar + "instance.json";
+        var path = args?.ConfigFile!;
 
         JObject conf;
         try {
@@ -54,10 +51,16 @@ class InstanceConfig {
             throw new Exception($"'{nameof(Assemblies)}' is not properly specified in configuration.");
         }
 
-        SqlHost = ReadConfKey<string>(conf, nameof(SqlHost), false);
-        SqlDatabase = ReadConfKey<string?>(conf, nameof(SqlDatabase), false);
-        SqlUsername = ReadConfKey<string>(conf, nameof(SqlUsername), true);
-        SqlPassword = ReadConfKey<string>(conf, nameof(SqlPassword), true);
+        var dbconf = conf["DatabaseOptions"]?.Value<JObject>();
+        if (dbconf == null) throw new Exception("Database settings were not specified in configuration.");
+        // TODO more detailed database configuration? password file, other advanced authentication settings... look into this.
+        Host = ReadConfKey<string>(dbconf, nameof(Host), false);
+        Database = ReadConfKey<string?>(dbconf, nameof(Database), false);
+        Username = ReadConfKey<string>(dbconf, nameof(Username), true);
+        Password = ReadConfKey<string>(dbconf, nameof(Password), true);
+
+        ServerConfigs = conf["Servers"]?.Value<JObject>();
+        if (ServerConfigs == null) throw new Exception("No server configurations were specified.");
     }
 
     private static T? ReadConfKey<T>(JObject jc, string key, [DoesNotReturnIf(true)] bool failOnEmpty) {
@@ -67,8 +70,8 @@ class InstanceConfig {
     }
 
     class CommandLineParameters {
-        [Option('c', "config", Default = null)]
-        public string? ConfigFile { get; set; } = null!;
+        [Option('c', "config", Default = "config.json")]
+        public string? ConfigFile { get; set; } = null;
 
         public static CommandLineParameters? Parse(string[] args) {
             CommandLineParameters? result = null;
