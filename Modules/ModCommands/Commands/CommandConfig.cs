@@ -36,4 +36,12 @@ abstract class CommandConfig {
         };
         await target.SendMessageAsync(message ?? "", embed: usageEmbed.Build());
     }
+
+    protected static string ProcessText(string input, SocketMessage m) {
+        // TODO elaborate on this
+        // For now, replaces all instances of @_ with the message sender.
+        return input
+            .Replace("@_", m.Author.Mention)
+            .Replace("@\\_", "@_");
+    }
 }
