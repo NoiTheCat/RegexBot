@@ -135,11 +135,11 @@ class ResponseExecutor {
     #region Response delegates
     private static Task<ResponseResult> CmdComment(string? parameter) => Task.FromResult(FromSuccess(parameter));
 
-    private Task<ResponseResult> CmdBan(string? parameter) => CmdBanKick(RemovalType.Ban, parameter);
-    private Task<ResponseResult> CmdKick(string? parameter) => CmdBanKick(RemovalType.Kick, parameter);
-    private async Task<ResponseResult> CmdBanKick(RemovalType rt, string? parameter) {
+    private Task<ResponseResult> CmdBan(string? parameter) => CmdBanKick(true, parameter);
+    private Task<ResponseResult> CmdKick(string? parameter) => CmdBanKick(false, parameter);
+    private async Task<ResponseResult> CmdBanKick(bool isBan, string? parameter) {
         BanKickResult result;
-        if (rt == RemovalType.Ban) {
+        if (isBan) {
             result = await _bot.BanAsync(_guild, LogSource, _user.Id,
                                          _rule.BanPurgeDays, parameter, _rule.NotifyUser);
         } else {

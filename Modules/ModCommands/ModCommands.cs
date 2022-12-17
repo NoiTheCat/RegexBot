@@ -15,7 +15,7 @@ internal class ModCommands : RegexbotModule {
         }
     }
 
-    public override Task<object?> CreateGuildStateAsync(ulong guildID, JToken config) {
+    public override Task<object?> CreateGuildStateAsync(ulong guildID, JToken? config) {
         if (config == null) return Task.FromResult<object?>(null);
 
         var conf = new ModuleConfig(this, config);

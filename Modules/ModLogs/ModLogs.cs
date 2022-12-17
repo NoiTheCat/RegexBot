@@ -8,6 +8,7 @@ namespace RegexBot.Modules.ModLogs;
 [RegexbotModule]
 internal partial class ModLogs : RegexbotModule {
     // TODO consider resurrecting 2.x idea of logging actions to db, making it searchable?
+    // TODO more robust channel filtering. define channels in config array, add check to it out here.
 
     public ModLogs(RegexbotClient bot) : base(bot) {
         // TODO missing logging features: joins, leaves, user edits (nick/username/discr)
@@ -15,7 +16,7 @@ internal partial class ModLogs : RegexbotModule {
         bot.SharedEventReceived += HandleReceivedSharedEvent;
     }
 
-    public override Task<object?> CreateGuildStateAsync(ulong guildID, JToken config) {
+    public override Task<object?> CreateGuildStateAsync(ulong guildID, JToken? config) {
         if (config == null) return Task.FromResult<object?>(null);
         if (config.Type != JTokenType.Object)
             throw new ModuleLoadException("Configuration for this section is invalid.");

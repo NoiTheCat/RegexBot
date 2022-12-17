@@ -12,7 +12,7 @@ internal class AutoResponder : RegexbotModule {
         DiscordClient.MessageReceived += DiscordClient_MessageReceived;
     }
 
-    public override Task<object?> CreateGuildStateAsync(ulong guildID, JToken config) {
+    public override Task<object?> CreateGuildStateAsync(ulong guildID, JToken? config) {
         if (config == null) return Task.FromResult<object?>(null);
         var defs = new List<Definition>();
 

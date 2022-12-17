@@ -52,7 +52,7 @@ internal sealed class EntryRole : RegexbotModule, IDisposable {
         return Task.CompletedTask;
     }
 
-    public override Task<object?> CreateGuildStateAsync(ulong guildID, JToken config) {
+    public override Task<object?> CreateGuildStateAsync(ulong guildID, JToken? config) {
         if (config == null) return Task.FromResult<object?>(null);
 
         if (config.Type != JTokenType.Object)

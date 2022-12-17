@@ -29,9 +29,10 @@ internal partial class ModLogs {
             .SingleOrDefault();
 
         var reportEmbed = new EmbedBuilder()
+            .WithColor(Color.Red)
             .WithTitle("Message deleted")
             .WithCurrentTimestamp()
-            .WithFooter($"User ID: {(cachedMsg == null ? "Unknown" : cachedMsg.AuthorId)}");
+            .WithFooter($"Message ID: {argMsg.Id}");
 
         if (cachedMsg != null) {
             if (cachedMsg.Content == null) {
@@ -60,7 +61,7 @@ internal partial class ModLogs {
 
         var editLine = $"Posted: {MakeTimestamp(SnowflakeUtils.FromSnowflake(argMsg.Id))}";
         if (cachedMsg?.EditedAt != null) editLine += $"\nLast edit: {MakeTimestamp(cachedMsg.EditedAt.Value)}";
-        SetContextField(reportEmbed, (ulong?)cachedMsg?.AuthorId, channel, editLine, argMsg.Id);
+        SetContextField(reportEmbed, (ulong?)cachedMsg?.AuthorId, channel, editLine);
 
         await reportChannel.SendMessageAsync(embed: reportEmbed.Build());
     }
@@ -78,9 +79,10 @@ internal partial class ModLogs {
         }
 
         var reportEmbed = new EmbedBuilder()
+            .WithColor(new Color(0xffff00)) // yellow
             .WithTitle("Message edited")
             .WithCurrentTimestamp()
-            .WithFooter($"User ID: {newMsg.Author.Id}");
+            .WithFooter($"Message ID: {newMsg.Id}");
 
         reportEmbed.Author = new EmbedAuthorBuilder() {
             Name = $"{newMsg.Author.Username}#{newMsg.Author.Discriminator}",
@@ -119,12 +121,12 @@ internal partial class ModLogs {
         string editLine;
         if ((oldMsg?.EditedAt) == null) editLine = $"Posted: {MakeTimestamp(SnowflakeUtils.FromSnowflake(newMsg.Id))}";
         else editLine = $"Previous edit: {MakeTimestamp(oldMsg.EditedAt.Value)}";
-        SetContextField(reportEmbed, newMsg.Author.Id, channel, editLine, newMsg.Id);
+        SetContextField(reportEmbed, newMsg.Author.Id, channel, editLine);
 
         await reportChannel.SendMessageAsync(embed: reportEmbed.Build());
     }
 
-    private void SetContextField(EmbedBuilder e, ulong? userId, SocketTextChannel channel, string editLine, ulong msgId) {
+    private void SetContextField(EmbedBuilder e, ulong? userId, SocketTextChannel channel, string editLine) {
         string userDisplay;
         if (userId.HasValue) {
             var q = Bot.EcQueryUser(userId.Value.ToString());
@@ -138,7 +140,6 @@ internal partial class ModLogs {
         contextStr.AppendLine($"User: {userDisplay}");
         contextStr.AppendLine($"Channel: <#{channel.Id}> (#{channel.Name})");
         contextStr.AppendLine(editLine);
-        contextStr.AppendLine($"Message ID: {msgId}");
 
         e.AddField(new EmbedFieldBuilder() {
             Name = "Context",

@@ -41,7 +41,7 @@ internal class PendingOutRole : RegexbotModule {
         }
     }
 
-    public override Task<object?> CreateGuildStateAsync(ulong guildID, JToken config) {
+    public override Task<object?> CreateGuildStateAsync(ulong guildID, JToken? config) {
         if (config == null) return Task.FromResult<object?>(null);
         if (config.Type != JTokenType.Object)
             throw new ModuleLoadException("Configuration for this section is invalid.");
