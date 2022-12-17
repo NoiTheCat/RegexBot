@@ -10,15 +10,16 @@ public class BotDatabaseContext : DbContext {
 
     static BotDatabaseContext() {
         // Get our own config loaded just for the SQL stuff
-        var conf = new InstanceConfig();
+        // TODO this should probably be cached, or otherwise loaded in a better way
+        var conf = new Configuration();
         _connectionString = new NpgsqlConnectionStringBuilder() {
 #if DEBUG
             IncludeErrorDetail = true,
 #endif
-            Host = conf.SqlHost ?? "localhost", // default to localhost
-            Database = conf.SqlDatabase,
-            Username = conf.SqlUsername,
-            Password = conf.SqlPassword
+            Host = conf.Host ?? "localhost", // default to localhost
+            Database = conf.Database,
+            Username = conf.Username,
+            Password = conf.Password
         }.ToString();
     }
 

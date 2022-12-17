@@ -1,0 +1,44 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "object",
+    "properties": {
+        "BotToken": {
+            "type": "string",
+            "description": "The token used by the bot to connect to Discord."
+        },
+        "Assemblies": {
+            "type": "array",
+            "description": "A list of additional files to be loaded to extend the bot's functionality.",
+            "default": [ "RegexBot.dll" ]
+        },
+        "DatabaseOptions": {
+            "type": "object",
+            "description": "A set of options for the SQL database connection.",
+            "properties": {
+                "Host": {
+                    "type": "string",
+                    "description": "The SQL host, whether a hostname, IP address, or path to a socket."
+                },
+                "Database": {
+                    "type": "string",
+                    "description": "The target SQL database name to connect to, if different from the default."
+                },
+                "Username": {
+                    "type": "string",
+                    "description": "The username used for SQL server authentication."
+                },
+                "Password": {
+                    "type": "string",
+                    "description": "The password used for SQL server authentication."
+                }
+            },
+            "required": [ "Username", "Password" ]
+        },
+        "Servers": {
+            "type": "object",
+            "description": "A collection of server configurations with keys representing server IDs and values containing the respective server's configuration."
+            /* TODO unfinished */
+        }
+    },
+    "required": [ "BotToken", "DatabaseOptions", "Servers" ]
+}

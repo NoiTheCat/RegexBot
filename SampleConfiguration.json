@@ -1,0 +1,57 @@
+﻿{
+  "$schema": "https://raw.githubusercontent.com/NoiTheCat/RegexBot/main/ConfigurationSchema.json",
+
+  "BotToken": "12345678901234567890qwertyuiop.1234567890",
+  //"Assemblies": [ "RegexBot.dll" ],
+  "DatabaseOptions": {
+    "Username": "regexbot",
+    "Password": "regexbot"
+  },
+
+  "Servers": {
+    "00000000": { // Place server ID here
+      "Name": "SERVER NAME", // Server name is unused by the bot, but is useful as a reference.
+      "Moderators": [
+        // Users and roles are accepted here.
+        "MODERATOR"
+      ],
+
+      /*
+        The following configuration is provided as a sample for commonly-used features.
+        For a detailed reference which includes all possible configuration settings, see
+        this project's documentation.
+      */
+      "RegexModerator": [
+        {
+          "Label": "No cheese",
+          "Regex": "cheese",
+          "Response": [
+            "say #_ You can't say that, that's illegal",
+            "delete"
+          ]
+        },
+        {
+          "Label": "Secret club initiation",
+          "Regex": "my name is .* and I (hate|dislike) cheese",
+          "Response": [
+            "say @_ We welcome you.",
+            "addrole &00000::Secret Club member"
+          ]
+        }
+      ],
+
+      "AutoResponder": [
+        {
+          "Label": "Infinite no u",
+          "Regex": "no u",
+          "Reply": "no u"
+        },
+        {
+          "Label": "Acknowledge praise",
+          "Regex": "yes u",
+          "Reply": ":blush:"
+        }
+      ]
+    }
+  }
+}

@@ -7,7 +7,7 @@ static class ModuleLoader {
     /// <summary>
     /// Given the instance configuration, loads all appropriate types from file specified in it.
     /// </summary>
-    internal static ReadOnlyCollection<RegexbotModule> Load(InstanceConfig conf, RegexbotClient rb) {
+    internal static ReadOnlyCollection<RegexbotModule> Load(Configuration conf, RegexbotClient rb) {
         var path = Path.GetDirectoryName(Assembly.GetEntryAssembly()!.Location) + Path.DirectorySeparatorChar;
         var modules = new List<RegexbotModule>();
 

@@ -8,7 +8,7 @@ public partial class RegexbotClient {
     /// <summary>
     /// Gets application instance configuration.
     /// </summary>
-    internal InstanceConfig Config { get; }
+    internal Configuration Config { get; }
 
     /// <summary>
     /// Gets the Discord client instance.
@@ -20,14 +20,14 @@ public partial class RegexbotClient {
     /// </summary>
     internal IReadOnlyCollection<RegexbotModule> Modules { get; }
 
-    internal RegexbotClient(InstanceConfig conf, DiscordSocketClient client) {
+    internal RegexbotClient(Configuration conf, DiscordSocketClient client) {
         Config = conf;
         DiscordClient = client;
 
         // Get all services started up
         _svcLogging = new Services.Logging.LoggingService(this);
         _svcSharedEvents = new Services.SharedEventService.SharedEventService(this);
-        _svcGuildState = new Services.ModuleState.ModuleStateService(this);
+        _svcGuildState = new Services.ModuleState.ModuleStateService(this, conf.ServerConfigs);
         _svcCommonFunctions = new Services.CommonFunctions.CommonFunctionsService(this);
         _svcEntityCache = new Services.EntityCache.EntityCacheService(this);
 
