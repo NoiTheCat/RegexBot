@@ -25,10 +25,15 @@ public class CachedUser {
     public string Username { get; set; } = null!;
 
     /// <summary>
-    /// Gets the user's discriminator value.
+    /// Gets the user's discriminator value. A value of "0000" means the user is on the new username system.
     /// </summary>
     public string Discriminator { get; set; } = null!;
-    
+
+    /// <summary>
+    /// Gets the user's display name. A user <em>may</em> have a global name if they are on the new username system.
+    /// </summary>
+    public string? GlobalName { get; set; } = null!;
+
     /// <summary>
     /// Gets the avatar URL, if any, for the associated user.
     /// </summary>
