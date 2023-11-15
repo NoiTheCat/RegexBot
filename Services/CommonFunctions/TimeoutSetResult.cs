@@ -15,10 +15,10 @@ public class TimeoutSetResult : IOperationResult {
     public Exception? Error { get; }
 
     /// <inheritdoc/>
-    public bool ErrorNotFound => (_target == null) || ((Error as HttpException)?.HttpCode == System.Net.HttpStatusCode.NotFound);
+    public bool ErrorNotFound => (_target == null) || Error is HttpException { HttpCode: System.Net.HttpStatusCode.NotFound };
 
     /// <inheritdoc/>
-    public bool ErrorForbidden => (Error as HttpException)?.HttpCode == System.Net.HttpStatusCode.Forbidden;
+    public bool ErrorForbidden => Error is HttpException { HttpCode: System.Net.HttpStatusCode.Forbidden };
 
     /// <inheritdoc/>
     public bool NotificationSuccess { get; }
@@ -32,7 +32,7 @@ public class TimeoutSetResult : IOperationResult {
     /// <inheritdoc/>
     public string ToResultString() {
         if (Success) {
-            var msg = $":white_check_mark: Timeout set for **{_target!.Username}#{_target.Discriminator}**.";
+            var msg = $":white_check_mark: Timeout set for **{_target!.GetDisplayableUsername()}**.";
             if (!NotificationSuccess) msg += "\n(User was unable to receive notification message.)";
             return msg;
         } else {

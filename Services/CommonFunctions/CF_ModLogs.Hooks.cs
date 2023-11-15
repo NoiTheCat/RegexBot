@@ -68,7 +68,7 @@ partial class RegexbotClient {
         // Attempt warning message
         var userSearch = _svcEntityCache.QueryUserCache(targetUser.ToString());
         var userDisp = userSearch != null
-            ? $"**{userSearch.Username}#{userSearch.Discriminator}**"
+            ? $"**{userSearch.GetDisplayableUsername()}**"
             : $"user with ID **{targetUser}**";
         var targetGuildUser = guild.GetUser(targetUser);
         if (targetGuildUser == null) return (entry, new LogAppendResult(

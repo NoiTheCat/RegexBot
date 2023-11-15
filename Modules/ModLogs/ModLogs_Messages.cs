@@ -1,5 +1,6 @@
 using Discord;
 using Microsoft.EntityFrameworkCore;
+using RegexBot.Common;
 using RegexBot.Data;
 using System.Text;
 
@@ -50,7 +51,7 @@ internal partial class ModLogs {
                 };
             } else {
                 reportEmbed.Author = new EmbedAuthorBuilder() {
-                    Name = $"{cachedMsg.Author.Username}#{cachedMsg.Author.Discriminator}",
+                    Name = $"{cachedMsg.Author.GetDisplayableUsername()}",
                     IconUrl = cachedMsg.Author.AvatarUrl ?? GetDefaultAvatarUrl(cachedMsg.Author.Discriminator)
                 };
             }
@@ -85,7 +86,7 @@ internal partial class ModLogs {
             .WithFooter($"Message ID: {newMsg.Id}");
 
         reportEmbed.Author = new EmbedAuthorBuilder() {
-            Name = $"{newMsg.Author.Username}#{newMsg.Author.Discriminator}",
+            Name = $"{newMsg.Author.GetDisplayableUsername()}",
             IconUrl = newMsg.Author.GetAvatarUrl() ?? newMsg.Author.GetDefaultAvatarUrl()
         };
 
@@ -130,7 +131,7 @@ internal partial class ModLogs {
         string userDisplay;
         if (userId.HasValue) {
             var q = Bot.EcQueryUser(userId.Value.ToString());
-            if (q != null) userDisplay = $"<@{q.UserId}> - {q.Username}#{q.Discriminator} `{q.UserId}`";
+            if (q != null) userDisplay = $"<@{q.UserId}> - {q.GetDisplayableUsername()} `{q.UserId}`";
             else userDisplay = $"Unknown user with ID `{userId}`";
         } else {
             userDisplay = "Unknown";
