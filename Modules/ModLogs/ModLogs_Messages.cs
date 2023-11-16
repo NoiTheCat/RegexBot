@@ -13,6 +13,7 @@ internal partial class ModLogs {
     private async Task HandleDelete(Cacheable<IMessage, ulong> argMsg, Cacheable<IMessageChannel, ulong> argChannel) {
         const int MaxPreviewLength = 750;
         if (argChannel.Value is not SocketTextChannel channel) return;
+        
         var conf = GetGuildState<ModuleConfig>(channel.Guild.Id);
         if ((conf?.LogMessageDeletions ?? false) == false) return;
         var reportChannel = conf?.ReportingChannel?.FindChannelIn(channel.Guild, true);
@@ -71,6 +72,7 @@ internal partial class ModLogs {
         var channel = (SocketTextChannel)newMsg.Channel;
         var conf = GetGuildState<ModuleConfig>(channel.Guild.Id);
         
+        if (newMsg.Author.IsBot || newMsg.Author.IsWebhook) return;
         var reportChannel = conf?.ReportingChannel?.FindChannelIn(channel.Guild, true);
         if (reportChannel == null) return;
         if (reportChannel.Id == channel.Id) {

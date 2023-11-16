@@ -17,13 +17,14 @@ class MessageCachingSubservice {
         // This event is fired also when a link preview embed is added to a message. In those situations, the message's edited timestamp
         // remains null, in addition to having other unusual and unexpected properties. We are not interested in these.
         if (!arg2.EditedTimestamp.HasValue) return Task.CompletedTask;
+        if (arg2.Author.IsBot || arg2.Author.IsWebhook) return Task.CompletedTask; // we don't log these anyway, so don't pass them on
         return AddOrUpdateCacheItemAsync(arg2, true);
     }
 
     private async Task AddOrUpdateCacheItemAsync(SocketMessage arg, bool isUpdate) {
         //if (!Common.Utilities.IsValidUserMessage(arg, out _)) return;
         if (arg.Channel is not SocketTextChannel) return;
-        if (arg.Author.IsWebhook) return; // do get bot messages, don't get webhooks
+        if (arg.Author.IsBot || arg.Author.IsWebhook) return; // do not get messages from an automated source
         if (((IMessage)arg).Type != MessageType.Default) return;
         if (arg is SocketSystemMessage) return;
 
