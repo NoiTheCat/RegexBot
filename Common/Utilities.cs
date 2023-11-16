@@ -86,4 +86,16 @@ public static class Utilities {
         } catch (Exception) { }
         return result ?? input;
     }
+
+    /// <summary>
+    /// Given an input string, replaces certain special character combinations with information
+    /// from the specified message.
+    /// </summary>
+    public static string ProcessTextTokens(string input, SocketMessage m) {
+        // TODO elaborate on this
+        // For now, replaces all instances of @_ with the message sender.
+        return input
+            .Replace("@_", m.Author.Mention)
+            .Replace("@\\_", "@_");
+    }
 }

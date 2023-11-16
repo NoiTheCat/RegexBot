@@ -64,7 +64,7 @@ class Timeout : CommandConfig {
         var result = await Module.Bot.SetTimeoutAsync(g, msg.Author.AsEntityNameString(), targetUser,
                                                       TimeSpan.FromMinutes(timeParam), reason, SendNotify);
         if (result.Success && SuccessMessage != null) {
-            var success = ProcessText(SuccessMessage, msg);
+            var success = Utilities.ProcessTextTokens(SuccessMessage, msg);
             await msg.Channel.SendMessageAsync($"{success}\n{result.ToResultString()}");
         } else {
             await msg.Channel.SendMessageAsync(result.ToResultString());
