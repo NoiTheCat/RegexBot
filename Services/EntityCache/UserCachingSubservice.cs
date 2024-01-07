@@ -60,6 +60,7 @@ class UserCachingSubservice {
 
         uinfo.Username = user.Username;
         uinfo.Discriminator = user.Discriminator;
+        uinfo.GlobalName = user.GlobalName;
         uinfo.AvatarUrl = user.GetAvatarUrl(size: 512);
         uinfo.ULastUpdateTime = DateTimeOffset.UtcNow;
     }

@@ -29,13 +29,13 @@ class Unban : CommandConfig {
         var query = Module.Bot.EcQueryUser(targetstr);
         if (query != null) {
             targetId = (ulong)query.UserId;
-            targetDisplay = $"{query.Username}#{query.Discriminator}";
+            targetDisplay = $"**{query.GetDisplayableUsername()}**";
         } else {
             if (!ulong.TryParse(targetstr, out targetId)) {
                 await SendUsageMessageAsync(msg.Channel, TargetNotFound);
                 return;
             }
-            targetDisplay = $"with ID {targetId}";
+            targetDisplay = $"with ID **{targetId}**";
         }
 
         // Do the action

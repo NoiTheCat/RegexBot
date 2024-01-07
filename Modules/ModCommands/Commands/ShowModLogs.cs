@@ -58,7 +58,7 @@ class ShowModLogs : CommandConfig {
 
         var resultList = new EmbedBuilder() {
             Author = new EmbedAuthorBuilder() {
-                Name = $"{query.User.Username}#{query.User.Discriminator}",
+                Name = $"{query.User.GetDisplayableUsername()}",
                 IconUrl = query.User.AvatarUrl
             },
             Footer = new EmbedFooterBuilder() {

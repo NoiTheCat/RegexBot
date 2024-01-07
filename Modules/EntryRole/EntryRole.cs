@@ -1,7 +1,7 @@
-﻿using System.Text;
+﻿using RegexBot.Common;
+using System.Text;
 
 namespace RegexBot.Modules.EntryRole;
-
 /// <summary>
 /// Automatically sets a role onto users entering the guild after a predefined amount of time.
 /// </summary>
@@ -138,7 +138,7 @@ internal sealed class EntryRole : RegexbotModule, IDisposable {
         var failList = new StringBuilder();
         var count = 0;
         foreach (var item in failedUserList) {
-            failList.Append($", {item.Username}#{item.Discriminator}");
+            failList.Append($", {item.GetDisplayableUsername()}");
             count++;
             if (count > 5) {
                 failList.Append($"and {count} other(s).");
