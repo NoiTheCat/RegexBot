@@ -14,7 +14,7 @@ class Ban : BanKick {
         // Ban: Unlike kick, the minimum required is just the target ID
         var result = await Module.Bot.BanAsync(g, msg.Author.ToString(), targetId, PurgeDays, reason, SendNotify);
         if (result.OperationSuccess && SuccessMessage != null) {
-            var success = ProcessText(SuccessMessage, msg);
+            var success = Utilities.ProcessTextTokens(SuccessMessage, msg);
             await msg.Channel.SendMessageAsync($"{success}\n{result.GetResultString(Module.Bot)}");
         } else {
             await msg.Channel.SendMessageAsync(result.GetResultString(Module.Bot));
@@ -35,7 +35,7 @@ class Kick : BanKick {
 
         var result = await Module.Bot.KickAsync(g, msg.Author.ToString(), targetId, reason, SendNotify);
         if (result.OperationSuccess && SuccessMessage != null) {
-            var success = ProcessText(SuccessMessage, msg);
+            var success = Utilities.ProcessTextTokens(SuccessMessage, msg);
             await msg.Channel.SendMessageAsync($"{success}\n{result.GetResultString(Module.Bot)}");
         } else {
             await msg.Channel.SendMessageAsync(result.GetResultString(Module.Bot));

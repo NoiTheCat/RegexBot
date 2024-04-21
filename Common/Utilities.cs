@@ -89,6 +89,18 @@ public static class Utilities {
         return result ?? input;
     }
 
+    /// <summary>
+    /// Given an input string, replaces certain special character combinations with information
+    /// from the specified message.
+    /// </summary>
+    public static string ProcessTextTokens(string input, SocketMessage m) {
+        // TODO elaborate on this
+        // For now, replaces all instances of @_ with the message sender.
+        return input
+            .Replace("@_", m.Author.Mention)
+            .Replace("@\\_", "@_");
+    }
+
     /// <inheritdoc cref="GetDisplayableUsernameCommon"/>
     public static string GetDisplayableUsername(this SocketUser user)
         => GetDisplayableUsernameCommon(user.Username, user.Discriminator, user.GlobalName);

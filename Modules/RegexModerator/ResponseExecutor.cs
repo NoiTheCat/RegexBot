@@ -229,7 +229,7 @@ class ResponseExecutor {
             return FromError("Channel or user were not correctly set in configuration.");
         }
         if (targetCh == null) return FromError("Could not acquire target channel.");
-        await targetCh.SendMessageAsync(param[1]);
+        await targetCh.SendMessageAsync(Utilities.ProcessTextTokens(param[1], _msg));
         return FromSuccess($"Sent to {(isUser ? "user DM" : $"<#{targetCh.Id}>")}.");
     }
 
