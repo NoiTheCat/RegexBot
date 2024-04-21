@@ -24,7 +24,7 @@ internal partial class ModLogs {
         var issuedDisplay = Utilities.TryFromEntityNameString(entry.IssuedBy, Bot);
         string targetDisplay;
         var targetq = Bot.EcQueryUser(entry.UserId.ToString());
-        if (targetq != null) targetDisplay = $"<@{targetq.UserId}> - {targetq.Username}#{targetq.Discriminator} `{targetq.UserId}`";
+        if (targetq != null) targetDisplay = $"<@{targetq.UserId}> - {targetq.GetDisplayableUsername()} `{targetq.UserId}`";
         else targetDisplay = $"User with ID `{entry.UserId}`";
 
         var logEmbed = new EmbedBuilder()

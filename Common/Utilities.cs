@@ -1,5 +1,7 @@
 ﻿using Discord;
+using RegexBot.Data;
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -81,7 +83,7 @@ public static class Utilities {
         try {
             var entityTry = new EntityName(input!, EntityType.User);
             var issueq = bot.EcQueryUser(entityTry.Id!.Value.ToString());
-            if (issueq != null) result = $"<@{issueq.UserId}> - {issueq.Username}#{issueq.Discriminator} `{issueq.UserId}`";
+            if (issueq != null) result = $"<@{issueq.UserId}> - {issueq.GetDisplayableUsername()} `{issueq.UserId}`";
             else result = $"Unknown user with ID `{entityTry.Id!.Value}`";
         } catch (Exception) { }
         return result ?? input;
@@ -97,5 +99,37 @@ public static class Utilities {
         return input
             .Replace("@_", m.Author.Mention)
             .Replace("@\\_", "@_");
+    }
+
+    /// <inheritdoc cref="GetDisplayableUsernameCommon"/>
+    public static string GetDisplayableUsername(this SocketUser user)
+        => GetDisplayableUsernameCommon(user.Username, user.Discriminator, user.GlobalName);
+
+    /// <inheritdoc cref="GetDisplayableUsernameCommon"/>
+    public static string GetDisplayableUsername(this CachedUser user)
+        => GetDisplayableUsernameCommon(user.Username, user.Discriminator, user.GlobalName);
+
+    /// <summary>
+    /// Returns a string representation of the user's username suitable for display purposes.
+    /// For the sake of consistency, it is preferable using this instead of any other means, including Discord.Net's ToString.
+    /// </summary>
+    private static string GetDisplayableUsernameCommon(string username, string discriminator, string? global) {
+        static string escapeFormattingCharacters(string input) {
+            var result = new StringBuilder();
+            foreach (var c in input) {
+                if (c is '\\' or '_' or '~' or '*' or '@' or '`') {
+                    result.Append('\\');
+                }
+                result.Append(c);
+            }
+            return result.ToString();
+        }
+
+        if (discriminator == "0000") {
+            if (global != null) return $"{escapeFormattingCharacters(global)} ({username})";
+            return username;
+        } else {
+            return $"{escapeFormattingCharacters(username)}#{discriminator}";
+        }
     }
 }

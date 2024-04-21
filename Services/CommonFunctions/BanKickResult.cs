@@ -98,8 +98,7 @@ public class BanKickResult {
         if (_rptTargetId != 0) {
             var user = bot.EcQueryUser(_rptTargetId.ToString());
             if (user != null) {
-                // TODO sanitize possible formatting characters in display name
-                msg += $" user **{user.Username}#{user.Discriminator}**";
+                msg += $" user **{user.GetDisplayableUsername()}**";
             } else {
                 msg += $" user with ID **{_rptTargetId}**";
             }

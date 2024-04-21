@@ -113,8 +113,8 @@ class ResponseExecutor {
                     }
                 )
                 .WithAuthor(
-                    name: $"{_msg.Author.Username}#{_msg.Author.Discriminator} said:",
-                    iconUrl: _msg.Author.GetAvatarUrl(),
+                    name: $"{_user.GetDisplayableUsername()} said:",
+                    iconUrl: _user.GetAvatarUrl(),
                     url: _msg.GetJumpUrl()
                 )
                 .WithDescription(invokingLine)
@@ -127,7 +127,7 @@ class ResponseExecutor {
             try {
                 await reportTarget.SendMessageAsync(embed: resultEmbed);
             } catch (Discord.Net.HttpException ex) when (ex.HttpCode == System.Net.HttpStatusCode.Forbidden) {
-                Log("Encountered 403 error when attempting to send report.");
+                Log("Encountered error 403 when attempting to send report.");
             }
         }
     }
@@ -218,7 +218,7 @@ class ResponseExecutor {
             if (targetCh == null) return FromError($"Unable to find channel '{name.Name}'.");
             isUser = false;
         } else if (name.Type == EntityType.User) {
-            if (name.Name == "_") targetCh = await _msg.Author.CreateDMChannelAsync();
+            if (name.Name == "_") targetCh = await _user.CreateDMChannelAsync();
             else {
                 var searchedUser = name.FindUserIn(_guild);
                 if (searchedUser == null) return FromError($"Unable to find user '{name.Name}'.");
