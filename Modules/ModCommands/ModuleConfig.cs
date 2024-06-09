@@ -17,9 +17,9 @@ class ModuleConfig {
             Label = def[nameof(Label)]?.Value<string>()
                 ?? throw new ModuleLoadException($"'{nameof(Label)}' was not defined in a command definition.");
             var cmd = CreateCommandInstance(instance, def);
-            if (commands.ContainsKey(cmd.Command)) {
+            if (commands.TryGetValue(cmd.Command, out CommandConfig? existing)) {
                 throw new ModuleLoadException(
-                    $"{Label}: The command name '{cmd.Command}' is already in use by '{commands[cmd.Command].Label}'.");
+                    $"{Label}: The command name '{cmd.Command}' is already in use by '{existing.Label}'.");
             }
             commands.Add(cmd.Command, cmd);
         }

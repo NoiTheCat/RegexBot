@@ -45,7 +45,7 @@ internal class AutoResponder : RegexbotModule {
         if (def.Command == null) {
             await msg.Channel.SendMessageAsync(def.GetResponse());
         } else {
-            var cmdline = def.Command.Split(new char[] { ' ' }, 2);
+            var cmdline = def.Command.Split([' '], 2);
 
             var ps = new ProcessStartInfo() {
                 FileName = cmdline[0],

@@ -21,7 +21,7 @@ class GuildData {
 
     const int WaitTimeMax = 600; // 10 minutes
 
-    public GuildData(JObject conf) : this(conf, new Dictionary<ulong, DateTimeOffset>()) { }
+    public GuildData(JObject conf) : this(conf, []) { }
 
     public GuildData(JObject conf, Dictionary<ulong, DateTimeOffset> _waitingList) {
         WaitingList = _waitingList;

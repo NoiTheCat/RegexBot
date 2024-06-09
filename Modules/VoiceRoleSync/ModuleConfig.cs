@@ -23,9 +23,7 @@ class ModuleConfig {
             } catch (FormatException) {
                 throw new ModuleLoadException($"'{item.Name}' is not specified as a role.");
             }
-            var role = name.FindRoleIn(g);
-            if (role == null) throw new ModuleLoadException($"Unable to find role '{name}'.");
-
+            var role = name.FindRoleIn(g) ?? throw new ModuleLoadException($"Unable to find role '{name}'.");
             var channels = Utilities.LoadStringOrStringArray(item.Value);
             if (channels.Count == 0) throw new ModuleLoadException($"One or more channels must be defined under '{name}'.");
             foreach (var id in channels) {

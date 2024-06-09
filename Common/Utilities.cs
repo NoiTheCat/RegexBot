@@ -1,7 +1,6 @@
 ﻿using Discord;
 using RegexBot.Data;
 using System.Diagnostics.CodeAnalysis;
-using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -9,26 +8,30 @@ namespace RegexBot.Common;
 /// <summary>
 /// Miscellaneous utility methods useful for the bot and modules.
 /// </summary>
-public static class Utilities {
+public static partial class Utilities {
     /// <summary>
-    /// Gets a compiled regex that matches a channel tag and pulls its snowflake value.
+    /// Gets a precompiled regex that matches a channel tag and pulls its snowflake value.
     /// </summary>
-    public static Regex ChannelMention { get; } = new(@"<#(?<snowflake>\d+)>", RegexOptions.Compiled);
+    [GeneratedRegex(@"<#(?<snowflake>\d+)>")] 
+    public static partial Regex ChannelMentionRegex();
 
     /// <summary>
-    /// Gets a compiled regex that matches a custom emoji and pulls its name and ID.
+    /// Gets a precompiled regex that matches a custom emoji and pulls its name and ID.
     /// </summary>
-    public static Regex CustomEmoji { get; } = new(@"<:(?<name>[A-Za-z0-9_]{2,}):(?<ID>\d+)>", RegexOptions.Compiled);
+    [GeneratedRegex(@"<:(?<name>[A-Za-z0-9_]{2,}):(?<ID>\d+)>")] 
+    public static partial Regex CustomEmojiRegex();
 
     /// <summary>
-    /// Gets a compiled regex that matches a fully formed Discord handle, extracting the name and discriminator.
+    /// Gets a precompiled regex that matches a fully formed Discord handle, extracting the name and discriminator.
     /// </summary>
-    public static Regex DiscriminatorSearch { get; } = new(@"(.+)#(\d{4}(?!\d))", RegexOptions.Compiled);
+    [GeneratedRegex(@"(.+)#(\d{4}(?!\d))")] 
+    public static partial Regex DiscriminatorSearchRegex();
 
     /// <summary>
-    /// Gets a compiled regex that matches a user tag and pulls its snowflake value.
+    /// Gets a precompiled regex that matches a user tag and pulls its snowflake value.
     /// </summary>
-    public static Regex UserMention { get; } = new(@"<@!?(?<snowflake>\d+)>", RegexOptions.Compiled);
+    [GeneratedRegex(@"<@!?(?<snowflake>\d+)>")]
+    public static partial Regex UserMentionRegex();
 
     /// <summary>
     /// Performs common checks on the specified message to see if it fits all the criteria of a
@@ -77,7 +80,7 @@ public static class Utilities {
     /// If given string is in an EntityName format, returns a displayable representation of it based on
     /// a cache query. Otherwise, returns the input string as-is.
     /// </summary>
-    [return: NotNullIfNotNull("input")]
+    [return: NotNullIfNotNull(nameof(input))]
     public static string? TryFromEntityNameString(string? input, RegexbotClient bot) {
         string? result = null;
         try {

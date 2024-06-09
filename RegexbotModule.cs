@@ -10,23 +10,19 @@ namespace RegexBot;
 /// <remarks>
 /// Implementing classes should not rely on local variables to store runtime or state data for guilds.
 /// Instead, use <see cref="CreateGuildStateAsync"/> and <see cref="GetGuildState"/>.
+/// <br/><br/>
+/// Additionally, do not assume that <see cref="DiscordClient"/> is available during the constructor.
 /// </remarks>
-public abstract class RegexbotModule {
+public abstract class RegexbotModule(RegexbotClient bot) {
     /// <summary>
     /// Retrieves the bot instance.
     /// </summary>
-    public RegexbotClient Bot { get; }
+    public RegexbotClient Bot { get; } = bot;
 
     /// <summary>
     /// Retrieves the Discord client instance.
     /// </summary>
     public DiscordSocketClient DiscordClient { get => Bot.DiscordClient; }
-
-    /// <summary>
-    /// Called when a module is being loaded.
-    /// At this point, all bot services are available, but Discord is not. Do not use <see cref="DiscordClient"/>.
-    /// </summary>
-    public RegexbotModule(RegexbotClient bot) => Bot = bot;
 
     /// <summary>
     /// Gets the name of this module.

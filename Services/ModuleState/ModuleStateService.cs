@@ -6,12 +6,12 @@ namespace RegexBot.Services.ModuleState;
 /// </summary>
 class ModuleStateService : Service {
     private readonly Dictionary<ulong, EntityList> _moderators;
-    private readonly Dictionary<ulong, Dictionary<Type, object?>> _stateData;
+    private readonly Dictionary<ulong, Dictionary<Type, object?>> _guildStates;
     private readonly JObject _serverConfs;
 
     public ModuleStateService(RegexbotClient bot, JObject servers) : base(bot) {
-        _moderators = new();
-        _stateData = new();
+        _moderators = [];
+        _guildStates = [];
         _serverConfs = servers;
 
         bot.DiscordClient.GuildAvailable += RefreshGuildState;
@@ -25,17 +25,20 @@ class ModuleStateService : Service {
     }
 
     private Task RemoveGuildData(SocketGuild arg) {
-        _stateData.Remove(arg.Id);
+        _guildStates.Remove(arg.Id);
         _moderators.Remove(arg.Id);
         return Task.CompletedTask;
     }
 
     // Hooked
     public T? DoGetStateObj<T>(ulong guildId, Type t) {
-        if (_stateData.ContainsKey(guildId) && _stateData[guildId].ContainsKey(t)) {
-            // Leave handling of potential InvalidCastException to caller.
-            return (T?)_stateData[guildId][t];
+        if (_guildStates.TryGetValue(guildId, out var guildConfs)) {
+            if (guildConfs.TryGetValue(t, out var moduleConf)) {
+                // Leave handling of potential InvalidCastException to caller.
+                return (T?)moduleConf;
+            }
         }
+
         return default;
     }
 
@@ -71,7 +74,7 @@ class ModuleStateService : Service {
             }
         }
         _moderators[guild.Id] = mods;
-        _stateData[guild.Id] = newStates;
+        _guildStates[guild.Id] = newStates;
         return true;
     }
 }

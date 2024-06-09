@@ -83,7 +83,7 @@ internal sealed class EntryRole : RegexbotModule, IDisposable {
             foreach (var g in DiscordClient.Guilds) {
                 subworkers.Add(RoleApplyGuildSubWorker(g));
             }
-            Task.WaitAll(subworkers.ToArray());
+            Task.WaitAll([.. subworkers]);
         }
     }
 
