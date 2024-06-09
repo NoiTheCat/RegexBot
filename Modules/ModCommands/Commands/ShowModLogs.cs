@@ -20,7 +20,7 @@ class ShowModLogs : CommandConfig {
 
     // Usage: (command) (query) [page]
     public override async Task Invoke(SocketGuild g, SocketMessage msg) {
-        var line = msg.Content.Split(new char[] { ' ' }, 3, StringSplitOptions.RemoveEmptyEntries);
+        var line = SplitToParams(msg, 3);
         if (line.Length < 2) {
             await SendUsageMessageAsync(msg.Channel, null);
             return;
@@ -47,13 +47,12 @@ class ShowModLogs : CommandConfig {
                 .Where(l => l.GuildId == query.GuildId && l.UserId == query.UserId)
                 .Count();
             totalPages = (int)Math.Ceiling((double)totalEntries / LogEntriesPerMessage);
-            results = db.ModLogs
+            results = [.. db.ModLogs
                 .Where(l => l.GuildId == query.GuildId && l.UserId == query.UserId)
                 .OrderByDescending(l => l.LogId)
                 .Skip((pagenum - 1) * LogEntriesPerMessage)
                 .Take(LogEntriesPerMessage)
-                .AsNoTracking()
-                .ToList();
+                .AsNoTracking()];
         }
 
         var resultList = new EmbedBuilder() {

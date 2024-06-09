@@ -3,16 +3,10 @@ using System.Diagnostics;
 
 namespace RegexBot.Modules.ModCommands.Commands;
 [DebuggerDisplay("Command definition '{Label}'")]
-abstract class CommandConfig {
-    public string Label { get; }
-    public string Command { get; }
-    protected ModCommands Module { get; }
-
-    protected CommandConfig(ModCommands module, JObject config) {
-        Module = module;
-        Label = config[nameof(Label)]!.Value<string>()!;
-        Command = config[nameof(Command)]!.Value<string>()!;
-    }
+abstract class CommandConfig(ModCommands module, JObject config) {
+    public string Label { get; } = config[nameof(Label)]!.Value<string>()!;
+    public string Command { get; } = config[nameof(Command)]!.Value<string>()!;
+    protected ModCommands Module { get; } = module;
 
     public abstract Task Invoke(SocketGuild g, SocketMessage msg);
 
@@ -20,6 +14,7 @@ abstract class CommandConfig {
     protected const string TargetNotFound = ":x: **Unable to find the given user.**";
 
     protected abstract string DefaultUsageMsg { get; }
+
     /// <summary>
     /// Sends out the default usage message (<see cref="DefaultUsageMsg"/>) within an embed. 
     /// An optional message can be included, for uses such as notifying users of incorrect usage.
@@ -36,4 +31,15 @@ abstract class CommandConfig {
         };
         await target.SendMessageAsync(message ?? "", embed: usageEmbed.Build());
     }
+
+    internal static readonly char[] separator = [' '];
+    /// <summary>
+    /// For the given message's content, assumes its message is a command and returns its parameters
+    /// as an array of substrings.
+    /// </summary>
+    /// <param name="msg">The incoming message to process.</param>
+    /// <param name="maxParams">The number of parameters to expect.</param>
+    /// <returns>A string array with 0 to maxParams - 1 elements.</returns>
+    protected static string[] SplitToParams(SocketMessage msg, int maxParams)
+        => msg.Content.Split(separator, maxParams, StringSplitOptions.RemoveEmptyEntries);
 }

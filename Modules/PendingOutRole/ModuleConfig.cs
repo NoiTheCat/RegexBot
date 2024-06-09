@@ -12,6 +12,5 @@ class ModuleConfig {
         } catch (FormatException) {
                 throw new ModuleLoadException("Name specified in configuration is not a role.");
         }
-            
     }
 }

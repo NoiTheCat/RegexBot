@@ -1,17 +1,15 @@
 ﻿using RegexBot.Common;
 
 namespace RegexBot.Modules.ModCommands.Commands;
-class RoleAdd : RoleManipulation {
+class RoleAdd(ModCommands module, JObject config) : RoleManipulation(module, config) {
     protected override (string, string) String1 => ("Adds", "to");
     protected override string String2 => "set";
-    public RoleAdd(ModCommands module, JObject config) : base(module, config) { }
     protected override async Task ContinueInvoke(SocketGuildUser target, SocketRole role) => await target.AddRoleAsync(role);
 }
 
-class RoleDel : RoleManipulation {
+class RoleDel(ModCommands module, JObject config) : RoleManipulation(module, config) {
     protected override (string, string) String1 => ("Removes", "from");
     protected override string String2 => "unset";
-    public RoleDel(ModCommands module, JObject config) : base(module, config) { }
     protected override async Task ContinueInvoke(SocketGuildUser target, SocketRole role) => await target.RemoveRoleAsync(role);
 }
 
@@ -46,7 +44,7 @@ abstract class RoleManipulation : CommandConfig {
 
     public override async Task Invoke(SocketGuild g, SocketMessage msg) {
         // TODO reason in further parameters?
-        var line = msg.Content.Split(new char[] { ' ' }, 3, StringSplitOptions.RemoveEmptyEntries);
+        var line = SplitToParams(msg, 3);
         string targetstr;
         if (line.Length < 2) {
             await SendUsageMessageAsync(msg.Channel, null);

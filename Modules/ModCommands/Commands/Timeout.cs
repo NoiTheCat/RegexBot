@@ -26,7 +26,7 @@ class Timeout : CommandConfig {
 
     // Usage: (command) (user) (duration) (reason)
     public override async Task Invoke(SocketGuild g, SocketMessage msg) {
-        var line = msg.Content.Split(new char[] { ' ' }, 4, StringSplitOptions.RemoveEmptyEntries);
+        var line = SplitToParams(msg, 4);
         string targetstr;
         string? reason;
         if (line.Length < 3) {

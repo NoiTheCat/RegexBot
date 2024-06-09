@@ -16,7 +16,7 @@ class Unban : CommandConfig {
 
     // Usage: (command) (user query)
     public override async Task Invoke(SocketGuild g, SocketMessage msg) {
-        var line = msg.Content.Split(new char[] { ' ' }, 3, StringSplitOptions.RemoveEmptyEntries);
+        var line = SplitToParams(msg, 3);
         string targetstr;
         if (line.Length < 2) {
             await SendUsageMessageAsync(msg.Channel, null);

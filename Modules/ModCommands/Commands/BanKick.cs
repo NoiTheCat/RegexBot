@@ -22,9 +22,7 @@ class Ban : BanKick {
     }
 }
 
-class Kick : BanKick {
-    public Kick(ModCommands module, JObject config) : base(module, config, false) { }
-
+class Kick(ModCommands module, JObject config) : BanKick(module, config, false) {
     protected override async Task ContinueInvoke(SocketGuild g, SocketMessage msg, string? reason,
                                                  ulong targetId, CachedGuildUser? targetQuery, SocketUser? targetUser) {
         // Kick: Unlike ban, must find the guild user in order to proceed
@@ -76,7 +74,7 @@ abstract class BanKick : CommandConfig {
 
     // Usage: (command) (user) (reason)
     public override async Task Invoke(SocketGuild g, SocketMessage msg) {
-        var line = msg.Content.Split(new char[] { ' ' }, 3, StringSplitOptions.RemoveEmptyEntries);
+        var line = SplitToParams(msg, 3);
         string targetstr;
         string? reason;
         if (line.Length < 2) {
