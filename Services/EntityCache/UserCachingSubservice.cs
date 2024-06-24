@@ -86,7 +86,7 @@ class UserCachingSubservice {
             if (sID.HasValue)
                 query = query.Where(c => c.UserId == (long)sID.Value);
             if (nameSearch != null) {
-                query = query.Where(c => c.Username.ToLower() == nameSearch.Value.name.ToLower());
+                query = query.Where(c => c.Username.Equals(nameSearch.Value.name, StringComparison.OrdinalIgnoreCase));
                 if (nameSearch.Value.disc != null) query = query.Where(c => c.Discriminator == nameSearch.Value.disc);
             }
             query = query.OrderByDescending(e => e.ULastUpdateTime);
@@ -95,7 +95,7 @@ class UserCachingSubservice {
         }
 
         // Is search actually a ping? Extract ID.
-        var m = Utilities.UserMention.Match(search);
+        var m = Utilities.UserMentionRegex().Match(search);
         if (m.Success) search = m.Groups["snowflake"].Value;
 
         // Is search a number? Assume ID, proceed to query.
@@ -117,8 +117,9 @@ class UserCachingSubservice {
             if (sID.HasValue)
                 query = query.Where(c => c.UserId == (long)sID.Value);
             if (nameSearch != null) {
-                query = query.Where(c => (c.Nickname != null && c.Nickname.ToLower() == nameSearch.Value.name.ToLower()) ||
-                    c.User.Username.ToLower() == nameSearch.Value.name.ToLower());
+                query = query.Where(c => (c.Nickname != null
+                    && c.Nickname.Equals(nameSearch.Value.name, StringComparison.OrdinalIgnoreCase))
+                    || c.User.Username.Equals(nameSearch.Value.name, StringComparison.OrdinalIgnoreCase));
                 if (nameSearch.Value.disc != null) query = query.Where(c => c.User.Discriminator == nameSearch.Value.disc);
             }
             query = query.OrderByDescending(e => e.GULastUpdateTime);
@@ -127,7 +128,7 @@ class UserCachingSubservice {
         }
 
         // Is search actually a ping? Extract ID.
-        var m = Utilities.UserMention.Match(search);
+        var m = Utilities.UserMentionRegex().Match(search);
         if (m.Success) search = m.Groups["snowflake"].Value;
 
         // Is search a number? Assume ID, proceed to query.
@@ -144,7 +145,7 @@ class UserCachingSubservice {
     private static (string, string?) SplitNameAndDiscriminator(string input) {
         string name;
         string? disc = null;
-        var split = Utilities.DiscriminatorSearch.Match(input);
+        var split = Utilities.DiscriminatorSearchRegex().Match(input);
         if (split.Success) {
             name = split.Groups[1].Value;
             disc = split.Groups[2].Value;

@@ -6,10 +6,9 @@ namespace RegexBot.Services.CommonFunctions {
     /// functions may help enforce a sense of consistency across modules when performing common actions, and may
     /// inform services which provide any additional features the ability to respond to those actions ahead of time.
     /// </summary>
-    internal partial class CommonFunctionsService : Service {
+    internal partial class CommonFunctionsService(RegexbotClient bot) : Service(bot) {
         // Note: Several classes within this service created by its hooks are meant to be sent to modules,
         // therefore those public classes are placed into the root RegexBot namespace for the developer's convenience.
-        public CommonFunctionsService(RegexbotClient bot) : base(bot) { }
     }
 }
 

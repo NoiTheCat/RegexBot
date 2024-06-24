@@ -52,7 +52,7 @@ class LoggingService : Service {
         var now = DateTimeOffset.Now;
         var output = new StringBuilder();
         var prefix = $"[{now:s}] [{source}] ";
-        foreach (var line in message.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.None)) {
+        foreach (var line in message.Split(["\r\n", "\n"], StringSplitOptions.None)) {
             output.Append(prefix).AppendLine(line);
         }
         var outstr = output.ToString();

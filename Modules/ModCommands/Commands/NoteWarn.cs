@@ -2,9 +2,7 @@ using RegexBot.Common;
 
 namespace RegexBot.Modules.ModCommands.Commands;
 // Note and Warn commands are highly similar in implementnation, and thus are handled in a single class.
-class Note : NoteWarn {
-    public Note(ModCommands module, JObject config) : base(module, config) { }
-
+class Note(ModCommands module, JObject config) : NoteWarn(module, config) {
     protected override string DefaultUsageMsg => string.Format(_usageHeader, Command)
         + "Appends a note to the moderation log for the given user.";
     protected override async Task ContinueInvoke(SocketGuild g, SocketMessage msg, string logMessage, SocketUser targetUser) {
@@ -13,9 +11,7 @@ class Note : NoteWarn {
     }
 }
 
-class Warn : NoteWarn {
-    public Warn(ModCommands module, JObject config) : base(module, config) { }
-
+class Warn(ModCommands module, JObject config) : NoteWarn(module, config) {
     protected override string DefaultUsageMsg => string.Format(_usageHeader, Command)
         + "Issues a warning to the given user, logging the instance to this bot's moderation log "
         + "and notifying the offending user over DM of the issued warning.";
@@ -45,7 +41,7 @@ abstract class NoteWarn : CommandConfig {
 
     // Usage: (command) (user) (message)
     public override async Task Invoke(SocketGuild g, SocketMessage msg) {
-        var line = msg.Content.Split(new char[] { ' ' }, 3, StringSplitOptions.RemoveEmptyEntries);
+        var line = SplitToParams(msg, 3);
         if (line.Length != 3) {
             await SendUsageMessageAsync(msg.Channel, ":x: Not all required parameters were specified.");
             return;

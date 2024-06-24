@@ -51,9 +51,8 @@ class Configuration {
             throw new Exception($"'{nameof(Assemblies)}' is not properly specified in configuration.");
         }
 
-        var dbconf = conf["DatabaseOptions"]?.Value<JObject>();
-        if (dbconf == null) throw new Exception("Database settings were not specified in configuration.");
-        // TODO more detailed database configuration? password file, other advanced authentication settings... look into this.
+        var dbconf = (conf["DatabaseOptions"]?.Value<JObject>())
+            ?? throw new Exception("Database settings were not specified in configuration.");
         Host = ReadConfKey<string>(dbconf, nameof(Host), false);
         Database = ReadConfKey<string?>(dbconf, nameof(Database), false);
         Username = ReadConfKey<string>(dbconf, nameof(Username), true);

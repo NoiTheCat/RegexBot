@@ -1,11 +1,12 @@
 ﻿using System.Collections;
+using System.Collections.ObjectModel;
 
 namespace RegexBot.Common;
 /// <summary>
 /// Represents a commonly-used configuration structure: an array of strings consisting of <see cref="EntityName"/> values.
 /// </summary>
 public class EntityList : IEnumerable<EntityName> {
-    private readonly IReadOnlyCollection<EntityName> _innerList;
+    private readonly ReadOnlyCollection<EntityName> _innerList;
 
     /// <summary>Gets an enumerable collection of all role names defined in this list.</summary>
     public IEnumerable<EntityName> Roles

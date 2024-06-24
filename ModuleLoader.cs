@@ -38,7 +38,7 @@ static class ModuleLoader {
         return modules.AsReadOnly();
     }
 
-    static IEnumerable<RegexbotModule> LoadModulesFromAssembly(Assembly asm, RegexbotClient rb) {
+    static List<RegexbotModule> LoadModulesFromAssembly(Assembly asm, RegexbotClient rb) {
         var eligibleTypes = from type in asm.GetTypes()
                             where !type.IsAssignableFrom(typeof(RegexbotModule))
                             where type.GetCustomAttribute<RegexbotModuleAttribute>() != null

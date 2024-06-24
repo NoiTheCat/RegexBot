@@ -6,12 +6,10 @@
 /// Services provide core and shared functionality for this program. Modules are expected to call into services
 /// directly or indirectly in order to access bot features.
 /// </remarks>
-internal abstract class Service {
-    public RegexbotClient BotClient { get; }
+internal abstract class Service(RegexbotClient bot) {
+    public RegexbotClient BotClient { get; } = bot;
 
     public string Name => GetType().Name;
-
-    public Service(RegexbotClient bot) => BotClient = bot;
 
     /// <summary>
     /// Emits a log message.

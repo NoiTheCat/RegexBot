@@ -13,7 +13,7 @@ class Say : CommandConfig {
     }
 
     public override async Task Invoke(SocketGuild g, SocketMessage msg) {
-        var line = msg.Content.Split(new char[] { ' ' }, 3, StringSplitOptions.RemoveEmptyEntries);
+        var line = SplitToParams(msg, 3);
         if (line.Length <= 1) {
             await SendUsageMessageAsync(msg.Channel, ":x: You must specify a channel.");
             return;
@@ -23,7 +23,7 @@ class Say : CommandConfig {
             return;
         }
 
-        var getCh = Utilities.ChannelMention.Match(line[1]);
+        var getCh = Utilities.ChannelMentionRegex().Match(line[1]);
         if (!getCh.Success) {
             await SendUsageMessageAsync(msg.Channel, ":x: Unable to find given channel.");
             return;

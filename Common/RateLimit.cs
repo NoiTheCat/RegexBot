@@ -11,7 +11,7 @@ public class RateLimit<T> where T : notnull {
     /// Time until an entry within this instance expires, in seconds.
     /// </summary>
     public int Timeout { get; }
-    private Dictionary<T, DateTime> Entries { get; } = new Dictionary<T, DateTime>();
+    private Dictionary<T, DateTime> Entries { get; } = [];
 
     /// <summary>
     /// Creates a new <see cref="RateLimit&lt;T&gt;"/> instance with the default timeout value.

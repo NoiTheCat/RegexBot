@@ -33,7 +33,7 @@ class ResponseExecutor {
         _user = (SocketGuildUser)msg.Author;
         _guild = _user.Guild;
 
-        _reports = new();
+        _reports = [];
         Log = logger;
     }
 
